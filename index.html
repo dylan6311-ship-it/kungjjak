@@ -66,6 +66,8 @@ svg.i{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke
 /* 버튼 */
 .cta{flex:none;padding:12px 20px calc(16px + env(safe-area-inset-bottom));background:var(--bg)}
 .cta .cap{text-align:center;margin-bottom:10px}
+.cta .two{display:flex;gap:8px}
+.cta .two .btn{flex:1;min-width:0}
 .btn{width:100%;height:56px;border-radius:16px;background:var(--brand);color:#fff;font-weight:700;font-size:17px;
   text-align:center;transition:transform .12s,opacity .2s}
 .btn:active,.row:active,.card:active,.opt:active,.chip:active{transform:scale(.975)}
@@ -329,7 +331,7 @@ const ICON = {
 const icon = (n, style = '') => `<svg class="i" viewBox="0 0 24 24" style="${style}">${ICON[n]}</svg>`;
 const chk = (on) => `<i class="chk ${on ? 'on' : ''}">${icon('check')}</i>`;
 const badge = (name) => (prof(name).verify ? `<span class="bdg">${icon('check')}인증</span>` : '');
-const attrs = (o, skip = []) => Object.entries(o).filter(([k]) => !['label', 'a', 'disabled', 'valid', 'cap', 'ghost', ...skip].includes(k)).map(([k, v]) => `data-${k}="${esc(v)}"`).join(' ');
+const attrs = (o, skip = []) => Object.entries(o).filter(([k]) => !['label', 'a', 'disabled', 'valid', 'cap', 'ghost', 'alt', ...skip].includes(k)).map(([k, v]) => `data-${k}="${esc(v)}"`).join(' ');
 function toast(msg) { clearTimeout(toastT); document.querySelector('.toast')?.remove(); const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; $('#app').appendChild(t); toastT = setTimeout(() => t.remove(), 2600); }
 async function copyText(text) {
   try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
@@ -525,7 +527,9 @@ const V = {
   },
 
   event({ id }) {
-    const p = post(id), t = S.tickets.find((x) => x.postId === id), revs = prof(p.by).reviews;
+    const p = post(id), ts = S.tickets.filter((x) => x.postId === id), open = ts.filter((x) => !x.attended), revs = prof(p.by).reviews;
+    const free = p.price.mode === 'donate', seats = open.reduce((n, x) => n + x.qty, 0);
+    const mine = ts.length > 1 ? { label: `내 티켓 ${ts.length}장`, a: 'go', n: 'tickets' } : ts.length ? { label: '내 티켓 보기', a: 'ticket', id: ts[0].id } : null;
     return {
       nav: true, right: { label: '공유', a: 'share', id },
       body: `<div class="poster" style="${grad(p)}"><small>${p.genre} · ${p.hood}</small><h1>${esc(p.title)}</h1></div>
@@ -537,7 +541,9 @@ const V = {
         ${p.mine ? '' : `<button class="btn ghost" style="margin-top:12px" data-a="ask" data-id="${id}">${esc(p.by)}에게 문의하기</button>`}
         ${revs.length ? `<div class="h2">다녀온 사람들의 한마디</div>${revs.slice(0, 2).map(reviewHTML).join('')}<p class="cap" style="margin-top:10px">${esc(p.by)}의 무대를 예매하고 본 사람만 남길 수 있어요.</p>` : ''}
         ${p.mine ? '' : `<div style="margin-top:28px">${reportLink(p.title)}</div>`}`,
-      cta: t ? { label: '내 티켓 보기', a: 'ticket', id: t.id, ghost: true } : { label: p.price.mode === 'donate' ? '무료로 예약하기' : '예매하기', a: 'book', id },
+      cta: !ts.length ? { label: free ? '무료로 예약하기' : '예매하기', a: 'book', id }
+        : !open.length ? { ...mine, ghost: true }
+        : { label: free ? '추가로 예약하기' : '추가 예매하기', a: 'book', id, alt: mine, cap: `이미 ${seats}명 ${free ? '예약' : '예매'}해 뒀어요` },
     };
   },
 
@@ -559,6 +565,7 @@ const V = {
         <div><span>장소</span><b>${esc(p.venue)}</b></div><div><span>인원</span><b>${flow.qty}명</b></div>
         ${total ? `<div><span>결제 수단</span><b>간편결제</b></div>` : ''}
         <div class="total"><span>${total ? '결제 금액' : '입장료'}</span><b>${total ? won(total) : '무료'}</b></div></div>
+        ${S.tickets.some((x) => x.postId === p.id) ? `<p class="cap" style="margin-top:12px">이미 가진 티켓은 그대로 두고, 티켓이 한 장 더 생겨요.</p>` : ''}
         <div class="box">${total ? `<b>낸 돈은 전부 ${esc(p.by)}에게 가요.</b> 쿵짝이 맡아 뒀다가 행사가 끝난 뒤에 전달해요. 쿵짝은 수수료를 받지 않아요.` : '<b>입장은 무료예요.</b> 보고 나서 좋았다면 앱에서 후원할 수 있어요.'}</div>`;
       cta = { label: total ? `${won(total)} 결제하기` : '무료로 예약하기', a: 'pay', cap: total ? '시연용 화면이라 실제 결제는 일어나지 않아요' : '' };
     }
@@ -815,7 +822,7 @@ function render(dir) {
     ${v.prog ? `<div class="prog"><i style="width:${v.prog * 100}%"></i></div>` : ''}${v.pin || ''}
     <main class="scroll">${v.body}</main>
     ${v.send ? `<div class="send"><input id="chatIn" class="inp" placeholder="메시지 보내기" value="${esc(chatDraft)}" autocomplete="off"><button data-a="send" aria-label="보내기">${icon('up')}</button></div>` : ''}
-    ${c ? `<div class="cta">${c.cap ? `<p class="cap">${c.cap}</p>` : ''}<button class="btn ${c.ghost ? 'ghost' : ''}" data-cta data-a="${c.a || ''}" ${attrs(c)} ${c.disabled || (curValid && !curValid()) ? 'disabled' : ''}>${c.label}</button></div>` : ''}
+    ${c ? `<div class="cta">${c.cap ? `<p class="cap">${c.cap}</p>` : ''}${c.alt ? `<div class="two"><button class="btn ghost" data-a="${c.alt.a}" ${attrs(c.alt)}>${c.alt.label}</button>` : ''}<button class="btn ${c.ghost ? 'ghost' : ''}" data-cta data-a="${c.a || ''}" ${attrs(c)} ${c.disabled || (curValid && !curValid()) ? 'disabled' : ''}>${c.label}</button>${c.alt ? '</div>' : ''}</div>` : ''}
     ${v.tab ? `<nav class="tabs">${tab('home', 'home', '홈')}${tab('chats', 'chat', '채팅')}<button class="plus" data-a="compose" aria-label="글 올리기"><span>${icon('plus')}</span></button>${tab('notifs', 'bell', '알림')}${tab('my', 'user', '내 정보')}</nav>` : ''}
   </div>`;
   const sc = app.querySelector('.scroll');
