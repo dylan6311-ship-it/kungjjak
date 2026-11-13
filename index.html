@@ -170,6 +170,19 @@ textarea.inp{height:120px;padding:14px 16px;resize:none;line-height:1.5;font-wei
 .toast{position:absolute;left:20px;right:20px;bottom:104px;background:rgba(25,31,40,.94);color:#fff;border-radius:14px;padding:15px 18px;
   font-size:15px;font-weight:600;line-height:1.45;text-align:center;animation:up .3s cubic-bezier(.2,.8,.2,1);z-index:9;pointer-events:none}
 @keyframes up{from{transform:translateY(14px);opacity:0}}
+.sheet{position:absolute;inset:0;background:rgba(25,31,40,.45);display:flex;align-items:flex-end;z-index:10;animation:up .2s}
+.sheet-in{background:var(--bg);width:100%;border-radius:24px 24px 0 0;padding:24px 20px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px}
+.sheet-in b{font-size:18px}
+.sheet-in textarea.inp{height:96px;font-size:15px}
+
+/* 시연 바로가기 (PC 화면 왼쪽) */
+.demo{margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}
+.demo .lbl{color:var(--sub);margin-bottom:10px}
+.demo button{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;margin-top:6px;border-radius:12px;background:var(--bg);font-size:14px;font-weight:600;box-shadow:inset 0 0 0 1px var(--line)}
+.demo button:hover{box-shadow:inset 0 0 0 1px var(--brand)}
+.demo button i{font-style:normal;width:22px;height:22px;border-radius:7px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font-size:12px;font-weight:800;flex:none}
+.demo .cap{margin-top:10px;font-size:12px}
+.kpi .live{color:var(--brand);font-weight:700}
 
 /* 인증, 검색, 프로필, 후기, 채팅 */
 .bdg{display:inline-flex;align-items:center;gap:1px;font-size:12px;font-weight:700;color:var(--teal);margin-left:6px;vertical-align:middle;white-space:nowrap}
@@ -192,6 +205,8 @@ textarea.inp{height:120px;padding:14px 16px;resize:none;line-height:1.5;font-wei
 .msg.sys{align-self:center;max-width:100%;background:#FFF4D6;color:#7A5200;font-size:13px;font-weight:600;border-radius:12px;text-align:center}
 .send{flex:none;display:flex;gap:8px;padding:10px 16px calc(14px + env(safe-area-inset-bottom));background:var(--bg)}
 .send .inp{height:46px;border-radius:23px;font-size:15px;font-weight:500}
+.sharePrev{display:block;width:100%;border-radius:16px;margin-top:8px;box-shadow:0 8px 24px rgba(25,31,40,.14)}
+.sharePrev.story{width:58%;margin:8px auto 0}
 .send button{width:46px;height:46px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
 </style>
 </head>
@@ -203,6 +218,15 @@ textarea.inp{height:120px;padding:14px 16px;resize:none;line-height:1.5;font-wei
     <p>동네 공연·전시·북토크를 발견하고, 다시 찾고, 직접 여는 앱. 오른쪽 화면을 눌러 보세요.</p>
     <p class="note">기획을 설명하기 위한 예시 화면이에요. 게시글과 팀·공간 이름은 모두 가상이고, 실제 결제는 일어나지 않아요.</p>
     <button class="reset" data-a="reset">처음부터 다시 보기</button>
+    <div class="demo">
+      <div class="lbl">시연 바로가기</div>
+      <button data-a="scene" data-scene="home"><i>1</i>가입을 마친 홈</button>
+      <button data-a="scene" data-scene="book"><i>2</i>공연 상세에서 예매하기</button>
+      <button data-a="scene" data-scene="next"><i>3</i>관람 다음 날, 다음 무대 알림</button>
+      <button data-a="scene" data-scene="hire"><i>4</i>내가 올린 섭외 글과 응답</button>
+      <button data-a="scene" data-scene="dash"><i>5</i>운영 현황</button>
+      <p class="cap">키보드 숫자 1~5로도 넘어가요. 1~4는 그 장면에 맞게 처음부터 다시 채워요.</p>
+    </div>
   </div>
   <div class="phone"><div id="app"></div></div>
 </div>
@@ -234,12 +258,12 @@ function seed() {
       '라이브 펍 소리굴': { kind: '공간', hood: '덕진동', verify: 'biz', bio: '40석 규모의 라이브 펍. 주말마다 무대가 열려요.', reviews: [] },
       '카페 온기': { kind: '공간', hood: '덕진동', verify: 'biz', bio: '대학가 골목의 카페. 저녁에는 작은 공연을 열어요.', reviews: [] },
       '갤러리 골목': { kind: '공간', hood: '서학동', verify: null, bio: '작가가 직접 운영하는 작은 전시 공간.', reviews: [] },
-      '전주대 경영학과 학생회': { kind: '모임', hood: '효자동', verify: 'school', bio: '전주대학교 경영학과 학생회예요.', reviews: [] },
+      '온고을대 경영학과 학생회': { kind: '모임', hood: '효자동', verify: 'school', bio: '온고을대 경영학과 학생회예요.', reviews: [] },
     },
     posts: [
       { id:'e1', type:'event', genre:'공연', title:'토요일 밤 어쿠스틱 라이브', by:'새벽세시', venue:'라이브 펍 소리굴', hood:'덕진동', at: iso(nextDow(6), '20:00'),
         price:{mode:'fixed', amount:10000}, g:0, desc:'통기타 두 대와 목소리로 채우는 한 시간. 처음 오는 분도 편하게 들을 수 있는 곡으로 골랐어요.\n음료 한 잔이 포함돼 있어요.' },
-      { id:'r1', type:'request', title:'학과 송년회에서 연주해 줄 밴드를 찾아요', by:'전주대 경영학과 학생회', hood:'효자동', at: iso(plusDays(30), '18:30'), place:'전주대 학생회관',
+      { id:'r1', type:'request', title:'학과 송년회에서 연주해 줄 밴드를 찾아요', by:'온고을대 경영학과 학생회', hood:'효자동', at: iso(plusDays(30), '18:30'), place:'온고을대 학생회관',
         budget:400000, mood:'60명쯤 모이는 송년회예요. 다 같이 따라 부를 수 있는 신나는 곡이면 좋겠어요. 30~40분 정도 부탁드려요.', g:1, status:'open',
         responses:[{by:'파도소리 밴드', msg:'4인조 밴드예요. 따라 부르기 좋은 곡으로 40분 준비할 수 있어요.'},{by:'새벽세시', msg:'어쿠스틱 2인조예요. 조용한 순서가 필요하면 불러 주세요.'},{by:'모래내 브라스', msg:'관악 5인조예요. 분위기 띄우는 건 자신 있어요.'}] },
       { id:'e3', type:'event', genre:'전시', title:'동네 작가 3인 사진전', by:'골목사진모임', venue:'갤러리 골목', hood:'서학동', end: iso(plusDays(20)),
@@ -266,6 +290,7 @@ function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e
 let S = load();
 let stack = [{ n: 'home' }];
 let flow = null, filter = '전체', subs = [], q = '', chatDraft = '', curValid = null, toastT;
+let shareFmt = 'feed', shareImg = null;
 
 /* ───────── 도우미 ───────── */
 const $ = (s) => document.querySelector(s);
@@ -305,6 +330,82 @@ const chk = (on) => `<i class="chk ${on ? 'on' : ''}">${icon('check')}</i>`;
 const badge = (name) => (prof(name).verify ? `<span class="bdg">${icon('check')}인증</span>` : '');
 const attrs = (o, skip = []) => Object.entries(o).filter(([k]) => !['label', 'a', 'disabled', 'valid', 'cap', 'ghost', ...skip].includes(k)).map(([k, v]) => `data-${k}="${esc(v)}"`).join(' ');
 function toast(msg) { clearTimeout(toastT); document.querySelector('.toast')?.remove(); const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; $('#app').appendChild(t); toastT = setTimeout(() => t.remove(), 2600); }
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
+  try {
+    const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); return ok;
+  } catch (e) { return false; }
+}
+function shareSheet(text) {
+  document.querySelector('.sheet')?.remove();
+  const s = document.createElement('div'); s.className = 'sheet';
+  s.innerHTML = `<div class="sheet-in"><b>소개 글</b><p class="cap">이 환경에서는 자동 복사가 막혀 있어요. 글을 길게 눌러 복사해 주세요.</p>
+    <textarea class="inp" readonly>${esc(text)}</textarea><button class="btn" data-a="closeSheet">닫기</button></div>`;
+  $('#app').appendChild(s); const ta = s.querySelector('textarea'); ta.focus(); ta.select();
+}
+/* 공유: 인스타그램용 포스터 이미지와 소개 글 */
+const FONT = 'Pretendard, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif';
+const tok = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function shareRows(p) {
+  if (p.type === 'event') return [['언제', when(p)], ['어디서', p.venue || p.hood], ['입장료', priceText(p.price)]];
+  if (p.type === 'request') return [['언제', when(p)], ['어디서', p.place || p.hood], ['예산', man(p.budget)]];
+  return [['누가', p.by], ['동네', '전주 ' + p.hood]];
+}
+const shareFoot = (p) => (p.type === 'event' ? '쿵짝에서 예매하기' : p.type === 'request' ? '쿵짝에서 응답하기' : '쿵짝에서 함께하기');
+function caption(p) {
+  const head = p.type === 'event' ? p.title : `[${kind(p)}] ${p.title}`;
+  const rows = shareRows(p).map(([k, v]) => `${k} ${v}`).join('\n');
+  const desc = p.type === 'request' ? p.mood : p.desc;
+  const tags = ['#쿵짝', '#전주' + (p.type === 'event' ? p.genre : kind(p)), '#전주' + p.hood, '#동네무대'].join(' ');
+  return [head, rows, desc, `${shareFoot(p)} · ${p.by}`, tags].filter(Boolean).join('\n\n');
+}
+function fitText(x, t, w) { if (x.measureText(t).width <= w) return t; while (t && x.measureText(t + '…').width > w) t = t.slice(0, -1); return t + '…'; }
+function wrapText(x, text, w, max) {
+  const lines = []; let cur = '';
+  for (const word of String(text).split(/\s+/)) {
+    const t = cur ? cur + ' ' + word : word;
+    if (x.measureText(t).width <= w) { cur = t; continue; }
+    if (cur) lines.push(cur);
+    cur = '';
+    for (const ch of word) { if (cur && x.measureText(cur + ch).width > w) { lines.push(cur); cur = ch; } else cur += ch; }
+  }
+  if (cur) lines.push(cur);
+  if (lines.length > max) { const out = lines.slice(0, max); out[max - 1] = fitText(x, out[max - 1] + '…', w); return out; }
+  return lines;
+}
+function roundRect(x, l, t, w, h, r) { x.beginPath(); x.moveTo(l + r, t); x.arcTo(l + w, t, l + w, t + h, r); x.arcTo(l + w, t + h, l, t + h, r); x.arcTo(l, t + h, l, t, r); x.arcTo(l, t, l + w, t, r); x.closePath(); }
+function makeShareImage(p, fmt) {
+  const story = fmt === 'story', W = 1080, H = story ? 1920 : 1350, P = 88, safe = story ? 150 : 0;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const x = cv.getContext('2d'), F = (wt, px) => `${wt} ${px}px ${FONT}`, [c1, c2] = GRADS[p.g % GRADS.length];
+  const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, c1); g.addColorStop(1, c2);
+  x.fillStyle = g; x.fillRect(0, 0, W, H); x.textBaseline = 'top';
+  x.fillStyle = tok('--bg'); x.font = F(900, 64); x.fillText('쿵짝', P, P + safe);
+  const rows = shareRows(p), pad = 56, rowH = 68, cardW = W - P * 2;
+  const cardH = pad * 2 + rows.length * rowH + 96, cardY = H - P - safe - cardH;
+  x.fillStyle = tok('--bg'); roundRect(x, P, cardY, cardW, cardH, 40); x.fill();
+  rows.forEach(([k, v], i) => {
+    const y = cardY + pad + i * rowH;
+    x.fillStyle = tok('--sub'); x.font = F(500, 38); x.fillText(k, P + pad, y);
+    x.fillStyle = tok('--ink'); x.font = F(700, 38); x.fillText(fitText(x, v, cardW - pad * 2 - 170), P + pad + 170, y);
+  });
+  x.fillStyle = tok('--line'); x.fillRect(P + pad, cardY + cardH - pad - 70, cardW - pad * 2, 2);
+  x.fillStyle = tok('--brand'); x.font = F(800, 40); x.fillText(shareFoot(p), P + pad, cardY + cardH - pad - 40);
+  x.font = F(800, 92); const lh = 116, lines = wrapText(x, p.title, W - P * 2, story ? 5 : 4);
+  const titleY = cardY - 72 - lines.length * lh;
+  x.fillStyle = tok('--bg'); lines.forEach((l, i) => x.fillText(l, P, titleY + i * lh + 8));
+  x.globalAlpha = .9; x.font = F(700, 40); x.fillText(`${kind(p)} · 전주 ${p.hood}`, P, titleY - 64); x.globalAlpha = 1;
+  return { id: p.id, fmt, url: cv.toDataURL('image/png') };
+}
+function dataFile(url, name) { const bin = atob(url.split(',')[1]), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new File([u], name, { type: 'image/png' }); }
+// 이미지를 내려받고, 글 복사가 막혔으면 글을 직접 보여줘요
+async function saveImage(img, p, copied) {
+  const a = document.createElement('a'); a.href = img.url; a.download = `kungjjak-${p.id}-${img.fmt}.png`; document.body.appendChild(a); a.click(); a.remove();
+  if (img.fmt === 'story') toast('이미지를 내려받았어요. 인스타그램 스토리에 올려 주세요');
+  else if (await copied) toast('이미지를 내려받고 글을 복사했어요. 인스타그램 새 게시물에 올려 주세요');
+  else shareSheet(caption(p));
+}
 function notify(n) { S.notifs.unshift({ id: 'n' + S.seq++, read: false, ...n }); }
 
 /* 채팅 */
@@ -370,6 +471,23 @@ const reportLink = (target) => `<button class="mini" data-a="report" data-target
 
 /* ───────── 화면 ───────── */
 const V = {
+  insta({ id }) {
+    const p = post(id);
+    if (!shareImg || shareImg.id !== id || shareImg.fmt !== shareFmt) shareImg = makeShareImage(p, shareFmt);
+    const story = shareFmt === 'story'; // 스토리는 이미지만 올려요. 소개 글은 게시물용에만 붙여요
+    return {
+      nav: true, title: '인스타그램에 올리기',
+      body: `<p class="lead" style="margin-top:8px">${story ? '스토리에 올릴 포스터 이미지를 만들었어요' : '포스터 이미지와 소개 글을 만들었어요'}. 아래 버튼을 누르면 인스타그램으로 바로 보낼 수 있어요.</p>
+        <div class="chips">${[['feed', '게시물용'], ['story', '스토리용']].map(([k, l]) => `<button class="chip ${shareFmt === k ? 'on' : ''}" data-a="shareFmt" data-v="${k}">${l}</button>`).join('')}</div>
+        <img class="sharePrev ${shareFmt}" src="${shareImg.url}" alt="${esc(p.title)} 포스터 이미지">
+        ${story ? '' : `<div class="h2">함께 올릴 글</div><div class="box" style="white-space:pre-line;margin-top:0;color:var(--ink)">${esc(caption(p))}</div>
+        <button class="btn ghost" style="margin-top:12px" data-a="copyCap" data-id="${id}">글만 복사하기</button>`}
+        <p class="cap" style="margin-top:12px">휴대폰에서는 공유 창이 열려요. PC에서는 이미지를 내려받으니, 인스타그램에서 ${story ? '스토리' : '새 게시물'}로 올려 주세요. 내려받기가 안 되면 이미지를 길게 누르거나 오른쪽 클릭해 저장하세요.</p>`,
+      cta: story ? { label: '인스타그램 스토리로 보내기', a: 'sendInsta', id }
+        : { label: '인스타그램으로 보내기', a: 'sendInsta', id, cap: '글은 자동으로 복사돼요. 인스타그램에서 붙여 넣으세요' },
+    };
+  },
+
   onboard() {
     if (!flow || flow.k !== 'onboard') flow = { k: 'onboard', i: 0, d: { name: '' }, hoods: [] };
     const n = flow.hoods.length;
@@ -565,7 +683,8 @@ const V = {
 
   profile({ name }) {
     const pr = prof(name), mine = isMine(name), on = following(name);
-    const ev = S.posts.filter((p) => p.type === 'event' && (p.by === name || p.venue === name)), etc = S.posts.filter((p) => p.type !== 'event' && p.by === name);
+    const upcoming = (p) => !S.tickets.some((t) => t.postId === p.id && t.attended) && (p.at ? parts(p.at).date >= NOW : p.end ? parts(p.end).date >= NOW : true);
+    const ev = S.posts.filter((p) => p.type === 'event' && (p.by === name || p.venue === name) && upcoming(p)), etc = S.posts.filter((p) => p.type !== 'event' && p.by === name);
     return { nav: true, body: `<div style="text-align:center;padding-top:8px"><div class="ava" style="width:76px;height:76px;font-size:30px;margin:0 auto 14px">${esc(name[0])}</div>
         <h1 class="big" style="margin:0">${esc(name)}${badge(name)}</h1><p class="lead">${[pr.kind, pr.hood].filter(Boolean).join(' · ') || '쿵짝 이웃'}</p>
         ${pr.verify ? `<p class="cap c-teal" style="font-weight:600;margin-top:6px">${VERIFY[pr.verify]}을 마쳤어요</p>` : `<p class="cap" style="margin-top:6px">아직 인증하지 않았어요</p>`}</div>
@@ -584,10 +703,11 @@ const V = {
     if (i === 0) return { nav: true, prog: 1 / 3, body: `<h1 class="big">어떤 프로필을 만들까요?</h1><p class="lead">내 계정은 그대로 두고, 팀이나 공간의 이름으로 글을 올릴 수 있어요.</p>
       ${kinds.map((o) => `<button class="opt" data-a="teamKind" data-v="${o[0]}"><div class="ic" style="background:${o[2]}">${o[1]}</div><div style="flex:1"><b>${o[3]}</b><span>${o[4]}</span></div></button>`).join('')}` };
     if (i === 1) return { nav: true, prog: 2 / 3, body: `<h1 class="big">이름과 소개를<br>알려주세요</h1>
-      <div class="field"><label>이름</label><input class="inp" data-f="name" placeholder="예: 파도소리 밴드" value="${esc(d.name)}" maxlength="20"></div>
+      <div class="field"><label>이름</label><input class="inp" data-f="name" placeholder="예: 파도소리 밴드" value="${esc(d.name)}" maxlength="20">
+        <p id="dupHint" class="cap c-brand" style="margin-top:8px;${S.profiles[d.name.trim()] ? '' : 'display:none'}">이미 쓰고 있는 이름이에요. 다른 이름을 적어 주세요.</p></div>
       <div class="field"><label>한 줄 소개</label><textarea class="inp" style="height:88px" data-f="bio" placeholder="어떤 팀인지, 어떤 곳인지 알려주세요">${esc(d.bio)}</textarea></div>${hoodChips(d)}`,
       cta: { label: '다음', a: 'flowNext', valid: () => d.name.trim() && !S.profiles[d.name.trim()] } };
-    const ways = [['school', '학교 이메일로 인증', '동아리, 학생회에 맞아요', '학교 이메일', 'name@jj.ac.kr'], ['insta', '인스타그램 계정 연결', '활동 기록이 있는 아티스트와 공간에 맞아요', '인스타그램 계정', '@계정 이름'], ['biz', '사업자등록번호로 확인', '가게, 공연장에 맞아요', '사업자등록번호', '000-00-00000']];
+    const ways = [['school', '학교 이메일로 인증', '동아리, 학생회에 맞아요', '학교 이메일', 'name@school.ac.kr'], ['insta', '인스타그램 계정 연결', '활동 기록이 있는 아티스트와 공간에 맞아요', '인스타그램 계정', '@계정 이름'], ['biz', '사업자등록번호로 확인', '가게, 공연장에 맞아요', '사업자등록번호', '000-00-00000']];
     const w = ways.find((x) => x[0] === d.verify);
     return { nav: true, prog: 1, body: `<h1 class="big">믿을 수 있는 곳임을<br>보여줄까요?</h1><p class="lead">인증하면 이름 옆에 인증 표시가 붙어요. 섭외와 예매에서 사람들이 더 안심하고 골라요.</p>
       ${ways.map((o) => `<button class="opt ${d.verify === o[0] ? 'on' : ''}" data-a="setD" data-f="verify" data-v="${o[0]}"><div style="flex:1"><b>${o[1]}</b><span>${o[2]}</span></div>${chk(d.verify === o[0])}</button>`).join('')}
@@ -621,8 +741,8 @@ const V = {
         { body: () => preview() + area('desc', '소개 (선택)', '어떤 자리인지 편하게 적어 주세요') },
       ],
       request: [
-        { body: () => `<h1 class="big">어떤 자리에<br>모시고 싶나요?</h1>${inp('title', '제목', '예: 동아리 정기 모임에 와 줄 밴드를 찾아요')}${who('요청하는 모임이나 가게', '예: 전주대 사진 동아리')}${area('mood', '원하는 분위기', '인원, 분위기, 공연 시간을 알려주세요')}`, valid: () => d.title.trim() && d.by.trim() && d.mood.trim() },
-        { body: () => `<h1 class="big">언제, 어디서 여나요?</h1>${dt}${inp('venue', '장소', '예: 전주대 학생회관')}${hoods}`, valid: () => d.date && d.time && d.venue.trim() },
+        { body: () => `<h1 class="big">어떤 자리에<br>모시고 싶나요?</h1>${inp('title', '제목', '예: 동아리 정기 모임에 와 줄 밴드를 찾아요')}${who('요청하는 모임이나 가게', '예: 온고을대 사진 동아리')}${area('mood', '원하는 분위기', '인원, 분위기, 공연 시간을 알려주세요')}`, valid: () => d.title.trim() && d.by.trim() && d.mood.trim() },
+        { body: () => `<h1 class="big">언제, 어디서 여나요?</h1>${dt}${inp('venue', '장소', '예: 온고을대 학생회관')}${hoods}`, valid: () => d.date && d.time && d.venue.trim() },
         { body: () => `<h1 class="big">예산은 얼마인가요?</h1><p class="lead">유명한 팀이 아니어도 괜찮아요. 동네 아티스트는 작은 예산에도 응답해요.</p>
             <div class="chips">${[100000, 200000, 400000].map((v) => `<button class="chip ${num(d.budget) === v ? 'on' : ''}" data-a="setD" data-f="budget" data-v="${v}">${man(v)}</button>`).join('')}</div>
             ${inp('budget', '직접 적기 (원)', '150,000', 'inputmode="numeric"')}`, valid: () => num(d.budget) > 0 },
@@ -667,12 +787,17 @@ const V = {
   },
 
   dash() {
-    const k = (t, v, unit, goal, pct, note) => `<div class="kpi"><div class="lbl">${t}</div><div class="n">${v}<small>${unit} / 목표 ${goal}</small></div><div class="bar"><i style="width:${pct}%"></i></div><div class="cap">${note}</div></div>`;
+    // 예시 수치에 이 화면에서 방금 한 일(다시 예매, 글 올리기, 섭외 확정)을 더해 보여줘요
+    const again = new Set(S.tickets.map((t) => t.postId)).size >= 2 && S.tickets.some((t) => t.attended) ? 1 : 0;
+    const myEvents = S.posts.filter((p) => p.mine && p.type === 'event').length;
+    const myHires = S.posts.filter((p) => p.mine && p.type === 'request' && p.chosen).length;
+    const live = (n, what) => (n ? `<br><span class="live">+${n} 방금 ${what}</span>` : '');
+    const k = (t, v, unit, goal, max, note) => `<div class="kpi"><div class="lbl">${t}</div><div class="n">${v}<small>${unit} / 목표 ${goal}</small></div><div class="bar"><i style="width:${Math.min(100, (v / max) * 100)}%"></i></div><div class="cap">${note}</div></div>`;
     return { nav: true, title: '운영 현황', body: `<h1 class="big">전주 시범 운영,<br>여기까지 왔어요</h1><p class="lead">시범 6개월 목표에 견준 예시 수치예요. 실제 운영 데이터가 아니에요.</p>
-      ${k('재관람자', 12, '명', '50명', 24, '쿵짝으로 두 번 이상 무대를 본 사람. 가장 중요하게 보는 숫자예요.')}
-      ${k('이웃이 직접 올린 행사', 9, '건', '월 20건', 45, '운영진이 아닌 아티스트와 주민이 올린 글. 전주에서 문화행사를 여는 책방 19곳과 인디 공간 7곳이 한 달에 한 건씩만 올려도 넘는 숫자예요.')}
-      ${k('90일 안에 다시 본 비율', 14, '%', '20%', 70, '첫 관람 뒤 석 달 안에 다시 예매한 비율이에요.')}
-      ${k('섭외 성사', 3, '건', '10건', 30, '주민과 동아리가 지역 아티스트를 불러 직접 연 무대예요.')}` };
+      ${k('재관람자', 12 + again, '명', '50명', 50, '쿵짝으로 두 번 이상 무대를 본 사람. 가장 중요하게 보는 숫자예요.' + live(again, '두 번째 무대를 예매한 나 (관람하면 확정)'))}
+      ${k('이웃이 직접 올린 행사', 9 + myEvents, '건', '월 20건', 20, '운영진이 아닌 아티스트와 주민이 올린 글. 전주에서 문화행사를 여는 책방 19곳과 인디 공간 7곳이 한 달에 한 건씩만 올려도 넘는 숫자예요.' + live(myEvents, '올린 행사'))}
+      ${k('90일 안에 다시 본 비율', 14, '%', '20%', 20, '첫 관람 뒤 석 달 안에 다시 예매한 비율이에요.')}
+      ${k('섭외 성사', 3 + myHires, '건', '10건', 10, '주민과 동아리가 지역 아티스트를 불러 직접 연 무대예요.' + live(myHires, '확정한 섭외'))}` };
   },
 };
 
@@ -730,11 +855,28 @@ const A = {
   },
   follow({ name }) { const on = following(name); S.follows = on ? S.follows.filter((f) => f !== name) : [...S.follows, name]; save(); render(); toast(on ? '팔로우를 취소했어요' : `${name}의 새 무대를 알려드릴게요`); },
   pick({ name }) { flow.picks = flow.picks.includes(name) ? flow.picks.filter((x) => x !== name) : [...flow.picks, name]; render(); },
-  share({ id }) {
-    const p = post(id), text = `[쿵짝] ${p.title} · ${p.type === 'event' ? `${when(p)} · ${p.venue}` : p.hood}`;
-    try { navigator.clipboard.writeText(text).catch(() => {}); } catch (e) {}
-    toast('소개 글을 복사했어요. 카카오톡이나 인스타그램에 붙여 넣어 보세요');
+  async share({ id }) {
+    // 포스터에 글꼴이 들어가도록 잠깐 기다려요(인터넷이 없으면 기본 글꼴로 그려요)
+    try { await Promise.race([document.fonts.load(`800 92px ${FONT}`), new Promise((r) => setTimeout(r, 800))]); } catch (e) {}
+    shareImg = null; go('insta', { id });
   },
+  shareFmt({ v }) { shareFmt = v; render(); },
+  async copyCap({ id }) {
+    const t = caption(post(id));
+    if (await copyText(t)) toast('글을 복사했어요. 인스타그램이나 카카오톡에 붙여 넣어 보세요'); else shareSheet(t);
+  },
+  sendInsta({ id }) {
+    const p = post(id), img = shareImg, story = img.fmt === 'story', cap = caption(p), copied = story ? null : copyText(cap);
+    let file = null; try { file = dataFile(img.url, `kungjjak-${p.id}.png`); } catch (e) {}
+    if (file && navigator.canShare && navigator.share && navigator.canShare({ files: [file] })) {
+      navigator.share(story ? { files: [file], title: p.title } : { files: [file], text: cap, title: p.title })
+        .then(() => toast(story ? '보냈어요. 인스타그램에서 스토리로 올려 주세요' : '보냈어요. 인스타그램에서 글을 붙여 넣고 올려 주세요'))
+        .catch((e) => { if (e && e.name !== 'AbortError') saveImage(img, p, copied); });
+      return;
+    }
+    saveImage(img, p, copied);
+  },
+  closeSheet() { document.querySelector('.sheet')?.remove(); },
 
   book({ id }) { const pr = post(id).price; flow = { k: 'book', id, i: 0, qty: 1, amount: pr.rec || 0, custom: false, d: {}, steps: ['qty', ...(pr.mode === 'flex' ? ['amount'] : []), 'confirm'] }; go('book'); },
   qty({ d }) { flow.qty = Math.min(4, Math.max(1, flow.qty + Number(d))); render(); },
@@ -760,7 +902,7 @@ const A = {
   },
 
   /* 채팅 */
-  chat({ id }) { flow = null; chatDraft = ''; go('chat', { id }); },
+  chat({ id }) { const c = chatOf(id); if (c && c.unread) { c.unread = false; save(); } flow = null; chatDraft = ''; go('chat', { id }); },
   ask({ id }) { const p = post(id), c = getChat(id, p.by, '문의'); save(); A.chat({ id: c.id }); },
   talk({ id, by }) {
     const p = post(id), fresh = !S.chats.some((x) => x.postId === id && x.with === by), c = getChat(id, by, p.type === 'request' ? '섭외' : '협업');
@@ -813,10 +955,39 @@ const A = {
   openNoti({ id }) { const n = S.notifs.find((x) => x.id === id); n.read = true; save(); if (n.to === 'home' || !post(n.to)) { stack = [{ n: 'home' }]; return render('f'); } go(post(n.to).type, { id: n.to }); },
   toggle({ k }) { S.settings[k] = !S.settings[k]; save(); render(); },
   reset() { try { localStorage.removeItem(KEY); } catch (e) {} S = seed(); flow = null; filter = '전체'; subs = []; q = ''; chatDraft = ''; stack = [{ n: 'onboard' }]; render('f'); },
+  scene({ scene }) { if (SCENES[scene]) { A.closeSheet(); SCENES[scene](); save(); render('f'); } },
+};
+
+/* ───────── 시연 바로가기: 발표 중 장면을 바로 불러와요 ───────── */
+function demoBase() {
+  S = seed(); flow = null; filter = '전체'; subs = []; q = ''; chatDraft = '';
+  S.me = { name: '덕진동 고양이' }; S.hoods = ['덕진동', '서신동'];
+  notify({ title: `이번 주 ${hoodLabel()} 가까이에서 무대 ${S.posts.filter((p) => p.type === 'event').length}개가 열려요`, body: '공연, 전시, 북토크를 모아 봤어요', to: 'home' });
+}
+const SCENES = {
+  home() { demoBase(); stack = [{ n: 'home' }]; },
+  book() { demoBase(); stack = [{ n: 'home' }, { n: 'event', p: { id: 'e1' } }]; },
+  next() {
+    demoBase();
+    S.tickets.unshift({ id: 't' + S.seq++, postId: 'e1', qty: 1, total: 10000, attended: true, tip: 0 });
+    S.follows = ['새벽세시', '라이브 펍 소리굴'];
+    const n = post('e2'); notify({ title: '어제 본 새벽세시의 다음 무대가 잡혔어요', body: `${n.title} · ${when(n)}`, to: 'e2' });
+    stack = [{ n: 'notifs' }];
+  },
+  hire() {
+    demoBase();
+    const r = post('r1'); r.mine = true; S.teams.push(r.by);
+    stack = [{ n: 'home' }, { n: 'request', p: { id: 'r1' } }];
+  },
+  dash() { if (!S.me) demoBase(); flow = null; stack = [{ n: 'my' }, { n: 'dash' }]; },
 };
 
 document.addEventListener('click', (e) => { const el = e.target.closest('[data-a]'); if (!el || el.disabled) return; const f = A[el.dataset.a]; if (f) f({ ...el.dataset }); });
-document.addEventListener('keydown', (e) => { if (e.target.id === 'chatIn' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); A.send(); } });
+document.addEventListener('keydown', (e) => {
+  if (e.target.id === 'chatIn' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); A.send(); return; }
+  if (/^(INPUT|TEXTAREA)$/.test(e.target.tagName) || e.altKey || e.ctrlKey || e.metaKey) return;
+  const scene = ['home', 'book', 'next', 'hire', 'dash'][Number(e.key) - 1]; if (scene) A.scene({ scene });
+});
 document.addEventListener('input', (e) => {
   const el = e.target;
   if (el.id === 'chatIn') { chatDraft = el.value; return; }
@@ -824,6 +995,7 @@ document.addEventListener('input', (e) => {
   const f = el.dataset.f; if (!f || !flow) return;
   flow.d[f] = el.value;
   if (flow.k === 'book' && f === 'custom') { flow.custom = !!el.value; flow.amount = num(el.value); document.querySelectorAll('.opt').forEach((o) => { o.classList.remove('on'); o.querySelector('.chk')?.classList.remove('on'); }); }
+  if (flow.k === 'team' && f === 'name') { const h = $('#dupHint'); if (h) h.style.display = S.profiles[el.value.trim()] ? '' : 'none'; }
   const b = $('[data-cta]'); if (b && curValid) b.disabled = !curValid();
 });
 render();
