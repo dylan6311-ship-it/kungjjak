@@ -351,7 +351,7 @@ function seed() {
         price:{mode:'donate'}, g:3, desc:'올해 전주에서 나온 독립출판물 세 권을 작가가 직접 읽어요. 사이사이 기타 연주가 이어져요.' },
       { id:'e5', type:'event', genre:'공연', title:'수요일의 재즈 트리오', by:'온고을 트리오', venue:'카페 온기', hood:'덕진동', at: iso(nextDow(3), '19:30'),
         price:{mode:'flex', min:5000, rec:12000}, g:4, desc:'피아노, 베이스, 드럼. 퇴근길에 들르기 좋은 70분.' },
-      { id:'c1', type:'collab', title:'연말 합동 공연, 같이 할 팀을 찾아요', by:'파도소리 밴드', hood:'덕진동', g:5, joined:false,
+      { id:'c1', type:'collab', seek:'team', title:'연말 합동 공연, 같이 할 팀을 찾아요', by:'파도소리 밴드', hood:'덕진동', g:5, joined:false,
         desc:'다음 달에 소리굴에서 세 팀이 함께 서는 공연을 준비하고 있어요. 장르는 가리지 않아요. 대관비는 나눠 내고 수익도 똑같이 나눠요.' },
       { id:'r2', type:'request', title:'카페 1주년, 통기타 한 팀 모셔요', by:'카페 온기', hood:'덕진동', at: iso(plusDays(25), '16:00'), place:'카페 온기',
         budget:150000, mood:'손님 20명 정도가 차 마시며 듣는 자리예요. 잔잔한 곡으로 30분.', g:3, status:'open', responses:[{by:'새벽세시', msg:'날짜 괜찮아요. 잔잔한 곡으로 준비할게요.'}] },
@@ -365,10 +365,12 @@ function seed() {
         price:{mode:'flex', min:5000, rec:12000}, g:0, desc:'새 노래 네 곡을 처음 들려드려요. 최소 금액만 내고 들어와서, 좋았다면 더 얹어 주세요.' },
       { id:'e6', type:'event', genre:'북토크', title:'심야 책방: 시 읽는 밤', by:'책방 늘보', venue:'책방 늘보', hood:'서신동', at: iso(nextDow(5, 1), '21:00'),
         price:{mode:'donate'}, g:3, desc:'불을 낮추고 각자 가져온 시를 한 편씩 읽어요.' },
-      { id:'c2', type:'collab', title:'사진전 닫는 날, 연주해 줄 분', by:'골목사진모임', hood:'서학동', g:2, joined:false,
+      { id:'c2', type:'collab', seek:'team', title:'사진전 닫는 날, 연주해 줄 분', by:'골목사진모임', hood:'서학동', g:2, joined:false,
         desc:'전시 마지막 날 저녁, 전시를 닫으며 작은 자리를 열어요. 20분 정도 연주해 줄 분을 찾아요. 사례는 작지만 드려요.' },
-      { id:'c3', type:'collab', title:'단독 공연부터 함께할 드러머를 찾아요', by:'새벽세시', venue:'라이브 펍 소리굴', hood:'덕진동', at: iso(nextDow(6, 2), '19:00'), g:0, joined:false,
+      { id:'c3', type:'collab', seek:'member', title:'단독 공연부터 함께할 드러머를 찾아요', by:'새벽세시', venue:'라이브 펍 소리굴', hood:'덕진동', at: iso(nextDow(6, 2), '19:00'), g:0, joined:false,
         desc:'통기타 두 대로 하던 듀오에 드럼을 더해 3인조로 가 보려고 해요. 단독 공연부터 같이 서고, 그 뒤 정기 공연도 함께해요. 카혼이나 작은 드럼 세트를 칠 수 있으면 좋아요.' },
+      { id:'c4', type:'collab', seek:'member', title:'서학동 골목을 같이 찍을 팀원을 찾아요', by:'골목사진모임', hood:'서학동', g:2, joined:false,
+        desc:'한 달에 두 번 서학동 골목을 같이 걸으며 찍어요. 연말에는 팀원들 사진으로 작은 전시도 열어요. 카메라 종류는 상관없어요.' },
     ],
   };
 }
@@ -672,10 +674,13 @@ const HOME_TABS = {
   hire: { label: '섭외하기', ask: '우리 행사에 어떤 팀을 부르고 싶나요?', type: 'request', search: '모임, 장소 이름',
     invite: ['섭외 제안 올리기', '날짜·장소·예산을 적으면 동네 팀이 응답해요'], sec: '지금 팀을 찾는 섭외 글' },
   with: { label: '함께하기', ask: '어떤 행사에 함께하고 싶으신가요?', type: 'collab', search: '팀 이름',
-    invite: ['협업 제안 올리기', '함께 공연·전시·행사할 사람을 찾아요'], sec: '함께할 사람을 찾는 글' },
+    invite: ['협업 제안 올리기', '함께 공연·전시·행사해요'], sec: '함께할 팀원·팀을 찾는 글' },
   all: { label: '전체', ask: '우리 동네에 어떤 글이 올라왔을까요?', type: null, search: '행사, 섭외, 협업 글' },
 };
 // 날짜 묶음: 오늘 / 내일 / 이번 주 / 이번 주말 / 다음 주 / 그 뒤로. '이번 주'는 오늘부터 이번 일요일까지
+// 협업 글이 찾는 것: 우리 팀에 들어올 팀원(member) / 같이 무대를 만들 다른 팀(team)
+const SEEK = { member: ['함께할 팀원', '팀원 모집', '우리 팀에 들어올 사람을 찾아요', '예: 드러머, 사진가, 낭독할 사람'], team: ['함께할 팀', '팀 모집', '같이 무대를 만들 다른 팀을 찾아요', '예: 합동 공연, 협업 전시'] };
+const seekOf = (p) => (p.seek === 'member' ? 'member' : 'team');
 const DAY = 864e5, day0 = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const weekEnd = () => { const d = day0(NOW); d.setDate(d.getDate() + ((7 - d.getDay()) % 7)); return d; };
 function bucket(p) {
@@ -693,7 +698,7 @@ const priceLine = (pr) => pr.mode === 'fixed' ? won(pr.amount) : pr.mode === 'fl
 // 목록 왼쪽 칸: 포스터 색 위에 날짜. 다음 주보다 먼 날은 월까지 보여줘요
 function dblock(p) {
   const open = (b, sp) => `<div class="dblock" style="${grad(p)}">${b}<span>${sp}</span></div>`;
-  if (p.type === 'collab') return open('<b class="sm">모집</b>', '중');
+  if (p.type === 'collab') return open(`<b class="sm">${seekOf(p) === 'member' ? '팀원' : '팀'}</b>`, '모집');
   if (!p.at) { const e = parts(p.end); return open(`<b class="sm">~${e.m}.${e.dd}</b>`, '진행 중'); }
   const d = parts(p.at), far = (day0(d.date) - weekEnd()) / DAY > 7;
   return open(far ? `<b class="sm">${d.m}.${d.dd}</b>` : `<b>${d.dd}</b>`, d.day);
@@ -702,7 +707,7 @@ function evRow(p) {
   const line = p.type === 'event' ? [p.genre, p.at ? fmtTime(p.at) : `${fmtDay(p.end)}까지`, p.venue]
     : p.type === 'request' ? [p.by, p.place || p.hood] : [p.by, p.hood];
   if (homeTab === 'all' && p.type !== 'event') line.unshift(kind(p)); // 전체 탭에서는 섭외·협업 글임을 앞에 밝혀요
-  const bold = p.type === 'event' ? priceLine(p.price) : p.type === 'request' ? `예산 ${man(p.budget)} · 응답 ${p.responses.length}팀` : p.chosen ? `${p.chosen}${wa(p.chosen)} 함께해요` : (p.responses || []).length ? `응답 ${p.responses.length}팀` : '함께할 사람을 찾고 있어요';
+  const bold = p.type === 'event' ? priceLine(p.price) : p.type === 'request' ? `예산 ${man(p.budget)} · 응답 ${p.responses.length}팀` : p.chosen ? `${p.chosen}${wa(p.chosen)} 함께해요` : (p.responses || []).length ? `응답 ${p.responses.length}팀` : `${SEEK[seekOf(p)][0]}을 찾고 있어요`;
   return `<button class="ev" data-a="open" data-id="${p.id}">${dblock(p)}<div class="tx"><h3>${esc(p.title)}</h3><p>${[...new Set(line.filter(Boolean))].map((x) => esc(x)).join(' · ')}</p><strong>${bold}</strong></div></button>`;
 }
 function listHTML() {
@@ -712,6 +717,7 @@ function listHTML() {
     .filter((p) => !see || !subs.includes('무료') || p.price.mode === 'donate')
     .filter((p) => !see || !genre || p.genre === genre)
     .filter((p) => !see || !subs.includes('인증 팀') || prof(p.by).verify)
+    .filter((p) => homeTab !== 'with' || subs.includes(SEEK.member[0]) === subs.includes(SEEK.team[0]) || subs.includes(SEEK[seekOf(p)][0]))
     .filter((p) => !t || [p.title, p.by, p.venue, p.place, p.hood, kind(p)].join(' ').toLowerCase().includes(t));
   const key = (p) => (p.at ? parts(p.at).date.getTime() : p.end ? parts(p.end).date.getTime() : 9e15);
   const near = (a, b) => S.hoods.includes(b.hood) - S.hoods.includes(a.hood);
@@ -796,7 +802,7 @@ const V = {
         <div class="seg">${Object.entries(HOME_TABS).map(([k, v]) => `<button class="${homeTab === k ? 'on' : ''}" data-a="homeTab" data-t="${k}">${v.label}</button>`).join('')}</div>
         <h2 class="ask">${T.ask}</h2>
         ${see ? `<div class="fchips">${chip('이번 주')}${chip('무료')}${chip('인증 팀')}<button class="fchip ${genre ? 'on' : ''}" data-a="genreOpen">${genre || '장르'}${icon('down')}</button></div>`
-          : !T.invite ? '' : `<button class="invite" data-a="composeAs" data-t="${T.type}"><div class="tx"><b>${T.invite[0]}</b><span>${T.invite[1]}</span></div>${icon('next', 'width:20px;height:20px;color:var(--mute)')}</button>`}
+          : (homeTab === 'with' ? `<div class="fchips">${chip(SEEK.member[0])}${chip(SEEK.team[0])}</div>` : '') + (!T.invite ? '' : `<button class="invite" data-a="composeAs" data-t="${T.type}"><div class="tx"><b>${T.invite[0]}</b><span>${T.invite[1]}</span></div>${icon('next', 'width:20px;height:20px;color:var(--mute)')}</button>`)}
         <div id="list">${listHTML()}</div>`,
     };
   },
@@ -954,7 +960,7 @@ const V = {
 
   collab({ id }) {
     const p = post(id);
-    return { nav: true, right: { label: '공유', a: 'share', id }, body: `<div class="lbl c-teal" style="margin-top:8px">협업 · ${p.hood}</div><h1 class="big" style="margin-top:6px">${esc(p.title)}</h1>
+    return { nav: true, right: { label: '공유', a: 'share', id }, body: `<div class="lbl c-teal" style="margin-top:8px">협업 · ${SEEK[seekOf(p)][1]} · ${p.hood}</div><h1 class="big" style="margin-top:6px">${esc(p.title)}</h1>
       ${p.at ? `<dl class="info"><div><dt>언제</dt><dd>${when(p)}</dd></div><div><dt>어디서</dt><dd>${esc(p.venue || p.by)}</dd></div></dl>` : ''}
       <div class="h2">내용</div><p class="body">${esc(p.desc)}</p><div class="h2">제안한 팀</div>${followRow(p.by, `${p.hood}에서 활동해요`)}
       ${p.mine ? `<div class="h2">응답한 팀 ${(p.responses || []).length}</div>${(p.responses || []).map((r) => `<div class="row" style="align-items:flex-start"><button class="who" style="align-items:flex-start" data-a="profile" data-name="${esc(r.by)}"><div class="ava">${esc(r.by[0])}</div><div class="tx"><b>${esc(r.by)}${badge(r.by)}${p.chosen === r.by ? ' · 함께해요' : ''}</b><span>${esc(r.msg)}</span></div></button>
@@ -1059,7 +1065,9 @@ const V = {
         { body: () => preview() },
       ],
       collab: [
-        { body: () => `<h1 class="big">어떤 협업을 찾나요?</h1>${inp('title', '제목', '예: 합동 공연 같이 할 팀을 찾아요')}${who('제안하는 팀', '예: 파도소리 밴드')}${area('desc', '내용', '일정, 역할, 비용 나누는 방식을 알려주세요')}${hoods}`, valid: () => d.title.trim() && d.by.trim() && d.desc.trim() },
+        { body: () => `<h1 class="big">누구와 함께하고 싶나요?</h1><p class="lead">고른 쪽에 따라 함께하기에서 '함께할 팀원'이나 '함께할 팀'으로 나뉘어 보여요.</p>
+            ${['member', 'team'].map((k) => `<button class="opt ${d.seek === k ? 'on' : ''}" data-a="setD" data-f="seek" data-v="${k}"><div style="flex:1"><b>${SEEK[k][0]}</b><span>${SEEK[k][2]} · ${SEEK[k][3]}</span></div>${chk(d.seek === k)}</button>`).join('')}`, valid: () => d.seek },
+        { body: () => `<h1 class="big">${d.seek === 'member' ? '어떤 팀원을 찾나요?' : '어떤 팀과 함께하나요?'}</h1>${inp('title', '제목', d.seek === 'member' ? '예: 함께할 드러머를 찾아요' : '예: 합동 공연 같이 할 팀을 찾아요')}${who(d.seek === 'member' ? '우리 팀 이름' : '제안하는 팀', '예: 파도소리 밴드')}${area('desc', '내용', d.seek === 'member' ? '맡을 역할, 연습 일정, 수익 나누는 방식을 알려주세요' : '일정, 역할, 비용 나누는 방식을 알려주세요')}${hoods}`, valid: () => d.title.trim() && d.by.trim() && d.desc.trim() },
         { body: () => preview() },
       ],
     }[T];
@@ -1138,7 +1146,7 @@ function build() {
   if (flow.type === 'event') return { ...base, genre: d.genre, venue: d.venue.trim(), at, desc: clean((d.desc || '').trim()),
     price: d.mode === 'fixed' ? { mode: 'fixed', amount: num(d.amount) } : d.mode === 'flex' ? { mode: 'flex', min: num(d.min), rec: num(d.rec) } : { mode: 'donate' } };
   if (flow.type === 'request') return { ...base, at, place: d.venue.trim(), budget: num(d.budget), mood: clean(d.mood.trim()), status: 'open', responses: [] };
-  return { ...base, desc: clean(d.desc.trim()), joined: false };
+  return { ...base, seek: d.seek, desc: clean(d.desc.trim()), joined: false };
 }
 
 /* ───────── 동작 ───────── */
@@ -1297,7 +1305,7 @@ const A = {
     toast(v ? `${VERIFY[v]}을 마쳤어요. 이름 옆에 인증 표시가 붙어요` : only ? '나중에 프로필에서 인증할 수 있어요' : '프로필을 만들었어요. 이 이름으로 글을 올릴 수 있어요');
   },
 
-  compose() { flow = { k: 'compose', type: null, i: 0, d: { genre: '공연', title: '', by: S.teams[0] || '', venue: '', hood: S.hoods[0], date: iso(plusDays(14)), time: '19:00', mode: 'fixed', amount: '', min: '', rec: '', budget: '', mood: '', desc: '' } }; go('compose'); },
+  compose() { flow = { k: 'compose', type: null, i: 0, d: { genre: '공연', title: '', by: S.teams[0] || '', venue: '', hood: S.hoods[0], date: iso(plusDays(14)), time: '19:00', mode: 'fixed', amount: '', min: '', rec: '', budget: '', mood: '', desc: '', seek: '' } }; go('compose'); },
   type({ t }) { flow.type = t; flow.i = 0; render('f'); },
   setD({ f, v }) { flow.d[f] = v; render(); },
   publish() {
