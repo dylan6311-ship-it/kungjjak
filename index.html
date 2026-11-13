@@ -11,6 +11,7 @@
   --ink:#191F28; --sub:#6B7684; --mute:#B0B8C1;
   /* 메인 색: 한바탕 전주 BI 전용색상 JEONJU PINK (R248 G66 B100) */
   --brand:#F84264; --brand-soft:#FEECEF; --yellow:#FFC23C; --teal:#2BB39A; --dark:#1C1C22;
+  --danger:#E5484D;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
@@ -210,6 +211,7 @@ textarea.inp{height:120px;padding:14px 16px;resize:none;line-height:1.5;font-wei
 .send .inp{height:46px;border-radius:23px;font-size:15px;font-weight:500}
 .sharePrev{display:block;width:100%;border-radius:16px;margin-top:8px;box-shadow:0 8px 24px rgba(25,31,40,.14)}
 .sharePrev.story{width:58%;margin:8px auto 0}
+.warn{margin-top:8px;font-size:13px;font-weight:600;color:var(--danger);line-height:1.45}
 .send button{width:46px;height:46px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;flex:none}
 </style>
 </head>
@@ -411,6 +413,42 @@ async function saveImage(img, p, copied) {
 }
 function notify(n) { S.notifs.unshift({ id: 'n' + S.seq++, read: false, ...n }); }
 
+/* 비속어 거르기: 이름·제목은 막고, 긴 글은 *로 가려요 */
+const KO_BAD = ['씨발','시발','씨빨','시빨','씨바','시바','쓰발','씨팔','시팔','ㅆㅂ','ㅅㅂ','ㅆㅃ','병신','븅신','빙신','ㅂㅅ','지랄','ㅈㄹ','좆','존나','졸라','ㅈㄴ',
+  '개새끼','개새기','개색기','개색히','개세끼','새끼야','이새끼','저새끼','ㅅㄲ','미친놈','미친년','미친새끼','ㅁㅊ','염병','엠창','느금마','니애미','니애비','썅'];
+// 영어 욕설: 단어 안에 섞여 있어도 거르는 것
+const EN_ANY = ['fuck','fck','fuk','fuq','phuck','shit','bitch','asshole','bastard','whore','slut','nigger','nigga','faggot','wanker','twat','dickhead','jackass','dumbass','stfu','wtf'];
+// 영어 욕설: 다른 단어의 일부일 때는 통과 (class, cocktail, assist 등)
+const EN_WORD = ['ass','arse','cunt','dick','cock','pussy','retard','piss','fag'];
+// 한영키를 바꾸지 않고 친 한글 욕설 (시발 → tlqkf)
+const CHO = 'rRseEfaqQtTdwWczxvg'.split('');
+const JUNG = ['k','o','i','O','j','p','u','P','h','hk','ho','hl','y','n','nj','np','nl','b','m','ml','l'];
+const JONG = ['','r','R','rt','s','sw','sg','e','f','fr','fa','fq','ft','fx','fv','fg','a','q','qt','t','T','d','w','c','z','x','v','g'];
+const toKeys = (w) => { const out = [...w].map((ch) => { const c = ch.charCodeAt(0) - 0xAC00; return c < 0 || c > 11171 ? null : CHO[Math.floor(c / 588)] + JUNG[Math.floor((c % 588) / 28)] + JONG[c % 28]; }); return out.includes(null) ? null : out.join(''); };
+const KEYED = KO_BAD.map(toKeys).filter((k) => k && k.length >= 4);
+const SEP = '[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z\\s]*';
+const pat = (w) => [...w].join(SEP);
+const byLen = (l) => [...l].sort((a, b) => b.length - a.length).map(pat).join('|');
+const KO_RE = new RegExp(byLen([...KO_BAD, ...KEYED]), 'gi');
+const EN_RE = new RegExp(`${byLen(EN_ANY)}|(?<![a-z])(?:${byLen(EN_WORD)})(?:e?s)?(?![a-z])`, 'gi');
+// sh1t, a$$ 처럼 숫자·기호로 바꾼 글자를 영어 검사 전에 되돌려요 (글자 수는 그대로)
+const LEET = { '0': 'o', '1': 'i', '!': 'i', '3': 'e', '4': 'a', '@': 'a', '$': 's', '5': 's', '7': 't', '|': 'l', '+': 't' };
+const SAFE_RE = /시발점|시발역|시바견|시바이누|시바스|shitake/gi;
+const NAME_F = ['name', 'title', 'by', 'venue'];
+function badRanges(t) {
+  const s = String(t ?? ''), safe = [...s.matchAll(SAFE_RE)].map((m) => [m.index, m.index + m[0].length]);
+  const leet = s.replace(/[0134579@$!|+]/g, (c) => LEET[c]);
+  const hits = [...s.matchAll(KO_RE), ...leet.matchAll(EN_RE)].map((m) => [m.index, m.index + m[0].length])
+    .filter(([a, b]) => !safe.some(([x, y]) => a >= x && b <= y)).sort((x, y) => x[0] - y[0]);
+  const merged = [];
+  for (const r of hits) { const last = merged[merged.length - 1]; if (last && r[0] <= last[1]) last[1] = Math.max(last[1], r[1]); else merged.push([...r]); }
+  return merged;
+}
+const hasBad = (t) => badRanges(t).length > 0;
+const clean = (t) => { let s = String(t ?? ''); for (const [a, b] of badRanges(s).reverse()) s = s.slice(0, a) + '*'.repeat(b - a) + s.slice(b); return s; };
+const formBad = () => !!(flow && flow.d) && NAME_F.some((f) => hasBad(flow.d[f]));
+const warn = (f, v) => `<p class="warn" data-warn="${f}" ${hasBad(v) ? '' : 'hidden'}>바르지 않은 표현이 들어 있어요. 고쳐 주세요.</p>`;
+
 /* 채팅 */
 const REPLIES = {
   '문의': ['안녕하세요! 네, 당일 현장에서도 들어오실 수 있어요.', '자리는 먼저 오신 순서대로 앉아요. 편하게 오세요.', '더 궁금한 점 있으면 언제든 물어보세요.'],
@@ -497,7 +535,7 @@ const V = {
     if (flow.i === 0) return {
       body: `<div style="padding-top:36px"><div class="logo" style="font-size:28px">쿵<b>짝</b></div>
         <h1 class="big" style="margin-top:28px">반가워요.<br>뭐라고 부를까요?</h1><p class="lead">후기와 채팅에 이 이름으로 보여요. 팀이나 공간 프로필은 가입한 뒤에 따로 만들 수 있어요.</p>
-        <div class="field"><label>이름 또는 별명</label><input class="inp" data-f="name" placeholder="예: 덕진동 고양이" value="${esc(flow.d.name)}" maxlength="12"></div></div>`,
+        <div class="field"><label>이름 또는 별명</label><input class="inp" data-f="name" placeholder="예: 덕진동 고양이" value="${esc(flow.d.name)}" maxlength="12">${warn('name', flow.d.name)}</div></div>`,
       cta: { label: '다음', a: 'flowNext', valid: () => flow.d.name.trim() },
     };
     return {
@@ -640,7 +678,7 @@ const V = {
   respond({ id }) {
     const p = post(id); if (!flow || flow.k !== 'respond') flow = { k: 'respond', d: { by: S.teams[0] || '', msg: '' } };
     return { nav: true, body: `<h1 class="big">어떤 무대를 할 수 있나요?</h1><p class="lead">${esc(p.by)}에게 전달되고, 바로 대화를 이어갈 수 있어요. 예산은 ${man(p.budget)}이에요.</p>
-      <div class="field"><label>팀 이름</label><input class="inp" data-f="by" placeholder="예: 새벽세시" value="${esc(flow.d.by)}"></div>
+      <div class="field"><label>팀 이름</label><input class="inp" data-f="by" placeholder="예: 새벽세시" value="${esc(flow.d.by)}">${warn('by', flow.d.by)}</div>
       <div class="field"><label>한마디</label><textarea class="inp" data-f="msg" placeholder="인원, 장르, 가능한 공연 시간을 알려주세요">${esc(flow.d.msg)}</textarea></div>`,
       cta: { label: '응답 보내기', a: 'sendResponse', id, valid: () => flow.d.by.trim() && flow.d.msg.trim() } };
   },
@@ -711,7 +749,7 @@ const V = {
     if (i === 0) return { nav: true, prog: 1 / 3, body: `<h1 class="big">어떤 프로필을 만들까요?</h1><p class="lead">내 계정은 그대로 두고, 팀이나 공간의 이름으로 글을 올릴 수 있어요.</p>
       ${kinds.map((o) => `<button class="opt" data-a="teamKind" data-v="${o[0]}"><div class="ic" style="background:${o[2]}">${o[1]}</div><div style="flex:1"><b>${o[3]}</b><span>${o[4]}</span></div></button>`).join('')}` };
     if (i === 1) return { nav: true, prog: 2 / 3, body: `<h1 class="big">이름과 소개를<br>알려주세요</h1>
-      <div class="field"><label>이름</label><input class="inp" data-f="name" placeholder="예: 파도소리 밴드" value="${esc(d.name)}" maxlength="20">
+      <div class="field"><label>이름</label><input class="inp" data-f="name" placeholder="예: 파도소리 밴드" value="${esc(d.name)}" maxlength="20">${warn('name', d.name)}
         <p id="dupHint" class="cap c-brand" style="margin-top:8px;${S.profiles[d.name.trim()] ? '' : 'display:none'}">이미 쓰고 있는 이름이에요. 다른 이름을 적어 주세요.</p></div>
       <div class="field"><label>한 줄 소개</label><textarea class="inp" style="height:88px" data-f="bio" placeholder="어떤 팀인지, 어떤 곳인지 알려주세요">${esc(d.bio)}</textarea></div>${hoodChips(d)}`,
       cta: { label: '다음', a: 'flowNext', valid: () => d.name.trim() && !S.profiles[d.name.trim()] } };
@@ -726,7 +764,7 @@ const V = {
 
   compose() {
     const d = flow.d, i = flow.i, T = flow.type;
-    const inp = (f, label, ph, extra = '') => `<div class="field"><label>${label}</label><input class="inp" data-f="${f}" placeholder="${ph}" value="${esc(d[f] || '')}" ${extra}></div>`;
+    const inp = (f, label, ph, extra = '') => `<div class="field"><label>${label}</label><input class="inp" data-f="${f}" placeholder="${ph}" value="${esc(d[f] || '')}" ${extra}>${NAME_F.includes(f) ? warn(f, d[f]) : ''}</div>`;
     const area = (f, label, ph) => `<div class="field"><label>${label}</label><textarea class="inp" data-f="${f}" placeholder="${ph}">${esc(d[f] || '')}</textarea></div>`;
     const who = (label, ph) => inp('by', label, ph) + (S.teams.length ? `<div class="chips" style="margin:10px 0 0">${S.teams.map((t) => `<button class="chip s ${d.by === t ? 'on' : ''}" data-a="setD" data-f="by" data-v="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : '');
     const hoods = hoodChips(d);
@@ -816,7 +854,7 @@ function render(dir) {
   const app = $('#app'), old = app.querySelector('.scroll'), keep = !dir && old ? old.scrollTop : 0, c = v.cta;
   const dots = { notifs: S.notifs.some((n) => !n.read), chats: S.chats.some((x) => x.unread) };
   const tab = (n, ic, t) => `<button class="${v.tab === n ? 'on' : ''}" data-a="tab" data-n="${n}">${icon(ic)}${t}${dots[n] ? '<i class="dot"></i>' : ''}</button>`;
-  curValid = c && c.valid ? c.valid : null;
+  const baseValid = c && c.valid; curValid = baseValid ? () => baseValid() && !formBad() : null;
   app.innerHTML = `<div class="screen ${dir ? 'in-' + dir : ''}">
     ${v.nav ? `<div class="nav"><button data-a="back" aria-label="뒤로">${icon('back')}</button><div class="t">${v.title || ''}</div><span class="r">${v.right ? `<button data-a="${v.right.a}" ${attrs(v.right)}>${v.right.label}</button>` : ''}</span></div>` : ''}
     ${v.prog ? `<div class="prog"><i style="width:${v.prog * 100}%"></i></div>` : ''}${v.pin || ''}
@@ -832,10 +870,10 @@ const go = (n, p) => { stack.push({ n, p }); render('f'); };
 const root = (...rest) => { stack = [{ n: 'home' }, ...rest]; };
 function build() {
   const d = flow.d, at = d.date && d.time ? `${d.date}T${d.time}` : null, base = { id: 'u' + S.seq, type: flow.type, title: d.title.trim(), by: d.by.trim(), hood: d.hood, mine: true, g: S.seq % GRADS.length };
-  if (flow.type === 'event') return { ...base, genre: d.genre, venue: d.venue.trim(), at, desc: (d.desc || '').trim(),
+  if (flow.type === 'event') return { ...base, genre: d.genre, venue: d.venue.trim(), at, desc: clean((d.desc || '').trim()),
     price: d.mode === 'fixed' ? { mode: 'fixed', amount: num(d.amount) } : d.mode === 'flex' ? { mode: 'flex', min: num(d.min), rec: num(d.rec) } : { mode: 'donate' } };
-  if (flow.type === 'request') return { ...base, at, place: d.venue.trim(), budget: num(d.budget), mood: d.mood.trim(), status: 'open', responses: [] };
-  return { ...base, desc: d.desc.trim(), joined: false };
+  if (flow.type === 'request') return { ...base, at, place: d.venue.trim(), budget: num(d.budget), mood: clean(d.mood.trim()), status: 'open', responses: [] };
+  return { ...base, desc: clean(d.desc.trim()), joined: false };
 }
 
 /* ───────── 동작 ───────── */
@@ -902,11 +940,11 @@ const A = {
   afterDone({ tid }) {
     const t = S.tickets.find((x) => x.id === tid), p = post(t.postId), text = flow.d.review.trim();
     t.attended = true; t.tip = flow.tip; S.follows = [...new Set([...S.follows, ...flow.picks])];
-    if (text) ensureProf(p.by, p.hood).reviews.unshift({ by: S.me.name, text, title: p.title });
+    if (text) ensureProf(p.by, p.hood).reviews.unshift({ by: S.me.name, text: clean(text), title: p.title });
     const later = S.posts.filter((x) => x.type === 'event' && x.id !== p.id && !S.tickets.some((k) => k.postId === x.id));
     const next = later.find((x) => x.by === p.by) || later.find((x) => x.venue === p.venue) || later.find((x) => x.hood === p.hood) || later[0];
     if (next) notify({ title: next.by === p.by ? `어제 본 ${p.by}의 다음 무대가 잡혔어요` : next.venue === p.venue ? `어제 다녀온 ${p.venue}에서 새 행사가 열려요` : '어제 본 무대와 비슷한 자리가 있어요', body: `${next.title} · ${when(next)}`, to: next.id });
-    save(); flow = null; stack = [{ n: 'notifs' }]; render('f'); toast(text ? '후기를 남겼어요. 하루가 지나 알림이 도착했어요' : '하루가 지났어요. 알림이 도착했어요');
+    save(); flow = null; stack = [{ n: 'notifs' }]; render('f'); toast(hasBad(text) ? '후기의 바르지 않은 표현은 *로 가렸어요. 하루가 지나 알림이 도착했어요' : text ? '후기를 남겼어요. 하루가 지나 알림이 도착했어요' : '하루가 지났어요. 알림이 도착했어요');
   },
 
   /* 채팅 */
@@ -919,11 +957,11 @@ const A = {
   },
   send() {
     const top = stack[stack.length - 1], c = chatOf(top.p.id), text = chatDraft.trim(); if (!text) return;
-    say(c, text); chatDraft = ''; save(); render(); reply(c);
+    const shown = clean(text); say(c, shown); chatDraft = ''; save(); render(); reply(c); if (shown !== text) toast('바르지 않은 표현은 *로 가렸어요');
   },
   respond({ id }) { flow = null; go('respond', { id }); },
   sendResponse({ id }) {
-    const p = post(id), by = flow.d.by.trim(), msg = flow.d.msg.trim();
+    const p = post(id), by = flow.d.by.trim(), msg = clean(flow.d.msg.trim());
     p.responses.push({ by, msg, me: true }); const c = getChat(id, p.by, '섭외'); say(c, `${by}입니다. ${msg}`); save();
     flow = null; stack.pop(); go('chat', { id: c.id }); toast('응답을 보냈어요. 여기서 바로 조율할 수 있어요'); reply(c);
   },
@@ -942,7 +980,7 @@ const A = {
   teamDone({ skip }) {
     const d = flow.d, name = d.name.trim(), v = skip ? null : d.verify;
     if (flow.only) { if (v) S.profiles[name].verify = v; }
-    else { S.profiles[name] = { kind: d.kind, hood: d.hood, bio: d.bio.trim(), verify: v, reviews: [] }; S.teams.push(name); }
+    else { S.profiles[name] = { kind: d.kind, hood: d.hood, bio: clean(d.bio.trim()), verify: v, reviews: [] }; S.teams.push(name); }
     save(); const only = flow.only; flow = null; stack.pop(); if (!only) stack.push({ n: 'profile', p: { name } }); render('f');
     toast(v ? `${VERIFY[v]}을 마쳤어요. 이름 옆에 인증 표시가 붙어요` : only ? '나중에 프로필에서 인증할 수 있어요' : '프로필을 만들었어요. 이 이름으로 글을 올릴 수 있어요');
   },
@@ -951,13 +989,13 @@ const A = {
   type({ t }) { flow.type = t; flow.i = 0; render('f'); },
   setD({ f, v }) { flow.d[f] = v; render(); },
   publish() {
-    const p = build(); S.seq++;
+    const masked = hasBad(flow.type === 'request' ? flow.d.mood : flow.d.desc), p = build(); S.seq++;
     if (p.type === 'request') {
       p.responses = [{ by: '새벽세시', msg: '어쿠스틱 2인조예요. 그날 시간 괜찮아요. 40분 공연할 수 있어요.' }, { by: '파도소리 밴드', msg: '4인조 밴드예요. 신나는 곡 위주로 준비할게요.' }];
       notify({ title: '섭외 글에 응답 2개가 왔어요', body: p.title, to: p.id });
     }
     S.posts.unshift(p); save(); flow = null; filter = '전체'; subs = []; q = ''; root({ n: p.type, p: { id: p.id } }); render('f');
-    toast(p.type === 'request' ? '올렸어요. 벌써 두 팀이 응답했어요' : `올렸어요. ${p.hood} 이웃의 피드에 보여요`);
+    toast(masked ? '바르지 않은 표현은 *로 가려서 올렸어요' : p.type === 'request' ? '올렸어요. 벌써 두 팀이 응답했어요' : `올렸어요. ${p.hood} 이웃의 피드에 보여요`);
   },
 
   openNoti({ id }) { const n = S.notifs.find((x) => x.id === id); n.read = true; save(); if (n.to === 'home' || !post(n.to)) { stack = [{ n: 'home' }]; return render('f'); } go(post(n.to).type, { id: n.to }); },
@@ -1002,6 +1040,7 @@ document.addEventListener('input', (e) => {
   if (el.dataset.s !== undefined) { q = el.value; $('#list').innerHTML = listHTML(); return; }
   const f = el.dataset.f; if (!f || !flow) return;
   flow.d[f] = el.value;
+  const w = document.querySelector(`[data-warn="${f}"]`); if (w) w.hidden = !hasBad(el.value);
   if (flow.k === 'book' && f === 'custom') { flow.custom = !!el.value; flow.amount = num(el.value); document.querySelectorAll('.opt').forEach((o) => { o.classList.remove('on'); o.querySelector('.chk')?.classList.remove('on'); }); }
   if (flow.k === 'team' && f === 'name') { const h = $('#dupHint'); if (h) h.style.display = S.profiles[el.value.trim()] ? '' : 'none'; }
   const b = $('[data-cta]'); if (b && curValid) b.disabled = !curValid();
