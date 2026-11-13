@@ -66,6 +66,9 @@ input,textarea{font:inherit;color:inherit}
 .nav .t{flex:1;text-align:center;font-weight:600;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nav .r{min-width:44px;display:flex;justify-content:flex-end}
 .nav .r button{width:auto;padding:0 12px;font-size:15px;font-weight:600;color:var(--sub)}
+/* 공유 버튼: 전주 색으로 눈에 띄게 (옅은 핑크 바탕 + 레드 글씨, 대비 약 7:1) */
+.nav .r button.share{height:34px;margin-right:6px;padding:0 13px 0 10px;border-radius:17px;display:flex;align-items:center;gap:4px;background:var(--brand-soft);color:var(--brand-ink);font-weight:700;box-shadow:inset 0 0 0 1px var(--brand)}
+.nav .r button.share svg{width:18px;height:18px;stroke-width:2.2}
 .prog{height:3px;background:var(--soft);margin:0 20px;border-radius:3px;overflow:hidden;flex:none}
 .prog i{display:block;height:100%;background:var(--brand-fill);border-radius:3px;transition:width .3s}
 .scroll{flex:1;overflow-y:auto;padding:8px 20px 28px;scrollbar-width:none}
@@ -415,7 +418,7 @@ const ICON = {
   plus:'<path d="M12 5v14M5 12h14"/>', up:'<path d="M12 19V5M6 11l6-6 6 6"/>',
   bell:'<path d="M6 9a6 6 0 0 1 12 0c0 6 2 7 2 7H4s2-1 2-7M10 20a2 2 0 0 0 4 0"/>',
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
-  back:'<path d="M15 5l-7 7 7 7"/>', check:'<path d="M5 12l5 5 9-10"/>', next:'<path d="M9 5l7 7-7 7"/>', down:'<path d="M6 9l6 6 6-6"/>', search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+  back:'<path d="M15 5l-7 7 7 7"/>', check:'<path d="M5 12l5 5 9-10"/>', next:'<path d="M9 5l7 7-7 7"/>', down:'<path d="M6 9l6 6 6-6"/>', share:'<path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>', search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
 };
 const icon = (n, style = '') => `<svg class="i" viewBox="0 0 24 24" style="${style}">${ICON[n]}</svg>`;
 const chk = (on) => `<i class="chk ${on ? 'on' : ''}">${icon('check')}</i>`;
@@ -1117,7 +1120,7 @@ function render(dir) {
   const tab = (n, ic, t) => `<button class="${v.tab === n ? 'on' : ''}" data-a="tab" data-n="${n}">${icon(ic)}${t}${dots[n] ? '<i class="dot"></i>' : ''}</button>`;
   const baseValid = c && c.valid; curValid = baseValid ? () => baseValid() && !formBad() : null;
   app.innerHTML = `<div class="screen ${dir ? 'in-' + dir : ''}">
-    ${v.nav ? `<div class="nav"><button data-a="back" aria-label="뒤로">${icon('back')}</button><div class="t">${v.title || ''}</div><span class="r">${v.right ? `<button data-a="${v.right.a}" ${attrs(v.right)}>${v.right.label}</button>` : ''}</span></div>` : ''}
+    ${v.nav ? `<div class="nav"><button data-a="back" aria-label="뒤로">${icon('back')}</button><div class="t">${v.title || ''}</div><span class="r">${v.right ? `<button data-a="${v.right.a}" ${attrs(v.right)}${v.right.a === 'share' ? ` class="share">${icon('share')}` : '>'}${v.right.label}</button>` : ''}</span></div>` : ''}
     ${v.prog ? `<div class="prog"><i style="width:${v.prog * 100}%"></i></div>` : ''}${v.pin || ''}
     <main class="scroll">${v.body}</main>
     ${v.sugg && v.sugg.length ? `<div class="sugg">${v.sugg.map((x) => `<button data-a="sugg" data-k="${x.k}">${esc(x.text)}</button>`).join('')}</div>` : ''}
