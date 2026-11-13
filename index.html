@@ -89,7 +89,43 @@ svg.i{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .tabs .plus span{width:44px;height:44px;border-radius:16px;background:var(--brand-grad);display:grid;place-items:center}
 .dot{position:absolute;top:4px;left:calc(50% + 8px);width:7px;height:7px;border-radius:50%;background:var(--brand-hot)}
 
-/* 홈 */
+/* 홈: 위치 + 검색 / 탭 세 개 / 탭마다 묻는 소제목 / 날짜별 목록 */
+.top2{display:flex;align-items:center;justify-content:space-between;padding-top:14px}
+.top2 .hood{margin:0}
+.iconbtn{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;color:var(--ink)}
+.sbar{display:flex;align-items:center;gap:8px;margin-top:12px}
+.sbar label{flex:1;min-width:0;display:flex;align-items:center;gap:8px;height:44px;padding:0 14px;border-radius:12px;background:var(--soft);color:var(--sub)}
+.sbar label svg{width:20px;height:20px;flex:none}
+.sbar input{flex:1;min-width:0;border:0;background:none;outline:0;font-size:16px;font-weight:500;color:var(--ink)}
+.sbar input::placeholder{color:var(--mute)}
+.sbar button{flex:none;white-space:nowrap;font-size:15px;font-weight:600;color:var(--sub);padding:0 4px}
+.seg{display:flex;gap:22px;margin-top:18px;border-bottom:1px solid var(--line)}
+.seg button{position:relative;padding:10px 0 12px;font-size:17px;font-weight:700;color:var(--mute);white-space:nowrap}
+.seg button.on{color:var(--ink)}
+.seg button.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--ink);border-radius:2px}
+.ask{font-size:21px;font-weight:800;letter-spacing:-.03em;line-height:1.35;margin:22px 0 0}
+.fchips{display:flex;gap:8px;margin:14px -20px 0;padding:0 20px;overflow-x:auto;scrollbar-width:none}
+.fchips::-webkit-scrollbar{display:none}
+.fchip{flex:none;white-space:nowrap;height:34px;padding:0 14px;border-radius:17px;font-size:14px;font-weight:600;color:var(--sub);background:var(--bg);box-shadow:inset 0 0 0 1px var(--line);display:flex;align-items:center;gap:4px}
+.fchip.on{background:var(--brand-soft);color:var(--brand-ink);box-shadow:inset 0 0 0 1px var(--brand)}
+.fchip svg{width:16px;height:16px}
+.sec{font-size:14px;font-weight:700;color:var(--sub);margin:24px 0 2px}
+.ev{display:flex;gap:16px;width:100%;padding:12px 0;align-items:flex-start;text-align:left;transition:transform .12s}
+.ev:active{transform:scale(.975)}
+.dblock{width:60px;height:68px;border-radius:14px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#fff}
+.dblock b{font-size:24px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.dblock b.sm{font-size:15px}
+.dblock span{font-size:13px;font-weight:600;color:rgba(255,255,255,.88)}
+.ev .tx{flex:1;min-width:0;padding-top:2px}
+.ev h3{font-size:17px;font-weight:700;line-height:1.35}
+.ev p{font-size:14px;color:var(--sub);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev strong{display:block;font-size:15px;font-weight:700;margin-top:3px}
+.invite{display:flex;align-items:center;gap:12px;width:100%;margin-top:16px;padding:16px;border-radius:16px;background:var(--soft);text-align:left}
+.invite .tx{flex:1}.invite b{display:block;font-size:16px}.invite span{font-size:13px;color:var(--sub)}
+.picker{display:flex;flex-direction:column;gap:4px}
+.picker button{display:flex;justify-content:space-between;align-items:center;padding:14px 4px;font-size:16px;font-weight:600}
+.picker button.on{color:var(--brand-ink)}
+/* 홈 (예전 목록 모양: 프로필·내 정보 화면에서 씀) */
 .top{display:flex;align-items:center;justify-content:space-between;padding-top:10px}
 .top .logo{font-size:22px}
 .hood{font-size:28px;font-weight:800;letter-spacing:-.03em;margin:18px 0 4px;display:flex;align-items:center;gap:4px}
@@ -308,6 +344,7 @@ let S = load();
 let stack = [{ n: 'home' }];
 let flow = null, filter = '전체', subs = [], q = '', chatDraft = '', curValid = null, toastT;
 let shareFmt = 'feed', shareImg = null;
+let homeTab = 'see', genre = '', searchOpen = false;
 
 /* ───────── 도우미 ───────── */
 const $ = (s) => document.querySelector(s);
@@ -341,7 +378,7 @@ const ICON = {
   plus:'<path d="M12 5v14M5 12h14"/>', up:'<path d="M12 19V5M6 11l6-6 6 6"/>',
   bell:'<path d="M6 9a6 6 0 0 1 12 0c0 6 2 7 2 7H4s2-1 2-7M10 20a2 2 0 0 0 4 0"/>',
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
-  back:'<path d="M15 5l-7 7 7 7"/>', check:'<path d="M5 12l5 5 9-10"/>', next:'<path d="M9 5l7 7-7 7"/>', down:'<path d="M6 9l6 6 6-6"/>',
+  back:'<path d="M15 5l-7 7 7 7"/>', check:'<path d="M5 12l5 5 9-10"/>', next:'<path d="M9 5l7 7-7 7"/>', down:'<path d="M6 9l6 6 6-6"/>', search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
 };
 const icon = (n, style = '') => `<svg class="i" viewBox="0 0 24 24" style="${style}">${ICON[n]}</svg>`;
 const chk = (on) => `<i class="chk ${on ? 'on' : ''}">${icon('check')}</i>`;
@@ -494,15 +531,58 @@ function card(p) {
     <div class="thumb" style="${grad(p)}">${kind(p)[0]}</div>
     <div><div class="lbl ${kindColor(p)}">${kind(p)}</div><h3>${esc(p.title)}</h3><div class="meta">${meta}</div></div></button>`;
 }
+/* 홈 탭: 보러 가기(행사) / 섭외하기(섭외 글) / 함께하기(협업 글) */
+const HOME_TABS = {
+  see: { label: '보러 가기', ask: '어떤 무대를 보러 갈까요?', type: 'event', search: '공연, 팀, 공간 이름' },
+  hire: { label: '섭외하기', ask: '우리 행사에 어떤 팀을 부르고 싶나요?', type: 'request', search: '모임, 장소 이름',
+    invite: ['섭외 글 올리기', '날짜·장소·예산을 적으면 동네 팀이 응답해요'], sec: '지금 팀을 찾는 섭외 글' },
+  with: { label: '함께하기', ask: '어떤 무대를 함께 준비하고 있나요?', type: 'collab', search: '팀 이름',
+    invite: ['협업 제안 올리기', '함께 설 팀이나 도와줄 사람을 찾아요'], sec: '함께할 팀을 찾는 글' },
+};
+// 날짜 묶음: 오늘 / 내일 / 이번 주 / 이번 주말 / 다음 주 / 그 뒤로. '이번 주'는 오늘부터 이번 일요일까지
+const DAY = 864e5, day0 = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const weekEnd = () => { const d = day0(NOW); d.setDate(d.getDate() + ((7 - d.getDay()) % 7)); return d; };
+function bucket(p) {
+  if (!p.at) return '지금 열려 있는 전시';
+  const d = parts(p.at).date, diff = Math.round((day0(d) - day0(NOW)) / DAY);
+  if (diff === 0) return '오늘';
+  if (day0(d) <= weekEnd()) return [0, 6].includes(d.getDay()) ? '이번 주말' : diff === 1 ? '내일' : '이번 주';
+  if ((day0(d) - weekEnd()) / DAY <= 7) return '다음 주';
+  return '그 뒤로';
+}
+const ORDER = ['오늘', '내일', '이번 주', '이번 주말', '다음 주', '그 뒤로', '지금 열려 있는 전시'];
+const upcomingEv = (p) => (p.at ? parts(p.at).date >= day0(NOW) : p.end ? parts(p.end).date >= day0(NOW) : true);
+const thisWeek = (p) => (p.at ? day0(parts(p.at).date) <= weekEnd() : true); // 진행 중인 전시는 이번 주에도 볼 수 있어요
+const priceLine = (pr) => pr.mode === 'fixed' ? won(pr.amount) : pr.mode === 'flex' ? `${won(pr.min)}부터, 낼 만큼` : '무료 · 후원 가능';
+// 목록 왼쪽 칸: 포스터 색 위에 날짜. 다음 주보다 먼 날은 월까지 보여줘요
+function dblock(p) {
+  const open = (b, sp) => `<div class="dblock" style="${grad(p)}">${b}<span>${sp}</span></div>`;
+  if (p.type === 'collab') return open('<b class="sm">모집</b>', '중');
+  if (!p.at) { const e = parts(p.end); return open(`<b class="sm">~${e.m}.${e.dd}</b>`, '진행 중'); }
+  const d = parts(p.at), far = (day0(d.date) - weekEnd()) / DAY > 7;
+  return open(far ? `<b class="sm">${d.m}.${d.dd}</b>` : `<b>${d.dd}</b>`, d.day);
+}
+function evRow(p) {
+  const line = p.type === 'event' ? [p.genre, p.at ? fmtTime(p.at) : `${fmtDay(p.end)}까지`, p.venue]
+    : p.type === 'request' ? [p.by, p.place || p.hood] : [p.by, p.hood];
+  const bold = p.type === 'event' ? priceLine(p.price) : p.type === 'request' ? `예산 ${man(p.budget)} · 응답 ${p.responses.length}팀` : '함께할 팀을 찾고 있어요';
+  return `<button class="ev" data-a="open" data-id="${p.id}">${dblock(p)}<div class="tx"><h3>${esc(p.title)}</h3><p>${[...new Set(line.filter(Boolean))].map((x) => esc(x)).join(' · ')}</p><strong>${bold}</strong></div></button>`;
+}
 function listHTML() {
-  const t = q.trim().toLowerCase();
-  const list = S.posts.filter((p) => filter === '전체' || (filter === '행사' ? p.type === 'event' : kind(p) === filter))
-    .filter((p) => !subs.includes('이번 주') || (p.type === 'event' && soon(p)))
-    .filter((p) => !subs.includes('무료') || (p.type === 'event' && p.price.mode === 'donate'))
-    .filter((p) => !subs.includes('인증된 팀') || prof(p.by).verify)
-    .filter((p) => !t || [p.title, p.by, p.venue, p.hood, kind(p)].join(' ').toLowerCase().includes(t))
-    .sort((a, b) => S.hoods.includes(b.hood) - S.hoods.includes(a.hood) || (b.mine ? 1 : 0) - (a.mine ? 1 : 0));
-  return list.map(card).join('') || '<div class="empty">조건에 맞는 글이 없어요.<br>검색어나 필터를 바꿔 보세요.</div>';
+  const t = q.trim().toLowerCase(), T = HOME_TABS[homeTab], see = homeTab === 'see';
+  const list = S.posts.filter((p) => p.type === T.type && (!see || upcomingEv(p)))
+    .filter((p) => !see || !subs.includes('이번 주') || thisWeek(p))
+    .filter((p) => !see || !subs.includes('무료') || p.price.mode === 'donate')
+    .filter((p) => !see || !genre || p.genre === genre)
+    .filter((p) => !see || !subs.includes('인증 팀') || prof(p.by).verify)
+    .filter((p) => !t || [p.title, p.by, p.venue, p.place, p.hood, kind(p)].join(' ').toLowerCase().includes(t));
+  const key = (p) => (p.at ? parts(p.at).date.getTime() : p.end ? parts(p.end).date.getTime() : 9e15);
+  const near = (a, b) => S.hoods.includes(b.hood) - S.hoods.includes(a.hood);
+  if (!list.length) return `<div class="empty">${t ? `'${esc(q.trim())}'에 맞는 글이 없어요.<br>검색어를 바꿔 보세요.` : see ? '조건에 맞는 무대가 없어요.<br>필터를 바꿔 보세요.' : '아직 올라온 글이 없어요.'}</div>`;
+  if (!see) return `<div class="sec">${T.sec}</div>` + list.sort((a, b) => near(a, b) || (b.mine ? 1 : 0) - (a.mine ? 1 : 0) || key(a) - key(b)).map(evRow).join('');
+  const groups = {};
+  list.sort((a, b) => key(a) - key(b) || near(a, b)).forEach((p) => (groups[bucket(p)] = groups[bucket(p)] || []).push(p));
+  return ORDER.filter((g) => groups[g]).map((g) => `<div class="sec">${g}</div>${groups[g].map(evRow).join('')}`).join('');
 }
 function followRow(name, sub) {
   const on = following(name);
@@ -569,14 +649,17 @@ const V = {
   },
 
   home() {
+    const T = HOME_TABS[homeTab], see = homeTab === 'see';
+    const chip = (c) => `<button class="fchip ${subs.includes(c) ? 'on' : ''}" data-a="sub" data-c="${c}">${c}</button>`;
     return {
       tab: 'home',
-      body: `<div class="top"><div class="logo">쿵<b>짝</b></div><button data-a="go" data-n="tickets" aria-label="내 티켓" style="padding:6px">${icon('ticket')}</button></div>
-        <button class="hood" data-a="go" data-n="hoods">${hoodLabel()}${icon('down', 'width:22px;height:22px;color:var(--mute)')}</button>
-        <p class="lead">가까운 무대부터 보여드려요</p>
-        <input class="inp search" data-s placeholder="무대, 팀, 공간 검색" value="${esc(q)}">
-        <div class="chips">${['전체', '행사', '섭외', '협업'].map((c) => `<button class="chip ${filter === c ? 'on' : ''}" data-a="filter" data-c="${c}">${c}</button>`).join('')}</div>
-        <div class="chips" style="margin:0 0 8px">${['이번 주', '무료', '인증된 팀'].map((c) => `<button class="chip s ${subs.includes(c) ? 'on' : ''}" data-a="sub" data-c="${c}">${c}</button>`).join('')}</div>
+      body: `<div class="top2"><button class="hood" data-a="go" data-n="hoods">${hoodLabel()}${icon('down', 'width:22px;height:22px;color:var(--mute)')}</button>
+          ${searchOpen ? '' : `<button class="iconbtn" data-a="searchOpen" aria-label="검색">${icon('search')}</button>`}</div>
+        ${searchOpen ? `<div class="sbar"><label>${icon('search')}<input data-s placeholder="${T.search}" value="${esc(q)}" autocomplete="off"></label><button data-a="searchClose">취소</button></div>` : ''}
+        <div class="seg">${Object.entries(HOME_TABS).map(([k, v]) => `<button class="${homeTab === k ? 'on' : ''}" data-a="homeTab" data-t="${k}">${v.label}</button>`).join('')}</div>
+        <h2 class="ask">${T.ask}</h2>
+        ${see ? `<div class="fchips">${chip('이번 주')}${chip('무료')}${chip('인증 팀')}<button class="fchip ${genre ? 'on' : ''}" data-a="genreOpen">${genre || '장르'}${icon('down')}</button></div>`
+          : `<button class="invite" data-a="composeAs" data-t="${T.type}"><div class="tx"><b>${T.invite[0]}</b><span>${T.invite[1]}</span></div>${icon('next', 'width:20px;height:20px;color:var(--mute)')}</button>`}
         <div id="list">${listHTML()}</div>`,
     };
   },
@@ -926,6 +1009,17 @@ const A = {
   },
   saveHoods() { S.hoods = HOODS.filter((h) => flow.hoods.includes(h)); save(); flow = null; stack.pop(); render('b'); toast('내 동네를 바꿨어요'); },
   filter({ c }) { filter = c; render(); },
+  homeTab({ t }) { homeTab = t; subs = []; genre = ''; render(); },
+  searchOpen() { searchOpen = true; render(); setTimeout(() => $('[data-s]')?.focus(), 0); },
+  searchClose() { searchOpen = false; q = ''; render(); },
+  genreOpen() {
+    document.querySelector('.sheet')?.remove();
+    const s = document.createElement('div'); s.className = 'sheet'; s.dataset.a = 'closeSheet';
+    s.innerHTML = `<div class="sheet-in"><b>어떤 무대를 볼까요?</b><div class="picker">${['', ...GENRES].map((g) => `<button class="${genre === g ? 'on' : ''}" data-a="genrePick" data-g="${g}">${g || '모든 장르'}${genre === g ? icon('check', 'width:20px;height:20px') : ''}</button>`).join('')}</div></div>`;
+    $('#app').appendChild(s);
+  },
+  genrePick({ g }) { genre = g; A.closeSheet(); render(); },
+  composeAs({ t }) { A.compose(); flow.direct = true; A.type({ t }); }, // 홈 입구에서 바로 시작하면 뒤로 갈 때 홈으로
   sub({ c }) { subs = subs.includes(c) ? subs.filter((x) => x !== c) : [...subs, c]; render(); },
   tab({ n }) { flow = null; stack = [{ n }]; render(); },
   go({ n }) { flow = null; go(n); },
@@ -935,7 +1029,7 @@ const A = {
     const top = stack[stack.length - 1];
     if (['book', 'compose', 'team', 'onboard', 'cancel'].includes(top.n) && flow) {
       if (flow.i > 0 && !flow.only) { flow.i--; return render('b'); }
-      if (top.n === 'compose' && flow.type) { flow.type = null; return render('b'); }
+      if (top.n === 'compose' && flow.type && !flow.direct) { flow.type = null; return render('b'); }
     }
     flow = null; chatDraft = ''; stack.pop(); if (!stack.length) stack = [{ n: 'home' }]; render('b');
   },
@@ -1043,19 +1137,19 @@ const A = {
       p.responses = [{ by: '새벽세시', msg: '어쿠스틱 2인조예요. 그날 시간 괜찮아요. 40분 공연할 수 있어요.' }, { by: '파도소리 밴드', msg: '4인조 밴드예요. 신나는 곡 위주로 준비할게요.' }];
       notify({ title: '섭외 글에 응답 2개가 왔어요', body: p.title, to: p.id });
     }
-    S.posts.unshift(p); save(); flow = null; filter = '전체'; subs = []; q = ''; root({ n: p.type, p: { id: p.id } }); render('f');
+    S.posts.unshift(p); save(); flow = null; filter = '전체'; subs = []; q = ''; genre = ''; homeTab = { event: 'see', request: 'hire', collab: 'with' }[p.type]; root({ n: p.type, p: { id: p.id } }); render('f');
     toast(masked ? '바르지 않은 표현은 *로 가려서 올렸어요' : p.type === 'request' ? '올렸어요. 벌써 두 팀이 응답했어요' : `올렸어요. ${p.hood} 이웃의 피드에 보여요`);
   },
 
   openNoti({ id }) { const n = S.notifs.find((x) => x.id === id); n.read = true; save(); if (n.to === 'home' || !post(n.to)) { stack = [{ n: 'home' }]; return render('f'); } go(post(n.to).type, { id: n.to }); },
   toggle({ k }) { S.settings[k] = !S.settings[k]; save(); render(); },
-  reset() { try { localStorage.removeItem(KEY); } catch (e) {} S = seed(); flow = null; filter = '전체'; subs = []; q = ''; chatDraft = ''; stack = [{ n: 'onboard' }]; render('f'); },
+  reset() { try { localStorage.removeItem(KEY); } catch (e) {} S = seed(); flow = null; filter = '전체'; subs = []; homeTab = 'see'; genre = ''; searchOpen = false; q = ''; chatDraft = ''; stack = [{ n: 'onboard' }]; render('f'); },
   scene({ scene }) { if (SCENES[scene]) { A.closeSheet(); SCENES[scene](); save(); render('f'); } },
 };
 
 /* ───────── 시연 바로가기: 발표 중 장면을 바로 불러와요 ───────── */
 function demoBase() {
-  S = seed(); flow = null; filter = '전체'; subs = []; q = ''; chatDraft = '';
+  S = seed(); flow = null; filter = '전체'; subs = []; q = ''; chatDraft = ''; homeTab = 'see'; genre = ''; searchOpen = false;
   S.me = { name: '덕진동 고양이' }; S.hoods = ['덕진동', '서신동'];
   notify({ title: `이번 주 ${hoodLabel()} 가까이에서 무대 ${S.posts.filter((p) => p.type === 'event').length}개가 열려요`, body: '공연, 전시, 북토크를 모아 봤어요', to: 'home' });
 }
