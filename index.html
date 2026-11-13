@@ -247,6 +247,18 @@ textarea.inp{height:120px;padding:14px 16px;resize:none;line-height:1.5;font-wei
 .msg{max-width:78%;padding:11px 14px;border-radius:18px;font-size:15px;line-height:1.5;background:var(--soft);align-self:flex-start;white-space:pre-wrap;overflow-wrap:anywhere;animation:up .25s}
 .msg.me{align-self:flex-end;background:var(--brand-grad);color:#fff}
 .msg.sys{align-self:center;max-width:100%;background:#FFF4D6;color:#7A5200;font-size:13px;font-weight:600;border-radius:12px;text-align:center}
+.sugg{flex:none;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;padding:10px 16px 0;background:var(--bg)}
+.sugg button{max-width:100%;padding:9px 14px;border-radius:18px;font-size:14px;font-weight:600;line-height:1.4;text-align:left;color:var(--brand-ink);background:var(--brand-soft);box-shadow:inset 0 0 0 1px var(--brand);transition:transform .12s}
+.sugg button:active{transform:scale(.97)}
+.msg.typing{color:var(--sub)}
+.msg.hint{align-self:center;max-width:100%;background:none;color:var(--sub);font-size:13px;padding:2px 0;text-align:center}
+.mcard{align-self:flex-start;width:86%;border-radius:18px;background:var(--bg);box-shadow:inset 0 0 0 1px var(--line);padding:16px;display:flex;flex-direction:column;gap:10px;animation:up .25s}
+.mcard .lbl{color:var(--sub)}
+.mcard p{font-size:14px;line-height:1.5}
+.mcard .rows div{display:flex;gap:12px;font-size:14px;padding:3px 0;line-height:1.45}
+.mcard .rows span{width:48px;flex:none;color:var(--sub)}
+.mcard .rows b{font-weight:600}
+.mcard .btn.sm{width:100%;height:42px}
 .send{flex:none;display:flex;gap:8px;padding:10px 16px calc(14px + env(safe-area-inset-bottom));background:var(--bg)}
 .send .inp{height:46px;border-radius:23px;font-size:15px;font-weight:500}
 .sharePrev{display:block;width:100%;border-radius:16px;margin-top:8px;box-shadow:0 8px 24px rgba(25,31,40,.14)}
@@ -270,7 +282,9 @@ textarea.inp{height:120px;padding:14px 16px;resize:none;line-height:1.5;font-wei
       <button data-a="scene" data-scene="next"><i>3</i>관람 다음 날, 다음 무대 알림</button>
       <button data-a="scene" data-scene="hire"><i>4</i>내가 올린 섭외 글과 응답</button>
       <button data-a="scene" data-scene="dash"><i>5</i>운영 현황</button>
-      <p class="cap">키보드 숫자 1~5로도 넘어가요. 1~4는 그 장면에 맞게 처음부터 다시 채워요.</p>
+      <button data-a="scene" data-scene="collab"><i>6</i>내가 올린 협업 글과 응답</button>
+      <button data-a="chatReset"><i>↺</i>대화 처음부터</button>
+      <p class="cap">키보드 숫자 1~6으로도 넘어가요. 5를 뺀 장면은 그 장면에 맞게 처음부터 다시 채워요.</p>
     </div>
   </div>
   <div class="phone"><div id="app"></div></div>
@@ -306,6 +320,7 @@ function seed() {
       '카페 온기': { kind: '공간', hood: '덕진동', verify: 'biz', bio: '대학가 골목의 카페. 저녁에는 작은 공연을 열어요.', reviews: [] },
       '갤러리 골목': { kind: '공간', hood: '서학동', verify: null, bio: '작가가 직접 운영하는 작은 전시 공간.', reviews: [] },
       '온고을대 경영학과 학생회': { kind: '모임', hood: '효자동', verify: 'school', bio: '온고을대 경영학과 학생회예요.', reviews: [] },
+      '온고을대 문예창작 동아리': { kind: '모임', hood: '효자동', verify: 'school', bio: '온고을대 문예창작 동아리예요. 한 학기에 한 번 북토크를 열어요.', reviews: [] },
     }),
     posts: [
       { id:'e1', type:'event', genre:'공연', title:'토요일 밤 어쿠스틱 라이브', by:'새벽세시', venue:'라이브 펍 소리굴', hood:'덕진동', at: iso(nextDow(6), '20:00'),
@@ -323,12 +338,21 @@ function seed() {
         desc:'다음 달에 소리굴에서 세 팀이 함께 서는 공연을 준비하고 있어요. 장르는 가리지 않아요. 대관비는 나눠 내고 수익도 똑같이 나눠요.' },
       { id:'r2', type:'request', title:'카페 1주년, 통기타 한 팀 모셔요', by:'카페 온기', hood:'덕진동', at: iso(plusDays(25), '16:00'), place:'카페 온기',
         budget:150000, mood:'손님 20명 정도가 차 마시며 듣는 자리예요. 잔잔한 곡으로 30분.', g:3, status:'open', responses:[{by:'새벽세시', msg:'날짜 괜찮아요. 잔잔한 곡으로 준비할게요.'}] },
+      { id:'r3', type:'request', title:'동아리 북토크에 와 주실 동네 작가님을 찾아요', by:'온고을대 문예창작 동아리', hood:'효자동', at: iso(plusDays(19), '19:00'), place:'온고을대 인문관 세미나실',
+        budget:200000, mood:'20명쯤 모이는 북토크예요. 직접 쓴 책 이야기와 짧은 낭독 40분, 질문 20분이면 좋겠어요.', g:3, status:'open',
+        responses:[{by:'책방 늘보', msg:'저희 책방에서 책을 낸 동네 작가님 두 분을 연결해 드릴 수 있어요.'}] },
+      { id:'r4', type:'request', title:'카페 벽에 한 달 동안 걸 사진·그림을 찾아요', by:'카페 온기', hood:'덕진동', at: iso(plusDays(18), '12:00'), place:'카페 온기',
+        budget:100000, mood:'한 달 동안 카페 벽 네 곳에 작품을 걸어요. 판매도 할 수 있고, 첫 주 토요일에 작가와의 대화를 열고 싶어요.', g:2, status:'open',
+        responses:[{by:'골목사진모임', msg:'동네를 찍은 사진 8점쯤 걸 수 있어요. 액자도 저희가 준비할게요.'}] },
       { id:'e2', type:'event', genre:'공연', title:'새벽세시 단독 공연', by:'새벽세시', venue:'라이브 펍 소리굴', hood:'덕진동', at: iso(nextDow(6, 2), '19:00'),
         price:{mode:'flex', min:5000, rec:12000}, g:0, desc:'새 노래 네 곡을 처음 들려드려요. 최소 금액만 내고 들어와서, 좋았다면 더 얹어 주세요.' },
       { id:'e6', type:'event', genre:'북토크', title:'심야 책방: 시 읽는 밤', by:'책방 늘보', venue:'책방 늘보', hood:'서신동', at: iso(nextDow(5, 1), '21:00'),
         price:{mode:'donate'}, g:3, desc:'불을 낮추고 각자 가져온 시를 한 편씩 읽어요.' },
       { id:'c2', type:'collab', title:'사진전 닫는 날, 연주해 줄 분', by:'골목사진모임', hood:'서학동', g:2, joined:false,
         desc:'전시 마지막 날 저녁, 전시를 닫으며 작은 자리를 열어요. 20분 정도 연주해 줄 분을 찾아요. 사례는 작지만 드려요.' },
+      { id:'c3', type:'collab', title:'12월 낭독회에서 2~3곡 연주해 줄 팀을 찾아요', by:'책방 늘보', hood:'서신동', at: iso(nextDow(6, 3), '16:00'), g:3, joined:false,
+        desc:'한 해를 정리하는 낭독회를 열어요. 낭독 사이사이 2~3곡을 연주해 줄 팀을 찾아요. 입장은 무료로 하고 후원을 받아요.',
+        responses:[{by:'새벽세시', msg:'어쿠스틱 듀오예요. 잔잔한 곡 위주라 낭독회랑 잘 맞을 것 같아요.'}] },
     ],
   };
 }
@@ -507,6 +531,94 @@ const REPLIES = {
 };
 const risky = (t) => /계좌|입금|송금|이체|현금|\d{2,6}-\d{2,6}-\d{2,}/.test(t);
 const WARN = '쿵짝 밖에서 돈을 보내면 보호받을 수 없어요. 결제는 앱 안에서 해 주세요.';
+/* 채팅 대본: 추천 답장 버튼을 누르면 정해진 답이 와요 (행사 문의 · 섭외 · 협업)
+   - 한 번에 버튼 최대 2개: 곁가지(side)는 답을 듣고 같은 단계에 남고, 본 줄기(main)는 다음 단계로 가요
+   - 대본에 없는 말을 직접 치면 안내 한 줄만 붙고 상대는 답하지 않아요 */
+const hasJong = (w) => { const c = String(w).charCodeAt(String(w).length - 1) - 0xAC00; return !(c >= 0 && c <= 11171) || c % 28 > 0; };
+const iye = (w) => (hasJong(w) ? '이에요' : '예요');
+const iga = (w) => (hasJong(w) ? '이' : '가');
+const wa = (w) => (hasJong(w) ? '과' : '와');
+const before30 = (s) => { const d = parts(s).date; d.setMinutes(d.getMinutes() - 30); return fmtTime(`2000-01-01T${pad(d.getHours())}:${pad(d.getMinutes())}`); };
+const SCRIPTS = {
+  ask: {
+    match: (c, p) => c.kind === '문의' && p && p.type === 'event',
+    open: (c, p) => [`안녕하세요, ${p.by}${iye(p.by)}. '${p.title}' 궁금한 거 편하게 물어보세요.`],
+    steps: (c, p) => [
+      { side: ['혼자 가도 괜찮을까요?', '그럼요. 혼자 오시는 분도 많아요. 편한 자리로 안내해 드릴게요.'],
+        main: ['자리는 정해져 있나요?', p.at ? `자유석이에요. ${before30(p.at)}부터 들어오시면 앞자리 잡기 좋아요.` : '정해진 자리는 없어요. 편하게 둘러보시면 돼요.'] },
+      { side: ['휠체어로 들어갈 수 있나요?', `${p.venue} 입구에 계단이 두 칸 있어요. 오시기 전에 채팅 주시면 경사로를 놓아 드릴게요.`],
+        main: ['늦게 가도 들어갈 수 있나요?', p.at ? '네, 곡 사이에 자리로 안내해 드릴게요.' : '네, 문 닫기 전까지 언제든 오세요.'] },
+      { main: [p.price.mode === 'donate' ? '예약할게요!' : '예매할게요!', '기다릴게요! 끝나고 팔로우해 두시면 다음 무대 소식도 바로 알려드려요.'], then: [{ card: 'book' }] },
+    ],
+  },
+  hire: {
+    match: (c, p) => c.kind === '섭외' && c.with === '파도소리 밴드' && p && p.type === 'request' && p.mine,
+    open: () => ['안녕하세요, 파도소리 밴드예요. 4인조고, 따라 부르기 좋은 곡으로 40분 준비할 수 있어요.'],
+    steps: (c, p) => [
+      { side: ['어떤 곡 하세요?', '요즘 노래랑 2000년대 노래를 반반 섞어요. 신청곡도 2곡까지 받아요.'],
+        main: [`${when(p)}인데 가능하세요?`, '네, 가능해요. 장소가 어디예요?'] },
+      { main: [`${p.place || p.hood}${iye(p.place || p.hood)}. 스피커랑 마이크 2개는 있어요.`, '좋아요. 그럼 악기만 가져갈게요. 리허설은 30분 전에 할게요.'] },
+      { main: ['가격은 어떻게 되나요?', `40분 공연에 세팅까지 해서 ${man(p.budget)}${iye(man(p.budget))}.`] },
+      { main: ['계좌로 바로 보내드려도 될까요?', '쿵짝으로 결제해 주세요. 돈은 행사가 끝난 뒤에 저희한테 와서 서로 안심이에요.'], then: [{ card: 'quote' }] },
+    ],
+    // 견적 카드에서 '맡기기'로 결제하고 돌아오면
+    after: (c, p) => ({ now: [{ sys: true, text: `${c.with}에게 맡겼어요. 행사가 끝나면 밴드에게 전달돼요.` }], later: [{ text: `감사합니다! ${p.at ? parts(p.at).dd + '일에' : '그날'} 뵐게요.` }] }),
+  },
+  collab: {
+    match: (c, p) => c.kind === '협업' && c.with === '새벽세시' && p && p.id === 'c3' && p.mine,
+    open: () => ['안녕하세요, 새벽세시예요. 어쿠스틱 듀오고, 잔잔한 곡 위주라 낭독회랑 잘 맞을 것 같아요.'],
+    steps: (c, p) => [
+      { side: ['공간이 좁은데 괜찮으세요?', '기타 한 대랑 목소리라 앰프 없이도 돼요.'],
+        main: ['낭독 사이사이에 2~3곡 부탁드려도 될까요?', '좋아요. 낭독할 책이 정해지면 분위기에 맞춰 곡을 골라 볼게요.'] },
+      { main: [`입장은 무료로 하고, 후원금은 ${c.with}${iga(c.with)} 받는 걸로 할까요?`, '감사해요! 대신 공연 끝나고 책방 책 소개도 같이 할게요.'] },
+      { main: [`${when(p)} 어떠세요?`, `좋아요. 그날 ${before30(p.at)}까지 갈게요.`], then: [{ card: 'agree' }] },
+    ],
+    // 약속 카드에서 '함께하기'를 누르면
+    after: (c, p) => ({ now: [{ sys: true, text: '함께하기로 했어요. 두 팀 이름으로 행사 글 초안을 만들었어요.' }, { card: 'draft' }], later: [] }),
+  },
+};
+let typingChat = null;
+const scriptOf = (c) => (c && c.script ? SCRIPTS[c.script] : null);
+function scriptInit(c) {
+  const p = post(c.postId), k = Object.keys(SCRIPTS).find((x) => SCRIPTS[x].match(c, p));
+  if (!k) return false;
+  Object.assign(c, { script: k, step: 0, used: [], done: false, tok: (c.tok || 0) + 1 });
+  c.msgs = SCRIPTS[k].open(c, p).map((text) => ({ text }));
+  return true;
+}
+function suggestions(c) {
+  const sc = scriptOf(c); if (!sc || typingChat === c.id) return [];
+  const st = sc.steps(c, post(c.postId))[c.step]; if (!st) return [];
+  return [...(st.side && !c.used.includes(c.step) ? [{ k: 'side', text: st.side[0] }] : []), { k: 'main', text: st.main[0] }];
+}
+// 상대 쪽에 '입력 중…'을 1초쯤 띄웠다가 답을 붙여요
+function theyType(c, msgs, done) {
+  const tok = c.tok; typingChat = c.id; render();
+  setTimeout(() => {
+    if (c.tok !== tok || !S.chats.includes(c)) return;
+    typingChat = null; c.msgs.push(...msgs); if (done) done(); save();
+    const top = stack[stack.length - 1];
+    if (top.n === 'chat' && top.p.id === c.id) render(); else c.unread = true;
+  }, 1000);
+}
+function scriptAfter(c) {
+  const sc = scriptOf(c); if (!sc || !sc.after || c.done) return;
+  const r = sc.after(c, post(c.postId)); c.done = true; c.msgs.push(...r.now); save();
+  if (r.later.length) theyType(c, r.later); else render();
+}
+const CARD_LABEL = { book: '예매 안내', quote: '견적서', agree: '함께할 내용', draft: '행사 글 초안' };
+function chatCard(c, p, k) {
+  const rows = (l) => `<div class="rows">${l.map(([a, b]) => `<div><span>${a}</span><b>${esc(b)}</b></div>`).join('')}</div>`;
+  const btn = (label, a, extra = '') => `<button class="btn sm" ${a ? `data-a="${a}" ${extra}` : 'disabled'}>${label}</button>`;
+  if (k === 'book') return `<div class="mcard"><div class="lbl">${CARD_LABEL[k]}</div><b>${esc(p.title)}</b>${rows([['언제', when(p)], ['어디서', p.venue], ['입장료', priceText(p.price)]])}
+    ${btn(p.price.mode === 'donate' ? '예약하러 가기' : '예매하러 가기', 'book', `data-id="${p.id}"`)}</div>`;
+  if (k === 'quote') return `<div class="mcard"><div class="lbl">${esc(c.with)}의 ${CARD_LABEL[k]}</div>${rows([['언제', when(p)], ['어디서', p.place || p.hood], ['공연', '40분 · 신청곡 2곡'], ['금액', man(p.budget)]])}
+    ${p.status === 'open' ? btn('맡기기', 'choose', `data-id="${p.id}" data-by="${esc(c.with)}"`) : btn(p.chosen === c.with ? '맡겼어요' : '다른 팀에 맡겼어요')}</div>`;
+  if (k === 'agree') return `<div class="mcard"><div class="lbl">${CARD_LABEL[k]}</div>${rows([['언제', when(p)], ['어디서', p.by], ['무대', '낭독 + 연주 2~3곡'], ['입장', `무료 · 후원은 ${c.with}에게`]])}
+    ${p.chosen ? btn(p.chosen === c.with ? '함께하기로 했어요' : '다른 팀과 함께해요') : btn('함께하기', 'agree', `data-cid="${c.id}"`)}</div>`;
+  return `<div class="mcard"><div class="lbl">${CARD_LABEL[k]}</div><p>${esc(p.by)} × ${esc(c.with)} 이름으로 올릴 글을 채워 뒀어요. 확인하고 올리면 두 팀의 팔로워에게 함께 보여요.</p>${btn('초안 보기', 'draft', `data-cid="${c.id}"`)}</div>`;
+}
+const msgHTML = (c, p, m) => (m.card ? chatCard(c, p, m.card) : `<div class="msg ${m.sys ? 'sys' : m.hint ? 'hint' : m.me ? 'me' : ''}">${esc(m.text)}</div>`);
 function getChat(postId, withName, k) {
   let c = S.chats.find((x) => x.postId === postId && x.with === withName);
   if (!c) { c = { id: 'c' + S.seq++, postId, with: withName, kind: k, msgs: [], unread: false, n: 0 }; S.chats.unshift(c); }
@@ -533,11 +645,11 @@ function card(p) {
 }
 /* 홈 탭: 보러 가기(행사) / 섭외하기(섭외 글) / 함께하기(협업 글) */
 const HOME_TABS = {
-  see: { label: '보러 가기', ask: '어떤 무대를 보러 갈까요?', type: 'event', search: '공연, 팀, 공간 이름' },
+  see: { label: '보러가기', ask: '어떤 행사를 보러 갈까요?', type: 'event', search: '공연, 팀, 공간 이름' },
   hire: { label: '섭외하기', ask: '우리 행사에 어떤 팀을 부르고 싶나요?', type: 'request', search: '모임, 장소 이름',
     invite: ['섭외 글 올리기', '날짜·장소·예산을 적으면 동네 팀이 응답해요'], sec: '지금 팀을 찾는 섭외 글' },
-  with: { label: '함께하기', ask: '어떤 무대를 함께 준비하고 있나요?', type: 'collab', search: '팀 이름',
-    invite: ['협업 제안 올리기', '함께 설 팀이나 도와줄 사람을 찾아요'], sec: '함께할 팀을 찾는 글' },
+  with: { label: '함께하기', ask: '어떤 행사에 함께하고 싶으신가요?', type: 'collab', search: '팀 이름',
+    invite: ['협업 제안 올리기', '함께 공연·전시·행사할 사람을 찾아요'], sec: '함께할 팀을 찾는 글' },
 };
 // 날짜 묶음: 오늘 / 내일 / 이번 주 / 이번 주말 / 다음 주 / 그 뒤로. '이번 주'는 오늘부터 이번 일요일까지
 const DAY = 864e5, day0 = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -565,7 +677,7 @@ function dblock(p) {
 function evRow(p) {
   const line = p.type === 'event' ? [p.genre, p.at ? fmtTime(p.at) : `${fmtDay(p.end)}까지`, p.venue]
     : p.type === 'request' ? [p.by, p.place || p.hood] : [p.by, p.hood];
-  const bold = p.type === 'event' ? priceLine(p.price) : p.type === 'request' ? `예산 ${man(p.budget)} · 응답 ${p.responses.length}팀` : '함께할 팀을 찾고 있어요';
+  const bold = p.type === 'event' ? priceLine(p.price) : p.type === 'request' ? `예산 ${man(p.budget)} · 응답 ${p.responses.length}팀` : p.chosen ? `${p.chosen}${wa(p.chosen)} 함께해요` : (p.responses || []).length ? `응답 ${p.responses.length}팀` : '함께할 팀을 찾고 있어요';
   return `<button class="ev" data-a="open" data-id="${p.id}">${dblock(p)}<div class="tx"><h3>${esc(p.title)}</h3><p>${[...new Set(line.filter(Boolean))].map((x) => esc(x)).join(' · ')}</p><strong>${bold}</strong></div></button>`;
 }
 function listHTML() {
@@ -818,13 +930,16 @@ const V = {
   collab({ id }) {
     const p = post(id);
     return { nav: true, right: { label: '공유', a: 'share', id }, body: `<div class="lbl c-teal" style="margin-top:8px">협업 · ${p.hood}</div><h1 class="big" style="margin-top:6px">${esc(p.title)}</h1>
+      ${p.at ? `<dl class="info"><div><dt>언제</dt><dd>${when(p)}</dd></div><div><dt>어디서</dt><dd>${esc(p.by)}</dd></div></dl>` : ''}
       <div class="h2">내용</div><p class="body">${esc(p.desc)}</p><div class="h2">제안한 팀</div>${followRow(p.by, `${p.hood}에서 활동해요`)}
+      ${p.mine ? `<div class="h2">응답한 팀 ${(p.responses || []).length}</div>${(p.responses || []).map((r) => `<div class="row" style="align-items:flex-start"><button class="who" style="align-items:flex-start" data-a="profile" data-name="${esc(r.by)}"><div class="ava">${esc(r.by[0])}</div><div class="tx"><b>${esc(r.by)}${badge(r.by)}${p.chosen === r.by ? ' · 함께해요' : ''}</b><span>${esc(r.msg)}</span></div></button>
+          <button class="btn sm ${p.chosen ? 'on' : ''}" data-a="talk" data-id="${id}" data-by="${esc(r.by)}">대화하기</button></div>`).join('') || '<p class="cap">아직 응답이 없어요.</p>'}` : ''}
       ${p.mine ? '' : `<div style="margin-top:28px">${reportLink(p.title)}</div>`}`,
       cta: p.mine ? null : p.joined ? { label: '대화 이어가기', a: 'talk', id, by: p.by, ghost: true } : { label: '함께하고 싶어요', a: 'join', id } };
   },
 
   chats() {
-    const row = (c) => { const last = [...c.msgs].reverse().find((m) => !m.sys); return `<button class="row" data-a="chat" data-id="${c.id}"><div class="ava">${esc(c.with[0])}</div>
+    const row = (c) => { const m0 = [...c.msgs].reverse().find((m) => !m.sys && !m.hint), last = m0 && m0.card ? { text: `[${CARD_LABEL[m0.card]}]` } : m0; return `<button class="row" data-a="chat" data-id="${c.id}"><div class="ava">${esc(c.with[0])}</div>
       <div class="tx"><b>${esc(c.with)}${badge(c.with)}</b><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.kind} · ${esc(last ? last.text : '')}</span></div>${c.unread ? '<i class="ndot"></i>' : ''}</button>`; };
     return { tab: 'chats', body: `<h1 class="hood">채팅</h1><p class="lead">모든 대화는 글 하나에서 시작돼요</p><div style="margin-top:12px">${S.chats.map(row).join('')
       || '<div class="empty">아직 대화가 없어요.<br>행사에 문의하거나 섭외 글에 응답하면<br>여기에 모여요.</div>'}</div>` };
@@ -838,8 +953,9 @@ const V = {
       pin: p ? `<div class="pin"><button class="who" data-a="open" data-id="${p.id}"><div class="thumb" style="${grad(p)};width:40px;height:40px;border-radius:12px;font-size:16px">${kind(p)[0]}</div>
         <div class="tx"><span class="lbl ${kindColor(p)}">${c.kind}</span><b style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.title)}</b></div></button>
         ${canHire ? `<button class="btn sm" data-a="choose" data-id="${p.id}" data-by="${esc(c.with)}">맡기기</button>` : p.chosen === c.with ? '<span class="lbl c-teal">확정</span>' : ''}</div>` : '',
-      body: `<p class="cap" style="text-align:center;margin:8px 0 14px">결제는 쿵짝 안에서만 해 주세요.<br>돈은 행사가 끝난 뒤에 전달돼요.</p>
-        <div class="msgs">${c.msgs.map((m) => `<div class="msg ${m.sys ? 'sys' : m.me ? 'me' : ''}">${esc(m.text)}</div>`).join('')}</div>`,
+      sugg: suggestions(c),
+      body: `<p class="cap" style="text-align:center;margin:8px 0 14px">결제는 쿵짝 안에서만 해 주세요.<br>돈은 행사가 끝난 뒤에 전달돼요.${scriptOf(c) ? `<br><button class="mini" data-a="chatReset">대화 처음부터</button>` : ''}</p>
+        <div class="msgs">${c.msgs.map((m) => msgHTML(c, p, m)).join('')}${typingChat === c.id ? '<div class="msg typing">입력 중…</div>' : ''}</div>`,
     };
   },
 
@@ -893,7 +1009,7 @@ const V = {
     const hoods = hoodChips(d);
     const dt = `<div class="two">${inp('date', '날짜', '', 'type="date"')}${inp('time', '시간', '', 'type="time"')}</div>`;
     if (!T) return { nav: true, body: `<h1 class="big">어떤 글을 올릴까요?</h1>
-      ${[['event', '행', 'var(--brand-grad)', '행사 올리기', '공연·전시·북토크를 열어요. 동네 피드에 바로 보여요'], ['request', '섭', 'var(--dark)', '섭외 요청하기', '우리 모임에 와 줄 지역 아티스트를 찾아요'], ['collab', '협', 'var(--teal)', '협업 제안하기', '함께 무대를 만들 팀을 찾아요']]
+      ${[['event', '행', 'var(--brand-grad)', '행사 올리기', '공연·전시·북토크를 열어요. 동네 피드에 바로 보여요'], ['request', '섭', 'var(--dark)', '섭외 요청하기', '우리 모임에 와 줄 지역 아티스트를 찾아요'], ['collab', '협', 'var(--teal)', '협업 제안하기', '함께 공연·전시·행사할 사람을 찾아요']]
         .map((o) => `<button class="opt" data-a="type" data-t="${o[0]}"><div class="ic" style="background:${o[2]}">${o[1]}</div><div style="flex:1"><b>${o[3]}</b><span>${o[4]}</span></div></button>`).join('')}` };
     const preview = () => `<h1 class="big">이렇게 올릴까요?</h1><p class="lead">${esc(d.hood)} 이웃의 피드에 바로 보여요.</p><div style="margin-top:12px;pointer-events:none">${card(build())}</div>`;
     const steps = {
@@ -982,6 +1098,7 @@ function render(dir) {
     ${v.nav ? `<div class="nav"><button data-a="back" aria-label="뒤로">${icon('back')}</button><div class="t">${v.title || ''}</div><span class="r">${v.right ? `<button data-a="${v.right.a}" ${attrs(v.right)}>${v.right.label}</button>` : ''}</span></div>` : ''}
     ${v.prog ? `<div class="prog"><i style="width:${v.prog * 100}%"></i></div>` : ''}${v.pin || ''}
     <main class="scroll">${v.body}</main>
+    ${v.sugg && v.sugg.length ? `<div class="sugg">${v.sugg.map((x) => `<button data-a="sugg" data-k="${x.k}">${esc(x.text)}</button>`).join('')}</div>` : ''}
     ${v.send ? `<div class="send"><input id="chatIn" class="inp" placeholder="메시지 보내기" value="${esc(chatDraft)}" autocomplete="off"><button data-a="send" aria-label="보내기">${icon('up')}</button></div>` : ''}
     ${c ? `<div class="cta">${c.cap ? `<p class="cap">${c.cap}</p>` : ''}${c.alt ? `<div class="two"><button class="btn ghost" data-a="${c.alt.a}" ${attrs(c.alt)}>${c.alt.label}</button>` : ''}<button class="btn ${c.ghost ? 'ghost' : ''}" data-cta data-a="${c.a || ''}" ${attrs(c)} ${c.disabled || (curValid && !curValid()) ? 'disabled' : ''}>${c.label}</button>${c.alt ? '</div>' : ''}</div>` : ''}
     ${v.tab ? `<nav class="tabs">${tab('home', 'home', '홈')}${tab('chats', 'chat', '채팅')}<button class="plus" data-a="compose" aria-label="글 올리기"><span>${icon('plus')}</span></button>${tab('notifs', 'bell', '알림')}${tab('my', 'user', '내 정보')}</nav>` : ''}
@@ -1092,15 +1209,18 @@ const A = {
 
   /* 채팅 */
   chat({ id }) { const c = chatOf(id); if (c && c.unread) { c.unread = false; save(); } flow = null; chatDraft = ''; go('chat', { id }); },
-  ask({ id }) { const p = post(id), c = getChat(id, p.by, '문의'); save(); A.chat({ id: c.id }); },
+  ask({ id }) { const p = post(id), c = getChat(id, p.by, '문의'); if (!c.msgs.length) scriptInit(c); save(); A.chat({ id: c.id }); },
   talk({ id, by }) {
     const p = post(id), fresh = !S.chats.some((x) => x.postId === id && x.with === by), c = getChat(id, by, p.type === 'request' ? '섭외' : '협업');
-    if (fresh) { const r = (p.responses || []).find((x) => x.by === by); if (r) c.msgs.push({ text: r.msg }); }
+    if (fresh && !scriptInit(c)) { const r = (p.responses || []).find((x) => x.by === by); if (r) c.msgs.push({ text: r.msg }); }
     save(); A.chat({ id: c.id });
   },
   send() {
     const top = stack[stack.length - 1], c = chatOf(top.p.id), text = chatDraft.trim(); if (!text) return;
-    const shown = clean(text); say(c, shown); chatDraft = ''; save(); render(); reply(c); if (shown !== text) toast('바르지 않은 표현은 *로 가렸어요');
+    const shown = clean(text); say(c, shown); chatDraft = '';
+    if (scriptOf(c)) { c.msgs.push({ hint: true, text: '데모에서는 아래 추천 답장으로 대화가 이어져요.' }); save(); render(); } // 대본 채팅은 상대가 엉뚱한 답을 하지 않게
+    else { save(); render(); reply(c); }
+    if (shown !== text) toast('바르지 않은 표현은 *로 가렸어요');
   },
   respond({ id }) { flow = null; go('respond', { id }); },
   sendResponse({ id }) {
@@ -1110,7 +1230,32 @@ const A = {
   },
   join({ id }) { const p = post(id); p.joined = true; const c = getChat(id, p.by, '협업'); say(c, '안녕하세요, 함께하고 싶어요.'); save(); go('chat', { id: c.id }); reply(c); },
   choose({ id, by }) { go('hire', { id, by }); },
-  hirePay({ id, by }) { const p = post(id); p.status = 'paid'; p.chosen = by; save(); stack.pop(); render('b'); toast(`${by}에게 맡겼어요. 공연이 끝나면 전달돼요`); },
+  hirePay({ id, by }) {
+    const p = post(id); p.status = 'paid'; p.chosen = by; save(); stack.pop(); render('b'); toast(`${by}에게 맡겼어요. 공연이 끝나면 전달돼요`);
+    const c = S.chats.find((x) => x.postId === id && x.with === by); if (c && scriptOf(c)) scriptAfter(c);
+  },
+  sugg({ k }) {
+    const top = stack[stack.length - 1], c = top.n === 'chat' && chatOf(top.p.id), sc = scriptOf(c); if (!sc || typingChat) return;
+    const st = sc.steps(c, post(c.postId))[c.step]; if (!st || !st[k]) return;
+    say(c, st[k][0]); chatDraft = '';
+    if (k === 'side') { c.used.push(c.step); theyType(c, [{ text: st[k][1] }]); }
+    else theyType(c, [{ text: st[k][1] }, ...(st.then || [])], () => { c.step++; });
+  },
+  agree({ cid }) { const c = chatOf(cid), p = post(c.postId); if (p.chosen) return; p.chosen = c.with; p.joined = true; scriptAfter(c); toast(`${c.with}${wa(c.with)} 함께하기로 했어요`); },
+  draft({ cid }) {
+    const c = chatOf(cid), p = post(c.postId), [date, time] = p.at.split('T');
+    A.compose(); flow.direct = true;
+    Object.assign(flow.d, { genre: '북토크', title: '낭독과 노래가 있는 밤', by: `${p.by} × ${c.with}`, venue: p.by, hood: p.hood, date, time, mode: 'donate',
+      desc: `낭독 사이사이 ${c.with}${iga(c.with)} 2~3곡을 연주해요. 입장은 무료이고, 후원금은 ${c.with}에게 가요.` });
+    A.type({ t: 'event' });
+  },
+  chatReset() {
+    const top = stack[stack.length - 1], c = top.n === 'chat' && chatOf(top.p.id);
+    if (!scriptOf(c)) return toast('대본이 있는 채팅 화면에서 눌러 주세요');
+    const p = post(c.postId);
+    if (p && p.chosen === c.with) { p.chosen = undefined; if (p.type === 'request') p.status = 'open'; if (p.type === 'collab') p.joined = false; }
+    typingChat = null; scriptInit(c); chatDraft = ''; save(); render(); toast('대화를 처음부터 다시 시작해요');
+  },
   settle({ id }) { const p = post(id); p.status = 'settled'; notify({ title: `${p.chosen}에게 ${man(p.budget)}이 전달됐어요`, body: `${p.title} · 정산 완료`, to: id }); save(); render(); toast('공연이 끝났어요. 정산을 마쳤어요'); },
   report({ target }) { flow = null; go('report', { target }); },
   why({ w }) { flow.why = w; render(); },
@@ -1169,13 +1314,18 @@ const SCENES = {
     stack = [{ n: 'home' }, { n: 'request', p: { id: 'r1' } }];
   },
   dash() { if (!S.me) demoBase(); flow = null; stack = [{ n: 'my' }, { n: 'dash' }]; },
+  collab() {
+    demoBase(); homeTab = 'with';
+    const c = post('c3'); c.mine = true; S.teams.push(c.by);
+    stack = [{ n: 'home' }, { n: 'collab', p: { id: 'c3' } }];
+  },
 };
 
 document.addEventListener('click', (e) => { const el = e.target.closest('[data-a]'); if (!el || el.disabled) return; const f = A[el.dataset.a]; if (f) f({ ...el.dataset }); });
 document.addEventListener('keydown', (e) => {
   if (e.target.id === 'chatIn' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); A.send(); return; }
   if (/^(INPUT|TEXTAREA)$/.test(e.target.tagName) || e.altKey || e.ctrlKey || e.metaKey) return;
-  const scene = ['home', 'book', 'next', 'hire', 'dash'][Number(e.key) - 1]; if (scene) A.scene({ scene });
+  const scene = ['home', 'book', 'next', 'hire', 'dash', 'collab'][Number(e.key) - 1]; if (scene) A.scene({ scene });
 });
 document.addEventListener('input', (e) => {
   const el = e.target;
