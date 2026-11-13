@@ -258,7 +258,8 @@ function seed() {
   return {
     me: null, hoods: [], seq: 1, tickets: [], follows: [], notifs: [], chats: [], teams: [], reports: [],
     settings: { push: true, kakao: true, weekly: true },
-    profiles: {
+    // 프로토타입이 없는 객체: '__proto__', 'constructor' 같은 이름도 평범한 키로 다뤄요
+    profiles: Object.assign(Object.create(null), {
       '새벽세시': { kind: '아티스트', hood: '덕진동', verify: 'insta', bio: '통기타 두 대로 노래하는 2인조. 전주에서 5년째 무대에 서고 있어요.', reviews: [{ by: '서신동 이웃', text: '작은 공간인데 소리가 꽉 찼어요. 다음 공연도 갈게요.', title: '가을 저녁 라이브' }, { by: '효자동 이웃', text: '처음 들었는데 노래가 계속 맴돌아요.', title: '가을 저녁 라이브' }] },
       '파도소리 밴드': { kind: '아티스트', hood: '덕진동', verify: 'insta', bio: '따라 부르기 좋은 곡을 하는 4인조 밴드.', reviews: [{ by: '덕진동 이웃', text: '동아리 행사에 모셨는데 분위기가 확 살았어요.', title: '동아리 연합 행사' }] },
       '모래내 브라스': { kind: '아티스트', hood: '중앙동', verify: null, bio: '관악 5인조. 거리와 시장에서 자주 연주해요.', reviews: [] },
@@ -269,7 +270,7 @@ function seed() {
       '카페 온기': { kind: '공간', hood: '덕진동', verify: 'biz', bio: '대학가 골목의 카페. 저녁에는 작은 공연을 열어요.', reviews: [] },
       '갤러리 골목': { kind: '공간', hood: '서학동', verify: null, bio: '작가가 직접 운영하는 작은 전시 공간.', reviews: [] },
       '온고을대 경영학과 학생회': { kind: '모임', hood: '효자동', verify: 'school', bio: '온고을대 경영학과 학생회예요.', reviews: [] },
-    },
+    }),
     posts: [
       { id:'e1', type:'event', genre:'공연', title:'토요일 밤 어쿠스틱 라이브', by:'새벽세시', venue:'라이브 펍 소리굴', hood:'덕진동', at: iso(nextDow(6), '20:00'),
         price:{mode:'fixed', amount:10000}, g:0, desc:'통기타 두 대와 목소리로 채우는 한 시간. 처음 오는 분도 편하게 들을 수 있는 곡으로 골랐어요.\n음료 한 잔이 포함돼 있어요.' },
@@ -295,7 +296,13 @@ function seed() {
     ],
   };
 }
-function load() { try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.posts && s.profiles) return s; } catch (e) {} return seed(); }
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if (s && s.posts && s.profiles) { s.profiles = Object.assign(Object.create(null), s.profiles); return s; }
+  } catch (e) {}
+  return seed();
+}
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 let S = load();
 let stack = [{ n: 'home' }];
@@ -313,8 +320,9 @@ const post = (id) => S.posts.find((p) => p.id === id);
 const chatOf = (id) => S.chats.find((c) => c.id === id);
 const following = (name) => S.follows.includes(name);
 const isMine = (name) => S.teams.includes(name);
-const prof = (name) => S.profiles[name] || { kind: '', hood: '', verify: null, bio: '', reviews: [] };
-const ensureProf = (name, hood) => (S.profiles[name] = S.profiles[name] || { kind: '팀', hood: hood || '', verify: null, bio: '', reviews: [] });
+const hasProf = (name) => Object.hasOwn(S.profiles, name);
+const prof = (name) => (hasProf(name) ? S.profiles[name] : { kind: '', hood: '', verify: null, bio: '', reviews: [] });
+const ensureProf = (name, hood) => (hasProf(name) ? S.profiles[name] : (S.profiles[name] = { kind: '팀', hood: hood || '', verify: null, bio: '', reviews: [] }));
 const hoodLabel = () => (S.hoods.length > 1 ? `${S.hoods[0]} 외 ${S.hoods.length - 1}곳` : S.hoods[0]);
 const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 function parts(s) { const [d, t] = s.split('T'); const [y, m, dd] = d.split('-').map(Number); const [h, mi] = (t || '0:0').split(':').map(Number); return { y, m, dd, h, mi, day: DAYS[new Date(y, m - 1, dd).getDay()], date: new Date(y, m - 1, dd, h, mi) }; }
@@ -687,7 +695,7 @@ const V = {
 
   request({ id }) {
     const p = post(id), st = p.status, mine = !!p.mine, sent = p.responses.some((r) => r.me);
-    const tl = [['요청을 올렸어요', `${p.hood} 아티스트에게 보여요`], ['팀을 정하고 결제했어요', p.chosen ? `${p.chosen} · ${man(p.budget)}` : '대화해 보고 한 팀에게 맡겨요'], ['공연', when(p)], ['정산 완료', '공연이 끝나면 아티스트에게 전달돼요']];
+    const tl = [['요청을 올렸어요', `${p.hood} 아티스트에게 보여요`], ['팀을 정하고 결제했어요', p.chosen ? `${esc(p.chosen)} · ${man(p.budget)}` : '대화해 보고 한 팀에게 맡겨요'], ['공연', when(p)], ['정산 완료', '공연이 끝나면 아티스트에게 전달돼요']];
     const at = st === 'open' ? 0 : st === 'paid' ? 1 : 3;
     const cta = mine ? (st === 'paid' ? { label: '공연이 끝났어요', a: 'settle', id, cap: '시연용: 공연이 끝난 날로 건너뛰어요' } : null)
       : sent ? { label: '대화 이어가기', a: 'talk', id, by: p.by, ghost: true } : { label: '이 섭외에 응답하기', a: 'respond', id };
@@ -781,9 +789,9 @@ const V = {
       ${kinds.map((o) => `<button class="opt" data-a="teamKind" data-v="${o[0]}"><div class="ic" style="background:${o[2]}">${o[1]}</div><div style="flex:1"><b>${o[3]}</b><span>${o[4]}</span></div></button>`).join('')}` };
     if (i === 1) return { nav: true, prog: 2 / 3, body: `<h1 class="big">이름과 소개를<br>알려주세요</h1>
       <div class="field"><label>이름</label><input class="inp" data-f="name" placeholder="예: 파도소리 밴드" value="${esc(d.name)}" maxlength="20">${warn('name', d.name)}
-        <p id="dupHint" class="cap c-brand" style="margin-top:8px;${S.profiles[d.name.trim()] ? '' : 'display:none'}">이미 쓰고 있는 이름이에요. 다른 이름을 적어 주세요.</p></div>
+        <p id="dupHint" class="cap c-brand" style="margin-top:8px;${hasProf(d.name.trim()) ? '' : 'display:none'}">이미 쓰고 있는 이름이에요. 다른 이름을 적어 주세요.</p></div>
       <div class="field"><label>한 줄 소개</label><textarea class="inp" style="height:88px" data-f="bio" placeholder="어떤 팀인지, 어떤 곳인지 알려주세요">${esc(d.bio)}</textarea></div>${hoodChips(d)}`,
-      cta: { label: '다음', a: 'flowNext', valid: () => d.name.trim() && !S.profiles[d.name.trim()] } };
+      cta: { label: '다음', a: 'flowNext', valid: () => d.name.trim() && !hasProf(d.name.trim()) } };
     const ways = [['school', '학교 이메일로 인증', '동아리, 학생회에 맞아요', '학교 이메일', 'name@school.ac.kr'], ['insta', '인스타그램 계정 연결', '활동 기록이 있는 아티스트와 공간에 맞아요', '인스타그램 계정', '@계정 이름'], ['biz', '사업자등록번호로 확인', '가게, 공연장에 맞아요', '사업자등록번호', '000-00-00000']];
     const w = ways.find((x) => x[0] === d.verify);
     return { nav: true, prog: 1, body: `<h1 class="big">믿을 수 있는 곳임을<br>보여줄까요?</h1><p class="lead">인증하면 이름 옆에 인증 표시가 붙어요. 섭외와 예매에서 사람들이 더 안심하고 골라요.</p>
@@ -1082,7 +1090,7 @@ document.addEventListener('input', (e) => {
   flow.d[f] = el.value;
   const w = document.querySelector(`[data-warn="${f}"]`); if (w) w.hidden = !hasBad(el.value);
   if (flow.k === 'book' && f === 'custom') { flow.custom = !!el.value; flow.amount = num(el.value); document.querySelectorAll('.opt').forEach((o) => { o.classList.remove('on'); o.querySelector('.chk')?.classList.remove('on'); }); }
-  if (flow.k === 'team' && f === 'name') { const h = $('#dupHint'); if (h) h.style.display = S.profiles[el.value.trim()] ? '' : 'none'; }
+  if (flow.k === 'team' && f === 'name') { const h = $('#dupHint'); if (h) h.style.display = hasProf(el.value.trim()) ? '' : 'none'; }
   const b = $('[data-cta]'); if (b && curValid) b.disabled = !curValid();
 });
 render();
