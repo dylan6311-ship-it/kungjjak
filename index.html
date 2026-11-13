@@ -26,6 +26,18 @@ input,textarea{font:inherit;color:inherit}
 
 /* 무대(데스크톱 배치) */
 .stage{min-height:100%;display:flex;align-items:center;justify-content:center;gap:72px;padding:24px}
+/* 시연 4번: 접는 휴대폰을 펼친 화면 하나에 두 앱 (왼쪽 섭외, 오른쪽 협업) */
+.pcol{display:flex;flex-direction:column;align-items:center;gap:10px}
+.plabel{display:none;width:100%;font-size:14px;font-weight:700;color:var(--sub);align-items:center}
+.plabel span{flex:1;text-align:center}
+.plabel button{font-size:13px;font-weight:600;color:var(--sub);text-decoration:underline;text-underline-offset:3px;flex:none}
+.stage.duo{gap:40px}
+.stage.duo .plabel{display:flex}
+.phone.fold{width:min(812px,calc(100vw - 48px));height:min(780px,calc(100vh - 82px));display:flex;gap:14px;background:var(--dark);border-radius:44px}
+.phone.fold #app,.phone.fold .pane2{flex:1;min-width:0;height:100%;border-radius:30px;overflow:hidden;background:var(--bg);position:relative}
+.phone.fold .pane2 iframe{width:100%;height:100%;border:0;display:block}
+.phone.fold .hinge{position:absolute;left:50%;top:50%;width:4px;height:44px;margin:-22px 0 0 -2px;border-radius:2px;background:rgba(255,255,255,.5);z-index:2}
+@media (max-width:1240px){.stage.duo .aside{display:none}}
 .aside{max-width:320px}
 .logo{font-weight:900;letter-spacing:-.04em}
 .logo b{background:var(--brand-grad);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -280,19 +292,21 @@ textarea.inp{height:120px;padding:14px 16px;resize:none;line-height:1.5;font-wei
       <button data-a="scene" data-scene="home"><i>1</i>가입을 마친 홈</button>
       <button data-a="scene" data-scene="book"><i>2</i>공연 상세에서 예매하기</button>
       <button data-a="scene" data-scene="next"><i>3</i>관람 다음 날, 다음 무대 알림</button>
-      <button data-a="scene" data-scene="hire"><i>4</i>내가 올린 섭외 글과 응답</button>
+      <button data-a="scene" data-scene="hire"><i>4</i>섭외·협업 채팅 (두 화면)</button>
       <button data-a="scene" data-scene="dash"><i>5</i>운영 현황</button>
-      <button data-a="scene" data-scene="collab"><i>6</i>내가 올린 협업 글과 응답</button>
       <button data-a="chatReset"><i>↺</i>대화 처음부터</button>
-      <p class="cap">키보드 숫자 1~6으로도 넘어가요. 5를 뺀 장면은 그 장면에 맞게 처음부터 다시 채워요.</p>
+      <p class="cap">키보드 숫자 1~5로도 넘어가요. 5를 뺀 장면은 그 장면에 맞게 처음부터 다시 채워요.</p>
     </div>
   </div>
-  <div class="phone"><div id="app"></div></div>
+  <div class="pcol"><p class="plabel"></p><div class="phone"><div id="app"></div></div></div>
 </div>
 
 <script>
 /* ───────── 데이터 ───────── */
-const KEY = 'kungjjak-v2';
+// 페이지 원본: 시연 4번에서 같은 앱을 오른쪽 휴대폰에 한 번 더 띄울 때 써요 (그 화면은 저장 공간을 따로 써요)
+const PANE = window.PANE || '';
+const PAGE_SRC = PANE ? '' : '<!doctype html>\n' + document.documentElement.outerHTML;
+const KEY = 'kungjjak-v2' + (PANE ? '-' + PANE : '');
 const HOODS = ['덕진동', '서신동', '효자동', '서학동', '중앙동'];
 const GENRES = ['공연', '전시', '북토크', '마켓'];
 // 0번은 전주 레드→핑크, 5번은 전주 마젠타→옅은 핑크. 나머지는 행사마다 다른 포스터 색
@@ -650,19 +664,20 @@ const HOME_TABS = {
     invite: ['섭외 글 올리기', '날짜·장소·예산을 적으면 동네 팀이 응답해요'], sec: '지금 팀을 찾는 섭외 글' },
   with: { label: '함께하기', ask: '어떤 행사에 함께하고 싶으신가요?', type: 'collab', search: '팀 이름',
     invite: ['협업 제안 올리기', '함께 공연·전시·행사할 사람을 찾아요'], sec: '함께할 팀을 찾는 글' },
+  all: { label: '전체', ask: '우리 동네에 어떤 글이 올라왔을까요?', type: null, search: '행사, 섭외, 협업 글' },
 };
 // 날짜 묶음: 오늘 / 내일 / 이번 주 / 이번 주말 / 다음 주 / 그 뒤로. '이번 주'는 오늘부터 이번 일요일까지
 const DAY = 864e5, day0 = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const weekEnd = () => { const d = day0(NOW); d.setDate(d.getDate() + ((7 - d.getDay()) % 7)); return d; };
 function bucket(p) {
-  if (!p.at) return '지금 열려 있는 전시';
+  if (!p.at) return p.type === 'event' ? '지금 열려 있는 전시' : '날짜 협의';
   const d = parts(p.at).date, diff = Math.round((day0(d) - day0(NOW)) / DAY);
   if (diff === 0) return '오늘';
   if (day0(d) <= weekEnd()) return [0, 6].includes(d.getDay()) ? '이번 주말' : diff === 1 ? '내일' : '이번 주';
   if ((day0(d) - weekEnd()) / DAY <= 7) return '다음 주';
   return '그 뒤로';
 }
-const ORDER = ['오늘', '내일', '이번 주', '이번 주말', '다음 주', '그 뒤로', '지금 열려 있는 전시'];
+const ORDER = ['오늘', '내일', '이번 주', '이번 주말', '다음 주', '그 뒤로', '지금 열려 있는 전시', '날짜 협의'];
 const upcomingEv = (p) => (p.at ? parts(p.at).date >= day0(NOW) : p.end ? parts(p.end).date >= day0(NOW) : true);
 const thisWeek = (p) => (p.at ? day0(parts(p.at).date) <= weekEnd() : true); // 진행 중인 전시는 이번 주에도 볼 수 있어요
 const priceLine = (pr) => pr.mode === 'fixed' ? won(pr.amount) : pr.mode === 'flex' ? `${won(pr.min)}부터, 낼 만큼` : '무료 · 후원 가능';
@@ -677,12 +692,13 @@ function dblock(p) {
 function evRow(p) {
   const line = p.type === 'event' ? [p.genre, p.at ? fmtTime(p.at) : `${fmtDay(p.end)}까지`, p.venue]
     : p.type === 'request' ? [p.by, p.place || p.hood] : [p.by, p.hood];
+  if (homeTab === 'all' && p.type !== 'event') line.unshift(kind(p)); // 전체 탭에서는 섭외·협업 글임을 앞에 밝혀요
   const bold = p.type === 'event' ? priceLine(p.price) : p.type === 'request' ? `예산 ${man(p.budget)} · 응답 ${p.responses.length}팀` : p.chosen ? `${p.chosen}${wa(p.chosen)} 함께해요` : (p.responses || []).length ? `응답 ${p.responses.length}팀` : '함께할 팀을 찾고 있어요';
   return `<button class="ev" data-a="open" data-id="${p.id}">${dblock(p)}<div class="tx"><h3>${esc(p.title)}</h3><p>${[...new Set(line.filter(Boolean))].map((x) => esc(x)).join(' · ')}</p><strong>${bold}</strong></div></button>`;
 }
 function listHTML() {
-  const t = q.trim().toLowerCase(), T = HOME_TABS[homeTab], see = homeTab === 'see';
-  const list = S.posts.filter((p) => p.type === T.type && (!see || upcomingEv(p)))
+  const t = q.trim().toLowerCase(), T = HOME_TABS[homeTab], see = homeTab === 'see', all = homeTab === 'all';
+  const list = S.posts.filter((p) => (!T.type || p.type === T.type) && (p.type !== 'event' || upcomingEv(p)))
     .filter((p) => !see || !subs.includes('이번 주') || thisWeek(p))
     .filter((p) => !see || !subs.includes('무료') || p.price.mode === 'donate')
     .filter((p) => !see || !genre || p.genre === genre)
@@ -691,7 +707,7 @@ function listHTML() {
   const key = (p) => (p.at ? parts(p.at).date.getTime() : p.end ? parts(p.end).date.getTime() : 9e15);
   const near = (a, b) => S.hoods.includes(b.hood) - S.hoods.includes(a.hood);
   if (!list.length) return `<div class="empty">${t ? `'${esc(q.trim())}'에 맞는 글이 없어요.<br>검색어를 바꿔 보세요.` : see ? '조건에 맞는 무대가 없어요.<br>필터를 바꿔 보세요.' : '아직 올라온 글이 없어요.'}</div>`;
-  if (!see) return `<div class="sec">${T.sec}</div>` + list.sort((a, b) => near(a, b) || (b.mine ? 1 : 0) - (a.mine ? 1 : 0) || key(a) - key(b)).map(evRow).join('');
+  if (!see && !all) return `<div class="sec">${T.sec}</div>` + list.sort((a, b) => near(a, b) || (b.mine ? 1 : 0) - (a.mine ? 1 : 0) || key(a) - key(b)).map(evRow).join('');
   const groups = {};
   list.sort((a, b) => key(a) - key(b) || near(a, b)).forEach((p) => (groups[bucket(p)] = groups[bucket(p)] || []).push(p));
   return ORDER.filter((g) => groups[g]).map((g) => `<div class="sec">${g}</div>${groups[g].map(evRow).join('')}`).join('');
@@ -771,7 +787,7 @@ const V = {
         <div class="seg">${Object.entries(HOME_TABS).map(([k, v]) => `<button class="${homeTab === k ? 'on' : ''}" data-a="homeTab" data-t="${k}">${v.label}</button>`).join('')}</div>
         <h2 class="ask">${T.ask}</h2>
         ${see ? `<div class="fchips">${chip('이번 주')}${chip('무료')}${chip('인증 팀')}<button class="fchip ${genre ? 'on' : ''}" data-a="genreOpen">${genre || '장르'}${icon('down')}</button></div>`
-          : `<button class="invite" data-a="composeAs" data-t="${T.type}"><div class="tx"><b>${T.invite[0]}</b><span>${T.invite[1]}</span></div>${icon('next', 'width:20px;height:20px;color:var(--mute)')}</button>`}
+          : !T.invite ? '' : `<button class="invite" data-a="composeAs" data-t="${T.type}"><div class="tx"><b>${T.invite[0]}</b><span>${T.invite[1]}</span></div>${icon('next', 'width:20px;height:20px;color:var(--mute)')}</button>`}
         <div id="list">${listHTML()}</div>`,
     };
   },
@@ -1288,8 +1304,9 @@ const A = {
 
   openNoti({ id }) { const n = S.notifs.find((x) => x.id === id); n.read = true; save(); if (n.to === 'home' || !post(n.to)) { stack = [{ n: 'home' }]; return render('f'); } go(post(n.to).type, { id: n.to }); },
   toggle({ k }) { S.settings[k] = !S.settings[k]; save(); render(); },
-  reset() { try { localStorage.removeItem(KEY); } catch (e) {} S = seed(); flow = null; filter = '전체'; subs = []; homeTab = 'see'; genre = ''; searchOpen = false; q = ''; chatDraft = ''; stack = [{ n: 'onboard' }]; render('f'); },
-  scene({ scene }) { if (SCENES[scene]) { A.closeSheet(); SCENES[scene](); save(); render('f'); } },
+  reset() { duo(false); try { localStorage.removeItem(KEY); } catch (e) {} S = seed(); flow = null; filter = '전체'; subs = []; homeTab = 'see'; genre = ''; searchOpen = false; q = ''; chatDraft = ''; stack = [{ n: 'onboard' }]; render('f'); },
+  scene({ scene }) { if (PANE || !SCENES[scene]) return; A.closeSheet(); duo(scene === 'hire'); SCENES[scene](); save(); render('f'); },
+  duoOff() { duo(false); },
 };
 
 /* ───────── 시연 바로가기: 발표 중 장면을 바로 불러와요 ───────── */
@@ -1321,11 +1338,20 @@ const SCENES = {
   },
 };
 
+function duo(on) {
+  const stage = $('.stage'), ph = stage.querySelector('.phone');
+  stage.classList.toggle('duo', on); ph.classList.toggle('fold', on);
+  ph.querySelectorAll('.hinge,.pane2').forEach((x) => x.remove());
+  if (!on) return;
+  stage.querySelector('.plabel').innerHTML = '<span>왼쪽 · 섭외하는 학생회</span><span>오른쪽 · 협업하는 책방</span><button data-a="duoOff">한 화면으로</button>';
+  ph.insertAdjacentHTML('beforeend', '<i class="hinge"></i><div class="pane2"><iframe title="협업 화면"></iframe></div>');
+  ph.querySelector('iframe').srcdoc = PAGE_SRC.replace('<head>', '<head><script>window.PANE = "collab";<\/script>');
+}
 document.addEventListener('click', (e) => { const el = e.target.closest('[data-a]'); if (!el || el.disabled) return; const f = A[el.dataset.a]; if (f) f({ ...el.dataset }); });
 document.addEventListener('keydown', (e) => {
   if (e.target.id === 'chatIn' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); A.send(); return; }
-  if (/^(INPUT|TEXTAREA)$/.test(e.target.tagName) || e.altKey || e.ctrlKey || e.metaKey) return;
-  const scene = ['home', 'book', 'next', 'hire', 'dash', 'collab'][Number(e.key) - 1]; if (scene) A.scene({ scene });
+  if (PANE || /^(INPUT|TEXTAREA)$/.test(e.target.tagName) || e.altKey || e.ctrlKey || e.metaKey) return;
+  const scene = ['home', 'book', 'next', 'hire', 'dash'][Number(e.key) - 1]; if (scene) A.scene({ scene });
 });
 document.addEventListener('input', (e) => {
   const el = e.target;
@@ -1338,6 +1364,7 @@ document.addEventListener('input', (e) => {
   if (flow.k === 'team' && f === 'name') { const h = $('#dupHint'); if (h) h.style.display = hasProf(el.value.trim()) ? '' : 'none'; }
   const b = $('[data-cta]'); if (b && curValid) b.disabled = !curValid();
 });
+if (PANE === 'collab') { SCENES.collab(); save(); } // 오른쪽 휴대폰: 책방이 올린 협업 글에서 시작
 render();
 </script>
 </body>
