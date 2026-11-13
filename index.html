@@ -292,7 +292,7 @@ textarea.inp{height:120px;padding:14px 16px;resize:none;line-height:1.5;font-wei
       <button data-a="scene" data-scene="home"><i>1</i>가입을 마친 홈</button>
       <button data-a="scene" data-scene="book"><i>2</i>공연 상세에서 예매하기</button>
       <button data-a="scene" data-scene="next"><i>3</i>관람 다음 날, 다음 무대 알림</button>
-      <button data-a="scene" data-scene="hire"><i>4</i>섭외·협업 채팅 (두 화면)</button>
+      <button data-a="scene" data-scene="hire"><i>4</i>섭외·협업 과정 (두 화면)</button>
       <button data-a="scene" data-scene="dash"><i>5</i>운영 현황</button>
       <button data-a="chatReset"><i>↺</i>대화 처음부터</button>
       <p class="cap">키보드 숫자 1~5로도 넘어가요. 5를 뺀 장면은 그 장면에 맞게 처음부터 다시 채워요.</p>
@@ -364,9 +364,8 @@ function seed() {
         price:{mode:'donate'}, g:3, desc:'불을 낮추고 각자 가져온 시를 한 편씩 읽어요.' },
       { id:'c2', type:'collab', title:'사진전 닫는 날, 연주해 줄 분', by:'골목사진모임', hood:'서학동', g:2, joined:false,
         desc:'전시 마지막 날 저녁, 전시를 닫으며 작은 자리를 열어요. 20분 정도 연주해 줄 분을 찾아요. 사례는 작지만 드려요.' },
-      { id:'c3', type:'collab', title:'12월 낭독회에서 2~3곡 연주해 줄 팀을 찾아요', by:'책방 늘보', hood:'서신동', at: iso(nextDow(6, 3), '16:00'), g:3, joined:false,
-        desc:'한 해를 정리하는 낭독회를 열어요. 낭독 사이사이 2~3곡을 연주해 줄 팀을 찾아요. 입장은 무료로 하고 후원을 받아요.',
-        responses:[{by:'새벽세시', msg:'어쿠스틱 듀오예요. 잔잔한 곡 위주라 낭독회랑 잘 맞을 것 같아요.'}] },
+      { id:'c3', type:'collab', title:'단독 공연부터 함께할 드러머를 찾아요', by:'새벽세시', venue:'라이브 펍 소리굴', hood:'덕진동', at: iso(nextDow(6, 2), '19:00'), g:0, joined:false,
+        desc:'통기타 두 대로 하던 듀오에 드럼을 더해 3인조로 가 보려고 해요. 단독 공연부터 같이 서고, 그 뒤 정기 공연도 함께해요. 카혼이나 작은 드럼 세트를 칠 수 있으면 좋아요.' },
     ],
   };
 }
@@ -579,25 +578,30 @@ const SCRIPTS = {
     after: (c, p) => ({ now: [{ sys: true, text: `${c.with}에게 맡겼어요. 행사가 끝나면 밴드에게 전달돼요.` }], later: [{ text: `감사합니다! ${p.at ? parts(p.at).dd + '일에' : '그날'} 뵐게요.` }] }),
   },
   collab: {
-    match: (c, p) => c.kind === '협업' && c.with === '새벽세시' && p && p.id === 'c3' && p.mine,
-    open: () => ['안녕하세요, 새벽세시예요. 어쿠스틱 듀오고, 잔잔한 곡 위주라 낭독회랑 잘 맞을 것 같아요.'],
+    // 협업: 밴드에 들어가고 싶은 드러머(나)가 새벽세시의 '드러머 찾아요' 글에 연락
+    match: (c, p) => c.kind === '협업' && c.with === '새벽세시' && p && p.id === 'c3' && !p.mine,
+    open: (c) => [{ me: true, text: '안녕하세요! 드럼 친 지 6년 됐어요. 글 보고 함께하고 싶어서 연락드려요.' },
+      `반가워요, ${c.with}${iye(c.with)}! 저희가 통기타라 소리가 크지 않은데, 카혼이나 작은 세트도 괜찮으세요?`],
     steps: (c, p) => [
-      { side: ['공간이 좁은데 괜찮으세요?', '기타 한 대랑 목소리라 앰프 없이도 돼요.'],
-        main: ['낭독 사이사이에 2~3곡 부탁드려도 될까요?', '좋아요. 낭독할 책이 정해지면 분위기에 맞춰 곡을 골라 볼게요.'] },
-      { main: [`입장은 무료로 하고, 후원금은 ${c.with}${iga(c.with)} 받는 걸로 할까요?`, '감사해요! 대신 공연 끝나고 책방 책 소개도 같이 할게요.'] },
-      { main: [`${when(p)} 어떠세요?`, `좋아요. 그날 ${before30(p.at)}까지 갈게요.`], then: [{ card: 'agree' }] },
+      { side: ['연주 영상 보내 드릴까요?', '좋아요! 프로필에 올려 두시면 둘이 같이 볼게요.'],
+        main: ['네, 카혼도 쳐요. 브러시로 작게 치는 것도 익숙해요.', '딱 저희가 찾던 거예요. 연습은 일주일에 몇 번 가능하세요?'] },
+      { side: ['합주실은 어디서 하세요?', '덕진동 합주실을 시간 단위로 빌려요. 대여비는 셋이 나눠요.'],
+        main: ['평일 저녁 두 번은 괜찮아요.', `좋아요. 그럼 ${when(p)} 단독 공연에 같이 서 볼래요?`] },
+      { main: ['좋아요! 공연 수익은 어떻게 나눠요?', '셋이 똑같이 나눠요. 쿵짝에서 정산되니까 따로 계산할 필요 없어요.'], then: [{ card: 'agree' }] },
     ],
     // 약속 카드에서 '함께하기'를 누르면
-    after: (c, p) => ({ now: [{ sys: true, text: '함께하기로 했어요. 두 팀 이름으로 행사 글 초안을 만들었어요.' }, { card: 'draft' }], later: [] }),
+    after: (c, p) => ({ now: [{ sys: true, text: `${c.with}${wa(c.with)} 함께하기로 했어요. 단독 공연 소개에 이름이 함께 올라가요.` }],
+      later: [{ text: `${S.me.name} 님, 환영해요! ${firstJam()}에 합주실에서 봬요.` }, { card: 'stage' }] }),
   },
 };
 let typingChat = null;
+const JOIN_LINE = () => `\n이번 공연부터 드럼에 ${S.me ? S.me.name : ''} 님이 함께해요.`;
 const scriptOf = (c) => (c && c.script ? SCRIPTS[c.script] : null);
 function scriptInit(c) {
   const p = post(c.postId), k = Object.keys(SCRIPTS).find((x) => SCRIPTS[x].match(c, p));
   if (!k) return false;
   Object.assign(c, { script: k, step: 0, used: [], done: false, tok: (c.tok || 0) + 1 });
-  c.msgs = SCRIPTS[k].open(c, p).map((text) => ({ text }));
+  c.msgs = SCRIPTS[k].open(c, p).map((m) => (typeof m === 'string' ? { text: m } : m));
   return true;
 }
 function suggestions(c) {
@@ -620,7 +624,8 @@ function scriptAfter(c) {
   const r = sc.after(c, post(c.postId)); c.done = true; c.msgs.push(...r.now); save();
   if (r.later.length) theyType(c, r.later); else render();
 }
-const CARD_LABEL = { book: '예매 안내', quote: '견적서', agree: '함께할 내용', draft: '행사 글 초안' };
+const CARD_LABEL = { book: '예매 안내', quote: '견적서', agree: '함께할 내용', stage: '함께 설 첫 무대' };
+const firstJam = () => { const d = iso(nextDow(2), '19:30'); return `${fmtDay(d)} ${fmtTime(d)}`; }; // 첫 합주: 다음 화요일 저녁
 function chatCard(c, p, k) {
   const rows = (l) => `<div class="rows">${l.map(([a, b]) => `<div><span>${a}</span><b>${esc(b)}</b></div>`).join('')}</div>`;
   const btn = (label, a, extra = '') => `<button class="btn sm" ${a ? `data-a="${a}" ${extra}` : 'disabled'}>${label}</button>`;
@@ -628,9 +633,10 @@ function chatCard(c, p, k) {
     ${btn(p.price.mode === 'donate' ? '예약하러 가기' : '예매하러 가기', 'book', `data-id="${p.id}"`)}</div>`;
   if (k === 'quote') return `<div class="mcard"><div class="lbl">${esc(c.with)}의 ${CARD_LABEL[k]}</div>${rows([['언제', when(p)], ['어디서', p.place || p.hood], ['공연', '40분 · 신청곡 2곡'], ['금액', man(p.budget)]])}
     ${p.status === 'open' ? btn('맡기기', 'choose', `data-id="${p.id}" data-by="${esc(c.with)}"`) : btn(p.chosen === c.with ? '맡겼어요' : '다른 팀에 맡겼어요')}</div>`;
-  if (k === 'agree') return `<div class="mcard"><div class="lbl">${CARD_LABEL[k]}</div>${rows([['언제', when(p)], ['어디서', p.by], ['무대', '낭독 + 연주 2~3곡'], ['입장', `무료 · 후원은 ${c.with}에게`]])}
-    ${p.chosen ? btn(p.chosen === c.with ? '함께하기로 했어요' : '다른 팀과 함께해요') : btn('함께하기', 'agree', `data-cid="${c.id}"`)}</div>`;
-  return `<div class="mcard"><div class="lbl">${CARD_LABEL[k]}</div><p>${esc(p.by)} × ${esc(c.with)} 이름으로 올릴 글을 채워 뒀어요. 확인하고 올리면 두 팀의 팔로워에게 함께 보여요.</p>${btn('초안 보기', 'draft', `data-cid="${c.id}"`)}</div>`;
+  if (k === 'agree') return `<div class="mcard"><div class="lbl">${CARD_LABEL[k]}</div>${rows([['팀', `${p.by} · 2인조 → 3인조`], ['맡을 것', '드럼·카혼'], ['첫 합주', `${firstJam()} · 덕진동 합주실`], ['첫 무대', `${when(p)} · ${p.venue || p.hood}`], ['수익', '셋이 똑같이 나눔']])}
+    ${c.agreed ? btn('함께하기로 했어요') : btn('함께하기', 'agree', `data-cid="${c.id}"`)}</div>`;
+  const e = post('e2'); // 함께 설 첫 무대: 새벽세시 단독 공연
+  return `<div class="mcard"><div class="lbl">${CARD_LABEL[k]}</div><b>${esc(e.title)}</b>${rows([['언제', when(e)], ['어디서', e.venue], ['드럼', S.me.name]])}${btn('공연 글 보기', 'open', `data-id="${e.id}"`)}</div>`;
 }
 const msgHTML = (c, p, m) => (m.card ? chatCard(c, p, m.card) : `<div class="msg ${m.sys ? 'sys' : m.hint ? 'hint' : m.me ? 'me' : ''}">${esc(m.text)}</div>`);
 function getChat(postId, withName, k) {
@@ -661,9 +667,9 @@ function card(p) {
 const HOME_TABS = {
   see: { label: '보러가기', ask: '어떤 행사를 보러 갈까요?', type: 'event', search: '공연, 팀, 공간 이름' },
   hire: { label: '섭외하기', ask: '우리 행사에 어떤 팀을 부르고 싶나요?', type: 'request', search: '모임, 장소 이름',
-    invite: ['섭외 글 올리기', '날짜·장소·예산을 적으면 동네 팀이 응답해요'], sec: '지금 팀을 찾는 섭외 글' },
+    invite: ['섭외 제안 올리기', '날짜·장소·예산을 적으면 동네 팀이 응답해요'], sec: '지금 팀을 찾는 섭외 글' },
   with: { label: '함께하기', ask: '어떤 행사에 함께하고 싶으신가요?', type: 'collab', search: '팀 이름',
-    invite: ['협업 제안 올리기', '함께 공연·전시·행사할 사람을 찾아요'], sec: '함께할 팀을 찾는 글' },
+    invite: ['협업 제안 올리기', '함께 공연·전시·행사할 사람을 찾아요'], sec: '함께할 사람을 찾는 글' },
   all: { label: '전체', ask: '우리 동네에 어떤 글이 올라왔을까요?', type: null, search: '행사, 섭외, 협업 글' },
 };
 // 날짜 묶음: 오늘 / 내일 / 이번 주 / 이번 주말 / 다음 주 / 그 뒤로. '이번 주'는 오늘부터 이번 일요일까지
@@ -693,7 +699,7 @@ function evRow(p) {
   const line = p.type === 'event' ? [p.genre, p.at ? fmtTime(p.at) : `${fmtDay(p.end)}까지`, p.venue]
     : p.type === 'request' ? [p.by, p.place || p.hood] : [p.by, p.hood];
   if (homeTab === 'all' && p.type !== 'event') line.unshift(kind(p)); // 전체 탭에서는 섭외·협업 글임을 앞에 밝혀요
-  const bold = p.type === 'event' ? priceLine(p.price) : p.type === 'request' ? `예산 ${man(p.budget)} · 응답 ${p.responses.length}팀` : p.chosen ? `${p.chosen}${wa(p.chosen)} 함께해요` : (p.responses || []).length ? `응답 ${p.responses.length}팀` : '함께할 팀을 찾고 있어요';
+  const bold = p.type === 'event' ? priceLine(p.price) : p.type === 'request' ? `예산 ${man(p.budget)} · 응답 ${p.responses.length}팀` : p.chosen ? `${p.chosen}${wa(p.chosen)} 함께해요` : (p.responses || []).length ? `응답 ${p.responses.length}팀` : '함께할 사람을 찾고 있어요';
   return `<button class="ev" data-a="open" data-id="${p.id}">${dblock(p)}<div class="tx"><h3>${esc(p.title)}</h3><p>${[...new Set(line.filter(Boolean))].map((x) => esc(x)).join(' · ')}</p><strong>${bold}</strong></div></button>`;
 }
 function listHTML() {
@@ -946,7 +952,7 @@ const V = {
   collab({ id }) {
     const p = post(id);
     return { nav: true, right: { label: '공유', a: 'share', id }, body: `<div class="lbl c-teal" style="margin-top:8px">협업 · ${p.hood}</div><h1 class="big" style="margin-top:6px">${esc(p.title)}</h1>
-      ${p.at ? `<dl class="info"><div><dt>언제</dt><dd>${when(p)}</dd></div><div><dt>어디서</dt><dd>${esc(p.by)}</dd></div></dl>` : ''}
+      ${p.at ? `<dl class="info"><div><dt>언제</dt><dd>${when(p)}</dd></div><div><dt>어디서</dt><dd>${esc(p.venue || p.by)}</dd></div></dl>` : ''}
       <div class="h2">내용</div><p class="body">${esc(p.desc)}</p><div class="h2">제안한 팀</div>${followRow(p.by, `${p.hood}에서 활동해요`)}
       ${p.mine ? `<div class="h2">응답한 팀 ${(p.responses || []).length}</div>${(p.responses || []).map((r) => `<div class="row" style="align-items:flex-start"><button class="who" style="align-items:flex-start" data-a="profile" data-name="${esc(r.by)}"><div class="ava">${esc(r.by[0])}</div><div class="tx"><b>${esc(r.by)}${badge(r.by)}${p.chosen === r.by ? ' · 함께해요' : ''}</b><span>${esc(r.msg)}</span></div></button>
           <button class="btn sm ${p.chosen ? 'on' : ''}" data-a="talk" data-id="${id}" data-by="${esc(r.by)}">대화하기</button></div>`).join('') || '<p class="cap">아직 응답이 없어요.</p>'}` : ''}
@@ -1244,7 +1250,7 @@ const A = {
     p.responses.push({ by, msg, me: true }); const c = getChat(id, p.by, '섭외'); say(c, `${by}입니다. ${msg}`); save();
     flow = null; stack.pop(); go('chat', { id: c.id }); toast('응답을 보냈어요. 여기서 바로 조율할 수 있어요'); reply(c);
   },
-  join({ id }) { const p = post(id); p.joined = true; const c = getChat(id, p.by, '협업'); say(c, '안녕하세요, 함께하고 싶어요.'); save(); go('chat', { id: c.id }); reply(c); },
+  join({ id }) { const p = post(id); p.joined = true; const c = getChat(id, p.by, '협업'); if (!c.msgs.length && scriptInit(c)) { save(); return go('chat', { id: c.id }); } say(c, '안녕하세요, 함께하고 싶어요.'); save(); go('chat', { id: c.id }); reply(c); },
   choose({ id, by }) { go('hire', { id, by }); },
   hirePay({ id, by }) {
     const p = post(id); p.status = 'paid'; p.chosen = by; save(); stack.pop(); render('b'); toast(`${by}에게 맡겼어요. 공연이 끝나면 전달돼요`);
@@ -1257,19 +1263,18 @@ const A = {
     if (k === 'side') { c.used.push(c.step); theyType(c, [{ text: st[k][1] }]); }
     else theyType(c, [{ text: st[k][1] }, ...(st.then || [])], () => { c.step++; });
   },
-  agree({ cid }) { const c = chatOf(cid), p = post(c.postId); if (p.chosen) return; p.chosen = c.with; p.joined = true; scriptAfter(c); toast(`${c.with}${wa(c.with)} 함께하기로 했어요`); },
-  draft({ cid }) {
-    const c = chatOf(cid), p = post(c.postId), [date, time] = p.at.split('T');
-    A.compose(); flow.direct = true;
-    Object.assign(flow.d, { genre: '북토크', title: '낭독과 노래가 있는 밤', by: `${p.by} × ${c.with}`, venue: p.by, hood: p.hood, date, time, mode: 'donate',
-      desc: `낭독 사이사이 ${c.with}${iga(c.with)} 2~3곡을 연주해요. 입장은 무료이고, 후원금은 ${c.with}에게 가요.` });
-    A.type({ t: 'event' });
+  agree({ cid }) {
+    const c = chatOf(cid), p = post(c.postId), e = post('e2'); if (c.agreed) return;
+    c.agreed = true; p.joined = true;
+    if (e && !e.desc.includes(JOIN_LINE())) e.desc += JOIN_LINE(); // 단독 공연 소개에 드러머 이름을 더해요
+    scriptAfter(c); toast(`${c.with}${wa(c.with)} 함께하기로 했어요`);
   },
   chatReset() {
     const top = stack[stack.length - 1], c = top.n === 'chat' && chatOf(top.p.id);
     if (!scriptOf(c)) return toast('대본이 있는 채팅 화면에서 눌러 주세요');
     const p = post(c.postId);
-    if (p && p.chosen === c.with) { p.chosen = undefined; if (p.type === 'request') p.status = 'open'; if (p.type === 'collab') p.joined = false; }
+    if (p && p.chosen === c.with) { p.chosen = undefined; if (p.type === 'request') p.status = 'open'; }
+    if (c.agreed) { c.agreed = false; const e = post('e2'); if (e) e.desc = e.desc.replace(JOIN_LINE(), ''); }
     typingChat = null; scriptInit(c); chatDraft = ''; save(); render(); toast('대화를 처음부터 다시 시작해요');
   },
   settle({ id }) { const p = post(id); p.status = 'settled'; notify({ title: `${p.chosen}에게 ${man(p.budget)}이 전달됐어요`, body: `${p.title} · 정산 완료`, to: id }); save(); render(); toast('공연이 끝났어요. 정산을 마쳤어요'); },
@@ -1332,8 +1337,7 @@ const SCENES = {
   },
   dash() { if (!S.me) demoBase(); flow = null; stack = [{ n: 'my' }, { n: 'dash' }]; },
   collab() {
-    demoBase(); homeTab = 'with';
-    const c = post('c3'); c.mine = true; S.teams.push(c.by);
+    demoBase(); homeTab = 'with'; S.me = { name: '하람' }; // 밴드에 들어가고 싶은 드러머(가상)
     stack = [{ n: 'home' }, { n: 'collab', p: { id: 'c3' } }];
   },
 };
@@ -1343,8 +1347,8 @@ function duo(on) {
   stage.classList.toggle('duo', on); ph.classList.toggle('fold', on);
   ph.querySelectorAll('.hinge,.pane2').forEach((x) => x.remove());
   if (!on) return;
-  stage.querySelector('.plabel').innerHTML = '<span>왼쪽 · 섭외하는 학생회</span><span>오른쪽 · 협업하는 책방</span><button data-a="duoOff">한 화면으로</button>';
-  ph.insertAdjacentHTML('beforeend', '<i class="hinge"></i><div class="pane2"><iframe title="협업 화면"></iframe></div>');
+  stage.querySelector('.plabel').innerHTML = '<span>왼쪽 · 섭외 과정 예시</span><span>오른쪽 · 협업 과정 예시</span><button data-a="duoOff">이전 화면으로</button>';
+  ph.insertAdjacentHTML('beforeend', '<i class="hinge"></i><div class="pane2"><iframe title="협업 과정 예시"></iframe></div>');
   ph.querySelector('iframe').srcdoc = PAGE_SRC.replace('<head>', '<head><script>window.PANE = "collab";<\/script>');
 }
 document.addEventListener('click', (e) => { const el = e.target.closest('[data-a]'); if (!el || el.disabled) return; const f = A[el.dataset.a]; if (f) f({ ...el.dataset }); });
