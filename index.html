@@ -1105,7 +1105,7 @@ const V = {
       ${link('newTeam', '팀·공간 프로필 만들기', '', '밴드, 책방, 동아리 이름으로 글을 올릴 수 있어요')}
       ${S.follows.length ? `<div class="h2">팔로우하는 팀과 공간</div>${S.follows.map((f) => followRow(f, '새 무대를 알려드려요')).join('')}` : ''}
       ${mine.length ? `<div class="h2">내가 올린 글</div>${mine.map(card).join('')}` : ''}
-      <div class="h2">더 보기</div>${link('go', `내 티켓 ${S.tickets.length}`, 'data-n="tickets"')}${link('go', '내 동네 바꾸기', 'data-n="hoods"')}${link('go', '알림 설정', 'data-n="settings"')}${link('go', '운영 현황 보기', 'data-n="dash"')}${link('reset', '처음부터 다시 보기')}` };
+      <div class="h2">더 보기</div>${link('go', `내 티켓 ${S.tickets.length}`, 'data-n="tickets"')}${link('go', '내 동네 바꾸기', 'data-n="hoods"')}${link('go', '알림 설정', 'data-n="settings"')}${link('go', '운영 현황 보기', 'data-n="dash"')}` };
   },
 
   dash() {
