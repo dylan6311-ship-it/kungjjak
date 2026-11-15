@@ -676,9 +676,9 @@ function card(p) {
 const HOME_TABS = {
   see: { label: '보러가기', ask: '어떤 행사를 보러 갈까요?', type: 'event', search: '공연, 팀, 공간 이름' },
   hire: { label: '섭외하기', ask: '우리 행사에 어떤 팀을 부르고 싶나요?', type: 'request', search: '모임, 장소 이름',
-    invite: ['섭외 제안 올리기', '날짜·장소·예산을 적으면 동네 팀이 응답해요'], sec: '지금 팀을 찾는 섭외 글' },
+    invite: ['섭외 제안 올리기', '날짜·장소·예산을 적으면 동네 팀이 응답해요'] },
   with: { label: '함께하기', ask: '누구와 함께하고 싶으신가요?', type: 'collab', search: '팀 이름',
-    invite: ['협업 제안 올리기', '함께 공연·전시·행사해요'], sec: '팀원·팀을 구하는 글' },
+    invite: ['협업 제안 올리기', '함께 공연·전시·행사해요'] },
   all: { label: '전체', ask: '우리 동네에 어떤 글이 올라왔을까요?', type: null, search: '행사, 섭외, 협업 글' },
 };
 // 날짜 묶음: 오늘 / 내일 / 이번 주 / 이번 주말 / 다음 주 / 그 뒤로. '이번 주'는 오늘부터 이번 일요일까지
@@ -726,7 +726,7 @@ function listHTML() {
   const key = (p) => (p.at ? parts(p.at).date.getTime() : p.end ? parts(p.end).date.getTime() : 9e15);
   const near = (a, b) => S.hoods.includes(b.hood) - S.hoods.includes(a.hood);
   if (!list.length) return `<div class="empty">${t ? `'${esc(q.trim())}'에 맞는 글이 없어요.<br>검색어를 바꿔 보세요.` : see ? '조건에 맞는 무대가 없어요.<br>필터를 바꿔 보세요.' : '아직 올라온 글이 없어요.'}</div>`;
-  if (!see && !all) return `<div class="sec">${T.sec}</div>` + list.sort((a, b) => near(a, b) || (b.mine ? 1 : 0) - (a.mine ? 1 : 0) || key(a) - key(b)).map(evRow).join('');
+  if (!see && !all) return `<div style="height:10px"></div>` + list.sort((a, b) => near(a, b) || (b.mine ? 1 : 0) - (a.mine ? 1 : 0) || key(a) - key(b)).map(evRow).join('');
   const groups = {};
   list.sort((a, b) => key(a) - key(b) || near(a, b)).forEach((p) => (groups[bucket(p)] = groups[bucket(p)] || []).push(p));
   return ORDER.filter((g) => groups[g]).map((g) => `<div class="sec">${g}</div>${groups[g].map(evRow).join('')}`).join('');
