@@ -290,6 +290,12 @@ textarea.inp{height:120px;padding:14px 16px;resize:none;line-height:1.5;font-wei
 .send .inp{height:46px;border-radius:23px;font-size:15px;font-weight:500}
 .sharePrev{display:block;width:100%;border-radius:16px;margin-top:8px;box-shadow:0 8px 24px rgba(25,31,40,.14)}
 .sharePrev.story{width:58%;margin:8px auto 0}
+.copyrow{display:flex;gap:8px;margin-top:12px}.copyrow .btn{flex:1;min-width:0}
+.blogt{font-size:17px;font-weight:700;color:var(--ink);padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--line)}
+.kchat{background:var(--soft);border-radius:18px;padding:16px;margin-top:8px;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.kchat .when{align-self:center;font-size:12px;color:var(--sub);margin-bottom:2px}
+.kchat img{width:62%;border-radius:14px;display:block}
+.kchat .kb{max-width:82%;background:var(--bg);color:var(--ink);border-radius:16px 4px 16px 16px;padding:11px 14px;font-size:14px;line-height:1.55;white-space:pre-line;overflow-wrap:anywhere}
 .warn{margin-top:8px;font-size:13px;font-weight:600;color:var(--danger);line-height:1.45}
 .send button{width:46px;height:46px;border-radius:50%;background:var(--brand-grad);color:#fff;display:grid;place-items:center;flex:none}
 </style>
@@ -406,7 +412,7 @@ function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); return tru
 let S = load();
 let stack = [{ n: 'home' }];
 let flow = null, filter = '전체', subs = [], q = '', chatDraft = '', curValid = null, toastT;
-let shareFmt = 'feed', shareImg = null;
+let shareFmt = 'feed', shareImg = null, shareTo = 'insta';
 let homeTab = 'see', genre = '', searchOpen = false;
 
 /* ───────── 도우미 ───────── */
@@ -473,14 +479,14 @@ async function copyText(text) {
     document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); return ok;
   } catch (e) { return false; }
 }
-function shareSheet(text) {
+function shareSheet(text, label = '소개 글') {
   document.querySelector('.sheet')?.remove();
   const s = document.createElement('div'); s.className = 'sheet';
-  s.innerHTML = `<div class="sheet-in"><b>소개 글</b><p class="cap">이 환경에서는 자동 복사가 막혀 있어요. 글을 길게 눌러 복사해 주세요.</p>
+  s.innerHTML = `<div class="sheet-in"><b>${esc(label)}</b><p class="cap">이 환경에서는 자동 복사가 막혀 있어요. 글을 길게 눌러 복사해 주세요.</p>
     <textarea class="inp" readonly>${esc(text)}</textarea><button class="btn" data-a="closeSheet">닫기</button></div>`;
   $('#app').appendChild(s); const ta = s.querySelector('textarea'); ta.focus(); ta.select();
 }
-/* 공유: 인스타그램용 포스터 이미지와 소개 글 */
+/* 공유: 인스타그램·네이버 블로그·카카오톡용 포스터 이미지와 글 */
 const FONT = 'Pretendard, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif';
 const tok = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 function shareRows(p) {
@@ -496,6 +502,18 @@ function caption(p) {
   const tags = ['#쿵짝', '#전주' + (p.type === 'event' ? p.genre : kind(p)), '#전주' + p.hood, '#동네무대'].join(' ');
   return [head, rows, desc, `${shareFoot(p)} · ${p.by}`, tags].filter(Boolean).join('\n\n');
 }
+const blogTitle = (p) => `${p.title} | 전주 ${p.hood} ${p.type === 'event' ? p.genre : kind(p)} 소식`;
+function blogText(p) {
+  const intro = p.type === 'event' ? `전주 ${p.hood}에서 열리는 ${p.genre} 소식을 전해요.` : p.type === 'request' ? `${p.by}에서 무대에 서 줄 동네 아티스트를 찾고 있어요.` : `${p.by}에서 함께할 사람을 찾고 있어요.`;
+  const rows = shareRows(p).map(([k, v]) => `■ ${k}: ${v}`).join('\n');
+  const desc = p.type === 'request' ? p.mood : p.desc;
+  const tags = ['#쿵짝', '#전주' + (p.type === 'event' ? p.genre : kind(p)), '#전주' + p.hood, '#동네무대', '#전주가볼만한곳'].join(' ');
+  return [intro, rows, desc, `${shareFoot(p)}: 쿵짝 앱에서 '${p.title}'${eul(p.title)} 찾아보세요. (${p.by})`, tags].filter(Boolean).join('\n\n');
+}
+function kakaoText(p) {
+  return [`[쿵짝] ${p.title}`, shareRows(p).map(([k, v]) => `${k} ${v}`).join('\n'), `${shareFoot(p)}: 쿵짝 앱에서 '${p.title}'${eul(p.title)} 찾아보세요`].join('\n\n');
+}
+const SHARE_TO = [['insta', '인스타그램'], ['blog', '네이버 블로그'], ['kakao', '카카오톡']];
 function fitText(x, t, w) { if (x.measureText(t).width <= w) return t; while (t && x.measureText(t + '…').width > w) t = t.slice(0, -1); return t + '…'; }
 function wrapText(x, text, w, max) {
   const lines = []; let cur = '';
@@ -543,6 +561,13 @@ function makeShareImage(p, fmt) {
 }
 function dataFile(url, name) { const bin = atob(url.split(',')[1]), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new File([u], name, { type: 'image/png' }); }
 // 이미지를 내려받고, 글 복사가 막혔으면 글을 직접 보여줘요
+function downloadImage(img, p) { const a = document.createElement('a'); a.href = img.url; a.download = `kungjjak-${p.id}-${img.fmt}.png`; document.body.appendChild(a); a.click(); a.remove(); }
+// 휴대폰이면 공유 창(카카오톡·네이버 블로그 앱을 고를 수 있어요)을 열고, 안 되면 false
+async function shareFile(img, p, text) {
+  let file = null; try { file = dataFile(img.url, `kungjjak-${p.id}.png`); } catch (e) { return false; }
+  if (!(navigator.canShare && navigator.share && navigator.canShare({ files: [file] }))) return false;
+  try { await navigator.share({ files: [file], text, title: p.title }); return true; } catch (e) { return e && e.name === 'AbortError' ? 'cancel' : false; }
+}
 async function saveImage(img, p, copied) {
   const a = document.createElement('a'); a.href = img.url; a.download = `kungjjak-${p.id}-${img.fmt}.png`; document.body.appendChild(a); a.click(); a.remove();
   if (img.fmt === 'story') toast('이미지를 내려받았어요. 인스타그램 스토리에 올려 주세요');
@@ -810,14 +835,32 @@ const reportLink = (target) => `<button class="mini" data-a="report" data-target
 /* ───────── 화면 ───────── */
 const V = {
   insta({ id }) {
-    const p = post(id);
-    if (!shareImg || shareImg.id !== id || shareImg.fmt !== shareFmt) shareImg = makeShareImage(p, shareFmt);
+    const p = post(id), fmt = shareTo === 'insta' ? shareFmt : 'feed';
+    if (!shareImg || shareImg.id !== id || shareImg.fmt !== fmt) shareImg = makeShareImage(p, fmt);
+    const pick = `<div class="chips" style="margin-top:8px">${SHARE_TO.map(([k, l]) => `<button class="chip ${shareTo === k ? 'on' : ''}" data-a="shareTo" data-v="${k}">${l}</button>`).join('')}</div>`;
+    const img = `<img class="sharePrev ${fmt}" src="${shareImg.url}" alt="${esc(p.title)} 포스터 이미지">`;
+    if (shareTo === 'blog') return {
+      nav: true, title: '공유하기',
+      body: `${pick}<p class="lead" style="margin-top:4px">블로그에 올릴 포스터 이미지와 글을 만들었어요.</p>${img}
+        <div class="h2">블로그에 올릴 글</div><div class="box" style="white-space:pre-line;margin-top:0;color:var(--ink)"><div class="blogt">${esc(blogTitle(p))}</div>${esc(blogText(p))}</div>
+        <div class="copyrow"><button class="btn ghost" data-a="copyBlog" data-part="title" data-id="${id}">제목 복사</button><button class="btn ghost" data-a="copyBlog" data-part="body" data-id="${id}">본문 복사</button></div>
+        <p class="cap" style="margin-top:12px">휴대폰에서는 공유 창에서 네이버 블로그를 골라 주세요. PC에서는 이미지를 내려받고 본문을 복사한 뒤 블로그 글쓰기 화면을 열어요. 제목은 '제목 복사'로 따로 넣어 주세요.</p>`,
+      cta: { label: '네이버 블로그에 올리기', a: 'sendBlog', id, cap: '본문은 자동으로 복사돼요. 글쓰기 화면에 붙여 넣으세요' },
+    };
+    if (shareTo === 'kakao') return {
+      nav: true, title: '공유하기',
+      body: `${pick}<p class="lead" style="margin-top:4px">친구나 단체방에 보낼 포스터 이미지와 글을 만들었어요.</p>
+        <div class="kchat" aria-label="카카오톡에서 보이는 모양 예시"><span class="when">카카오톡 대화방에서는 이렇게 보여요</span><img src="${shareImg.url}" alt="${esc(p.title)} 포스터 이미지"><div class="kb">${esc(kakaoText(p))}</div></div>
+        <button class="btn ghost" style="margin-top:12px" data-a="copyKakao" data-id="${id}">글만 복사하기</button>
+        <p class="cap" style="margin-top:12px">휴대폰에서는 공유 창에서 카카오톡을 고르고 대화방을 고르면 돼요. PC에서는 이미지를 내려받고 글을 복사하니, 카카오톡 대화방에 붙여 넣어 주세요.</p>`,
+      cta: { label: '카카오톡으로 보내기', a: 'sendKakao', id, cap: '글은 자동으로 복사돼요' },
+    };
     const story = shareFmt === 'story'; // 스토리는 이미지만 올려요. 소개 글은 게시물용에만 붙여요
     return {
-      nav: true, title: '인스타그램에 올리기',
-      body: `<p class="lead" style="margin-top:8px">${story ? '스토리에 올릴 포스터 이미지를 만들었어요' : '포스터 이미지와 소개 글을 만들었어요'}. 아래 버튼을 누르면 인스타그램으로 바로 보낼 수 있어요.</p>
-        <div class="chips">${[['feed', '게시물용'], ['story', '스토리용']].map(([k, l]) => `<button class="chip ${shareFmt === k ? 'on' : ''}" data-a="shareFmt" data-v="${k}">${l}</button>`).join('')}</div>
-        <img class="sharePrev ${shareFmt}" src="${shareImg.url}" alt="${esc(p.title)} 포스터 이미지">
+      nav: true, title: '공유하기',
+      body: `${pick}<p class="lead" style="margin-top:4px">${story ? '스토리에 올릴 포스터 이미지를 만들었어요' : '포스터 이미지와 소개 글을 만들었어요'}. 아래 버튼을 누르면 인스타그램으로 바로 보낼 수 있어요.</p>
+        <div class="chips" style="margin-top:4px">${[['feed', '게시물용'], ['story', '스토리용']].map(([k, l]) => `<button class="chip s ${shareFmt === k ? 'on' : ''}" data-a="shareFmt" data-v="${k}">${l}</button>`).join('')}</div>
+        ${img}
         ${story ? '' : `<div class="h2">함께 올릴 글</div><div class="box" style="white-space:pre-line;margin-top:0;color:var(--ink)">${esc(caption(p))}</div>
         <button class="btn ghost" style="margin-top:12px" data-a="copyCap" data-id="${id}">글만 복사하기</button>`}
         <p class="cap" style="margin-top:12px">휴대폰에서는 공유 창이 열려요. PC에서는 이미지를 내려받으니, 인스타그램에서 ${story ? '스토리' : '새 게시물'}로 올려 주세요. 내려받기가 안 되면 이미지를 길게 누르거나 오른쪽 클릭해 저장하세요.</p>`,
@@ -1254,6 +1297,36 @@ const A = {
     shareImg = null; go('insta', { id });
   },
   shareFmt({ v }) { shareFmt = v; render(); },
+  shareTo({ v }) { shareTo = v; render(); },
+  async copyBlog({ id, part }) {
+    const p = post(id), t = part === 'title' ? blogTitle(p) : blogText(p), what = part === 'title' ? '제목' : '본문';
+    if (await copyText(t)) toast(`${what}을 복사했어요. 블로그 글쓰기 화면에 붙여 넣어 주세요`); else shareSheet(t, `블로그 ${what}`);
+  },
+  async copyKakao({ id }) {
+    const t = kakaoText(post(id));
+    if (await copyText(t)) toast('글을 복사했어요. 카카오톡 대화방에 붙여 넣어 주세요'); else shareSheet(t, '카카오톡에 보낼 글');
+  },
+  async sendBlog({ id }) {
+    const p = post(id), img = shareImg, text = blogText(p);
+    const copied = copyText(text); // 누른 순간에 복사를 시작해야 브라우저가 허락해요
+    const r = await shareFile(img, p, text);
+    if (r === true) return toast('블로그 앱에서 글을 붙여 넣고 올려 주세요');
+    if (r === 'cancel') return;
+    downloadImage(img, p);
+    let w = null; try { w = window.open('https://blog.naver.com/GoBlogWrite.naver', '_blank'); if (w) w.opener = null; } catch (e) {}
+    if (!(await copied)) return shareSheet(text, '블로그 본문');
+    toast(w ? '이미지를 내려받고 본문을 복사했어요. 새 창의 블로그 글쓰기에 붙여 넣어 주세요' : '이미지를 내려받고 본문을 복사했어요. 네이버 블로그 글쓰기에 붙여 넣어 주세요');
+  },
+  async sendKakao({ id }) {
+    const p = post(id), img = shareImg, text = kakaoText(p);
+    const copied = copyText(text);
+    const r = await shareFile(img, p, text);
+    if (r === true) return toast('보냈어요. 카카오톡에서 대화방을 골라 주세요');
+    if (r === 'cancel') return;
+    downloadImage(img, p);
+    if (!(await copied)) return shareSheet(text, '카카오톡에 보낼 글');
+    toast('이미지를 내려받고 글을 복사했어요. 카카오톡 대화방에 붙여 넣어 주세요');
+  },
   async copyCap({ id }) {
     const t = caption(post(id));
     if (await copyText(t)) toast('글을 복사했어요. 인스타그램이나 카카오톡에 붙여 넣어 보세요'); else shareSheet(t);
