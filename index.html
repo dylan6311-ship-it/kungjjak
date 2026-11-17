@@ -385,7 +385,7 @@ function seed() { return fillGal(seedBase()); }
 function seedBase() {
   return {
     me: null, hoods: [], seq: 1, tickets: [], follows: [], notifs: [], chats: [], teams: [], reports: [],
-    settings: { push: true, kakao: true, weekly: true, follow: true },
+    settings: { push: true, kakao: true, weekly: true, follow: true, followCollab: true, followRequest: true },
     // 프로토타입이 없는 객체: '__proto__', 'constructor' 같은 이름도 평범한 키로 다뤄요
     profiles: Object.assign(Object.create(null), {
       '새벽세시': { kind: '아티스트', hood: '덕진동', verify: 'insta', bio: '통기타 두 대로 노래하는 2인조. 전주에서 5년째 무대에 서고 있어요.', reviews: [{ by: '서신동 이웃', text: '작은 공간인데 소리가 꽉 찼어요. 다음 공연도 갈게요.', title: '가을 저녁 라이브' }, { by: '효자동 이웃', text: '처음 들었는데 노래가 계속 맴돌아요.', title: '가을 저녁 라이브' }] },
@@ -454,7 +454,7 @@ const DEMO_GAL = {
 function load() {
   try {
     const s = JSON.parse(localStorage.getItem(KEY));
-    if (s && s.posts && s.profiles) { s.profiles = Object.assign(Object.create(null), s.profiles); if (s.settings && s.settings.follow === undefined) s.settings.follow = true; return fillGal(s); }
+    if (s && s.posts && s.profiles) { s.profiles = Object.assign(Object.create(null), s.profiles); if (s.settings) ['follow', 'followCollab', 'followRequest'].forEach((k) => { if (s.settings[k] === undefined) s.settings[k] = true; }); return fillGal(s); }
   } catch (e) {}
   return seed();
 }
@@ -1398,9 +1398,13 @@ const V = {
     return { nav: true, title: '알림 설정', body: `<div class="h2" style="margin-top:12px">어디로 받을까요?</div>
       ${sw('push', '앱 알림', '쿵짝 앱에서 알려드려요')}${sw('kakao', '카카오톡', '앱을 열지 않아도 받을 수 있어요')}
       <div class="h2">얼마나 자주 받을까요?</div>
-      ${sw('follow', '팔로우한 팀의 새 무대', '새 공연·전시가 올라오면 바로 알려드려요')}
       ${sw('weekly', '우리 동네 무대 모아 보기', '일주일에 한 번, 묶어서 알려드려요')}
-      <div class="box"><b>이번 주 ${S.hoods.join('·')} 무대</b><br>${S.posts.filter((p) => p.type === 'event' && shown(p)).sort((a, b) => S.hoods.includes(b.hood) - S.hoods.includes(a.hood)).slice(0, 3).map((p) => `· ${esc(p.title)} (${when(p)})`).join('<br>')}<br><span class="cap">매주 이런 모양으로 도착해요</span></div>` };
+      <div class="box" style="margin-top:4px"><b>이번 주 ${S.hoods.join('·')} 무대</b><br>${S.posts.filter((p) => p.type === 'event' && shown(p)).sort((a, b) => S.hoods.includes(b.hood) - S.hoods.includes(a.hood)).slice(0, 3).map((p) => `· ${esc(p.title)} (${when(p)})`).join('<br>')}<br><span class="cap">매주 이런 모양으로 도착해요</span></div>
+      <div class="h2">팔로우한 팀·공간이 글을 올리면</div>
+      <p class="cap" style="margin:-4px 0 4px">받고 싶은 글 종류만 켜 두세요. 올라오는 대로 바로 알려드려요.</p>
+      ${sw('follow', '새 행사', '공연·전시·북토크·마켓')}
+      ${sw('followCollab', '함께하기 제안', '팀원을 구하거나 함께할 팀을 찾는 글')}
+      ${sw('followRequest', '섭외 요청', '무대에 설 아티스트를 찾는 글')}` };
   },
 
   my() {
@@ -1681,13 +1685,18 @@ const A = {
       notify({ title: '섭외 글에 응답 2개가 왔어요', body: p.title, to: p.id });
     }
     // 팔로우한 팀이나 공간이 새 행사를 올리면 팔로워에게 바로 알려요 (알림 설정에서 끌 수 있어요)
-    const fans = p.type === 'event' && S.settings.follow !== false ? [p.by, p.venue].filter((n, i, a) => n && a.indexOf(n) === i && following(n)) : [];
+    const FOLLOW_KEY = { event: 'follow', collab: 'followCollab', request: 'followRequest' };
+    const fans = S.settings[FOLLOW_KEY[p.type]] !== false ? (p.type === 'event' ? [p.by, p.venue] : [p.by]).filter((n, i, a) => n && a.indexOf(n) === i && following(n)) : [];
     if (fans.length) {
       const who = fans[0], ga = (w) => (bat(w) ? '이' : '가');
-      notify({ title: who === p.by ? `팔로우한 ${who}${ga(who)} 새 ${p.genre}${eul(p.genre)} 올렸어요` : `팔로우한 ${who}에서 새 ${p.genre}${ga(p.genre)} 열려요`, body: `${p.title} · ${when(p)}`, to: p.id });
+      const title = p.type === 'event' ? (who === p.by ? `팔로우한 ${who}${ga(who)} 새 ${p.genre}${eul(p.genre)} 올렸어요` : `팔로우한 ${who}에서 새 ${p.genre}${ga(p.genre)} 열려요`)
+        : p.type === 'collab' ? `팔로우한 ${who}${ga(who)} ${seekOf(p) === 'member' ? '함께할 팀원을' : '함께할 팀을'} 찾아요`
+        : `팔로우한 ${who}${ga(who)} 섭외 요청을 올렸어요`;
+      const body = p.type === 'request' ? `${p.title} · 예산 ${man(p.budget)}` : p.at ? `${p.title} · ${when(p)}` : p.title;
+      notify({ title, body, to: p.id });
     }
     S.posts.unshift(p); save(); flow = null; filter = '전체'; subs = []; q = ''; genre = ''; homeTab = { event: 'see', request: 'hire', collab: 'with' }[p.type]; root({ n: p.type, p: { id: p.id } }); render('f');
-    toast(masked ? '바르지 않은 표현은 *로 가려서 올렸어요' : fans.length ? `올렸어요. ${fans[0]}${eul(fans[0])} 팔로우한 사람에게 알림을 보냈어요` : p.type === 'request' ? '올렸어요. 벌써 두 팀이 응답했어요' : `올렸어요. ${p.hood} 이웃의 피드에 보여요`);
+    toast(masked ? '바르지 않은 표현은 *로 가려서 올렸어요' : fans.length ? `올렸어요. ${p.type === 'request' ? '두 팀이 벌써 응답했고, ' : ''}${fans[0]}${eul(fans[0])} 팔로우한 사람에게 알림을 보냈어요` : p.type === 'request' ? '올렸어요. 벌써 두 팀이 응답했어요' : `올렸어요. ${p.hood} 이웃의 피드에 보여요`);
   },
 
   openNoti({ id }) { const n = S.notifs.find((x) => x.id === id); n.read = true; save(); if (n.to === 'home' || !post(n.to)) { stack = [{ n: 'home' }]; return render('f'); } go(post(n.to).type, { id: n.to }); },
