@@ -67,6 +67,7 @@ input,textarea{font:inherit;color:inherit}
 .nav .r{min-width:44px;display:flex;justify-content:flex-end}
 .nav .r button{width:auto;padding:0 12px;font-size:15px;font-weight:600;color:var(--sub)}
 /* 공유 버튼: 전주 색으로 눈에 띄게 (옅은 핑크 바탕 + 레드 글씨, 대비 약 7:1) */
+.nav .r button:disabled{color:var(--mute);cursor:default}
 .nav .r button.share{height:34px;margin-right:6px;padding:0 13px 0 10px;border-radius:17px;display:flex;align-items:center;gap:4px;background:var(--brand-soft);color:var(--brand-ink);font-weight:700;box-shadow:inset 0 0 0 1px var(--brand)}
 .nav .r button.share svg{width:18px;height:18px;stroke-width:2.2}
 .prog{height:3px;background:var(--soft);margin:0 20px;border-radius:3px;overflow:hidden;flex:none}
@@ -721,7 +722,7 @@ function evRow(p) {
 }
 function listHTML() {
   const t = q.trim().toLowerCase(), T = HOME_TABS[homeTab], see = homeTab === 'see', all = homeTab === 'all';
-  const list = S.posts.filter((p) => (!T.type || p.type === T.type) && (p.type !== 'event' || upcomingEv(p)))
+  const list = S.posts.filter(shown).filter((p) => (!T.type || p.type === T.type) && (p.type !== 'event' || upcomingEv(p)))
     .filter((p) => !see || !subs.includes('이번 주') || thisWeek(p))
     .filter((p) => !see || !subs.includes('무료') || p.price.mode === 'donate')
     .filter((p) => !see || !genre || p.genre === genre)
@@ -757,6 +758,17 @@ const bat = (w) => (w.charCodeAt(w.length - 1) - 0xAC00) % 28 > 0;
 const CANCEL_WHY = ['일정이 생겨서 갈 수 없어요', '함께 가는 인원이 바뀌었어요', '실수로 예매했어요', '다른 날짜로 다시 예매할게요', '기타'];
 // 무료 예약이면 고르는 화면처럼 '예매'를 '예약'으로 바꿔 저장해요
 const cancelWhy = () => (flow.why === '기타' ? clean(flow.d.etc.trim()) : S.tickets.find((x) => x.id === flow.id).total ? flow.why : flow.why.replace('예매', '예약'));
+/* 신고: 글 종류마다 맞는 사유를 보여주고, 신고한 글은 내 피드에서 숨겨요 */
+const REPORT_WHY = {
+  event: ['실제로 열리지 않는 행사 같아요', '날짜·장소·입장료가 사실과 달라요', '앱 밖에서 돈을 보내 달라고 해요', '불쾌하거나 부적절한 내용이 있어요'],
+  request: ['실제 섭외가 아닌 홍보·광고 글이에요', '예산이나 조건이 사실과 달라요', '앱 밖에서 돈을 보내 달라고 해요', '불쾌하거나 부적절한 내용이 있어요'],
+  collab: ['함께할 생각이 없는 홍보·광고 글이에요', '사칭하거나 거짓 정보를 올렸어요', '앱 밖에서 돈을 보내 달라고 해요', '불쾌하거나 부적절한 내용이 있어요'],
+  person: ['사칭하거나 거짓 정보를 올렸어요', '앱 밖에서 돈을 보내 달라고 해요', '불쾌한 말을 해요', '원하지 않는 연락을 계속 보내요'],
+};
+const reported = (p) => S.reports.some((r) => r.postId === p.id);
+const shown = (p) => !reported(p);
+const postRight = (p) => [...(p.mine ? [] : [reported(p) ? { label: '신고함', a: 'report', disabled: true } : { label: '신고', a: 'report', id: p.id, target: p.title }]), { label: '공유', a: 'share', id: p.id }];
+const reportedBox = (p) => (reported(p) ? `<div class="box" style="margin-top:14px"><b>신고한 글이에요.</b> 내 피드에서는 숨겼고, 운영진이 확인하고 있어요.</div>` : '');
 const reportLink = (target) => `<button class="mini" data-a="report" data-target="${esc(target)}">신고하기</button>`;
 
 /* ───────── 화면 ───────── */
@@ -821,8 +833,8 @@ const V = {
     const free = p.price.mode === 'donate', seats = open.reduce((n, x) => n + x.qty, 0);
     const mine = ts.length > 1 ? { label: `내 티켓 ${ts.length}장`, a: 'go', n: 'tickets' } : ts.length ? { label: '내 티켓 보기', a: 'ticket', id: ts[0].id } : null;
     return {
-      nav: true, right: { label: '공유', a: 'share', id },
-      body: `<div class="poster" style="${grad(p)}"><small>${p.genre} · ${p.hood}</small><h1>${esc(p.title)}</h1></div>
+      nav: true, right: postRight(p),
+      body: `<div class="poster" style="${grad(p)}"><small>${p.genre} · ${p.hood}</small><h1>${esc(p.title)}</h1></div>${reportedBox(p)}
         <dl class="info"><div><dt>언제</dt><dd>${when(p)}</dd></div><div><dt>어디서</dt><dd>${esc(p.venue)}</dd></div>
         <div><dt>입장료</dt><dd>${p.price.mode === 'fixed' ? won(p.price.amount) : p.price.mode === 'flex' ? `${won(p.price.min)}부터, 낼 만큼` : '무료, 끝난 뒤 앱에서 후원'}</dd></div></dl>
         <div class="h2">소개</div><p class="body">${esc(p.desc || '소개가 아직 없어요.')}</p>
@@ -830,7 +842,7 @@ const V = {
         ${p.venue && p.venue !== p.by ? followRow(p.venue, `${p.hood}의 공간`) : ''}
         ${p.mine ? '' : `<button class="btn ghost" style="margin-top:12px" data-a="ask" data-id="${id}">${esc(p.by)}에게 문의하기</button>`}
         ${revs.length ? `<div class="h2">다녀온 사람들의 한마디</div>${revs.slice(0, 2).map(reviewHTML).join('')}<p class="cap" style="margin-top:10px">${esc(p.by)}의 무대를 예매하고 본 사람만 남길 수 있어요.</p>` : ''}
-        ${p.mine ? '' : `<div style="margin-top:28px">${reportLink(p.title)}</div>`}`,
+`,
       cta: !ts.length ? { label: free ? '무료로 예약하기' : '예매하기', a: 'book', id }
         : !open.length ? { ...mine, ghost: true }
         : { label: free ? '추가로 예약하기' : '추가 예매하기', a: 'book', id, alt: mine, cap: `이미 ${seats}명 ${free ? '예약' : '예매'}해 뒀어요` },
@@ -936,8 +948,8 @@ const V = {
     const cta = mine ? (st === 'paid' ? { label: '공연이 끝났어요', a: 'settle', id, cap: '시연용: 공연이 끝난 날로 건너뛰어요' } : null)
       : sent ? { label: '대화 이어가기', a: 'talk', id, by: p.by, ghost: true } : { label: '이 섭외에 응답하기', a: 'respond', id };
     return {
-      nav: true, right: { label: '공유', a: 'share', id },
-      body: `<div class="lbl c-dark" style="margin-top:8px">섭외 · ${p.hood}</div><h1 class="big" style="margin-top:6px">${esc(p.title)}</h1>
+      nav: true, right: postRight(p),
+      body: `<div class="lbl c-dark" style="margin-top:8px">섭외 · ${p.hood}</div><h1 class="big" style="margin-top:6px">${esc(p.title)}</h1>${reportedBox(p)}
         ${followRow(p.by, prof(p.by).kind || '요청한 곳')}
         <dl class="info"><div><dt>언제</dt><dd>${when(p)}</dd></div><div><dt>어디서</dt><dd>${esc(p.place || p.hood)}</dd></div><div><dt>예산</dt><dd>${man(p.budget)}</dd></div></dl>
         <div class="h2">이런 무대를 원해요</div><p class="body">${esc(p.mood)}</p>
@@ -945,7 +957,7 @@ const V = {
         <div class="h2" style="${mine ? 'margin-top:12px' : ''}">응답한 팀 ${p.responses.length}</div>
         ${p.responses.map((r) => `<div class="row" style="align-items:flex-start"><button class="who" style="align-items:flex-start" data-a="profile" data-name="${esc(r.by)}"><div class="ava">${esc(r.by[0])}</div><div class="tx"><b>${esc(r.by)}${badge(r.by)}${p.chosen === r.by ? ' · 확정' : ''}</b><span>${esc(r.msg)}</span></div></button>
           ${mine ? `<button class="btn sm ${st === 'open' ? '' : 'on'}" data-a="talk" data-id="${id}" data-by="${esc(r.by)}">대화하기</button>` : ''}</div>`).join('') || '<p class="cap">아직 응답이 없어요.</p>'}
-        ${mine ? '' : `<div style="margin-top:28px">${reportLink(p.title)}</div>`}`,
+`,
       cta,
     };
   },
@@ -969,12 +981,12 @@ const V = {
 
   collab({ id }) {
     const p = post(id);
-    return { nav: true, right: { label: '공유', a: 'share', id }, body: `<div class="lbl c-teal" style="margin-top:8px">협업 · ${SEEK[seekOf(p)][1]} · ${p.hood}</div><h1 class="big" style="margin-top:6px">${esc(p.title)}</h1>
+    return { nav: true, right: postRight(p), body: `<div class="lbl c-teal" style="margin-top:8px">협업 · ${SEEK[seekOf(p)][1]} · ${p.hood}</div><h1 class="big" style="margin-top:6px">${esc(p.title)}</h1>${reportedBox(p)}
       ${p.at ? `<dl class="info"><div><dt>언제</dt><dd>${when(p)}</dd></div><div><dt>어디서</dt><dd>${esc(p.venue || p.by)}</dd></div></dl>` : ''}
       <div class="h2">내용</div><p class="body">${esc(p.desc)}</p><div class="h2">${seekOf(p) === 'team' ? '올린 사람' : '제안한 팀'}</div>${followRow(p.by, `${p.hood}에서 활동해요`)}
       ${p.mine ? `<div class="h2">응답한 팀 ${(p.responses || []).length}</div>${(p.responses || []).map((r) => `<div class="row" style="align-items:flex-start"><button class="who" style="align-items:flex-start" data-a="profile" data-name="${esc(r.by)}"><div class="ava">${esc(r.by[0])}</div><div class="tx"><b>${esc(r.by)}${badge(r.by)}${p.chosen === r.by ? ' · 함께해요' : ''}</b><span>${esc(r.msg)}</span></div></button>
           <button class="btn sm ${p.chosen ? 'on' : ''}" data-a="talk" data-id="${id}" data-by="${esc(r.by)}">대화하기</button></div>`).join('') || '<p class="cap">아직 응답이 없어요.</p>'}` : ''}
-      ${p.mine ? '' : `<div style="margin-top:28px">${reportLink(p.title)}</div>`}`,
+`,
       cta: p.mine ? null : p.joined ? { label: '대화 이어가기', a: 'talk', id, by: p.by, ghost: true } : { label: '함께하고 싶어요', a: 'join', id } };
   },
 
@@ -999,17 +1011,20 @@ const V = {
     };
   },
 
-  report({ target }) {
-    if (!flow || flow.k !== 'report') flow = { k: 'report', why: null };
-    return { nav: true, body: `<h1 class="big">무엇이 문제인가요?</h1><p class="lead">'${esc(target)}'에 대한 신고예요. 운영진이 확인하고, 상대에게는 알리지 않아요.</p>
-      <div style="margin-top:16px">${['실제로 열리지 않는 행사 같아요', '앱 밖에서 돈을 보내 달라고 해요', '사칭하거나 거짓 정보를 올렸어요', '불쾌한 말을 해요'].map((w) => `<button class="opt ${flow.why === w ? 'on' : ''}" data-a="why" data-w="${w}"><div style="flex:1"><b style="font-size:16px">${w}</b></div>${chk(flow.why === w)}</button>`).join('')}</div>`,
-      cta: { label: '신고하기', a: 'sendReport', target, disabled: !flow.why } };
+  report({ target, id }) {
+    if (!flow || flow.k !== 'report') flow = { k: 'report', why: null, d: { etc: '' } };
+    const p = id ? post(id) : null, list = [...REPORT_WHY[p ? p.type : 'person'], '기타'];
+    return { nav: true, body: `<h1 class="big">무엇이 문제인가요?</h1><p class="lead">${p ? `'${esc(target)}' 글` : `'${esc(target)}'`}에 대한 신고예요. 운영진이 확인하고, 상대에게는 알리지 않아요.</p>
+      <div style="margin-top:16px">${list.map((w) => `<button class="opt ${flow.why === w ? 'on' : ''}" data-a="why" data-w="${w}"><div style="flex:1"><b style="font-size:16px">${w === '기타' ? '기타 (직접 적기)' : w}</b></div>${chk(flow.why === w)}</button>`).join('')}</div>
+      ${flow.why === '기타' ? `<div class="field"><label>신고하는 이유</label><textarea class="inp" style="height:88px" data-f="etc" placeholder="어떤 점이 문제인지 짧게 적어 주세요" maxlength="100">${esc(flow.d.etc)}</textarea></div>` : ''}
+      ${p ? '<p class="cap" style="margin-top:16px">신고한 글은 바로 내 피드에서 사라져요.</p>' : ''}`,
+      cta: { label: '신고하기', a: 'sendReport', target, id: id || '', valid: () => flow.why && (flow.why !== '기타' || flow.d.etc.trim()) } };
   },
 
   profile({ name }) {
     const pr = prof(name), mine = isMine(name), on = following(name);
     const upcoming = (p) => !S.tickets.some((t) => t.postId === p.id && t.attended) && (p.at ? parts(p.at).date >= NOW : p.end ? parts(p.end).date >= NOW : true);
-    const ev = S.posts.filter((p) => p.type === 'event' && (p.by === name || p.venue === name) && upcoming(p)), etc = S.posts.filter((p) => p.type !== 'event' && p.by === name);
+    const ev = S.posts.filter((p) => p.type === 'event' && (p.by === name || p.venue === name) && upcoming(p) && shown(p)), etc = S.posts.filter((p) => p.type !== 'event' && p.by === name && shown(p));
     return { nav: true, body: `<div style="text-align:center;padding-top:8px"><div class="ava" style="width:76px;height:76px;font-size:30px;margin:0 auto 14px">${esc(name[0])}</div>
         <h1 class="big" style="margin:0">${esc(name)}${badge(name)}</h1><p class="lead">${[pr.kind, pr.hood].filter(Boolean).join(' · ') || '쿵짝 이웃'}</p>
         ${pr.verify ? `<p class="cap c-teal" style="font-weight:600;margin-top:6px">${VERIFY[pr.verify]}을 마쳤어요</p>` : `<p class="cap" style="margin-top:6px">아직 인증하지 않았어요</p>`}</div>
@@ -1097,7 +1112,7 @@ const V = {
       <div class="h2">얼마나 자주 받을까요?</div>
       <div class="row"><div class="tx"><b>팔로우한 팀의 새 무대</b><span>잡히는 대로 바로 알려드려요</span></div></div>
       ${sw('weekly', '우리 동네 무대 모아 보기', '일주일에 한 번, 묶어서 알려드려요')}
-      <div class="box"><b>이번 주 ${S.hoods.join('·')} 무대</b><br>${S.posts.filter((p) => p.type === 'event').sort((a, b) => S.hoods.includes(b.hood) - S.hoods.includes(a.hood)).slice(0, 3).map((p) => `· ${esc(p.title)} (${when(p)})`).join('<br>')}<br><span class="cap">매주 이런 모양으로 도착해요</span></div>` };
+      <div class="box"><b>이번 주 ${S.hoods.join('·')} 무대</b><br>${S.posts.filter((p) => p.type === 'event' && shown(p)).sort((a, b) => S.hoods.includes(b.hood) - S.hoods.includes(a.hood)).slice(0, 3).map((p) => `· ${esc(p.title)} (${when(p)})`).join('<br>')}<br><span class="cap">매주 이런 모양으로 도착해요</span></div>` };
   },
 
   my() {
@@ -1137,7 +1152,7 @@ function render(dir) {
   const tab = (n, ic, t) => `<button class="${v.tab === n ? 'on' : ''}" data-a="tab" data-n="${n}">${icon(ic)}${t}${dots[n] ? '<i class="dot"></i>' : ''}</button>`;
   const baseValid = c && c.valid; curValid = baseValid ? () => baseValid() && !formBad() : null;
   app.innerHTML = `<div class="screen ${dir ? 'in-' + dir : ''}">
-    ${v.nav ? `<div class="nav"><button data-a="back" aria-label="뒤로">${icon('back')}</button><div class="t">${v.title || ''}</div><span class="r">${v.right ? `<button data-a="${v.right.a}" ${attrs(v.right)}${v.right.a === 'share' ? ` class="share">${icon('share')}` : '>'}${v.right.label}</button>` : ''}</span></div>` : ''}
+    ${v.nav ? `<div class="nav"><button data-a="back" aria-label="뒤로">${icon('back')}</button><div class="t">${v.title || ''}</div><span class="r">${[].concat(v.right || []).map((r) => `<button data-a="${r.a}" ${attrs(r)}${r.disabled ? ' disabled' : ''}${r.a === 'share' ? ` class="share">${icon('share')}` : '>'}${r.label}</button>`).join('')}</span></div>` : ''}
     ${v.prog ? `<div class="prog"><i style="width:${v.prog * 100}%"></i></div>` : ''}${v.pin || ''}
     <main class="scroll">${v.body}</main>
     ${v.sugg && v.sugg.length ? `<div class="sugg">${v.sugg.map((x) => `<button data-a="sugg" data-k="${x.k}">${esc(x.text)}</button>`).join('')}</div>` : ''}
@@ -1243,7 +1258,7 @@ const A = {
     const t = S.tickets.find((x) => x.id === tid), p = post(t.postId), text = flow.d.review.trim();
     t.attended = true; t.tip = flow.tip; S.follows = [...new Set([...S.follows, ...flow.picks])];
     if (text) ensureProf(p.by, p.hood).reviews.unshift({ by: S.me.name, text: clean(text), title: p.title });
-    const later = S.posts.filter((x) => x.type === 'event' && x.id !== p.id && !S.tickets.some((k) => k.postId === x.id && !k.canceled));
+    const later = S.posts.filter((x) => x.type === 'event' && x.id !== p.id && shown(x) && !S.tickets.some((k) => k.postId === x.id && !k.canceled));
     const next = later.find((x) => x.by === p.by) || later.find((x) => x.venue === p.venue) || later.find((x) => x.hood === p.hood) || later[0];
     if (next) notify({ title: next.by === p.by ? `어제 본 ${p.by}의 다음 무대가 잡혔어요` : next.venue === p.venue ? `어제 다녀온 ${p.venue}에서 새 행사가 열려요` : '어제 본 무대와 비슷한 자리가 있어요', body: `${next.title} · ${when(next)}`, to: next.id });
     save(); flow = null; stack = [{ n: 'notifs' }]; render('f'); toast(hasBad(text) ? '후기의 바르지 않은 표현은 *로 가렸어요. 하루가 지나 알림이 도착했어요' : text ? '후기를 남겼어요. 하루가 지나 알림이 도착했어요' : '하루가 지났어요. 알림이 도착했어요');
@@ -1298,9 +1313,15 @@ const A = {
     typingChat = null; scriptInit(c); chatDraft = ''; save(); render(); toast('대화를 처음부터 다시 시작해요');
   },
   settle({ id }) { const p = post(id); p.status = 'settled'; notify({ title: `${p.chosen}에게 ${man(p.budget)}이 전달됐어요`, body: `${p.title} · 정산 완료`, to: id }); save(); render(); toast('공연이 끝났어요. 정산을 마쳤어요'); },
-  report({ target }) { flow = null; go('report', { target }); },
+  report({ target, id }) { flow = null; go('report', { target, id }); },
   why({ w }) { flow.why = w; render(); },
-  sendReport({ target }) { S.reports.push({ target, why: flow.why }); save(); flow = null; stack.pop(); render('b'); toast('신고했어요. 운영진이 확인할게요'); },
+  sendReport({ target, id }) {
+    const why = flow.why === '기타' ? clean(flow.d.etc.trim()) : flow.why;
+    S.reports.push({ target, why, ...(id ? { postId: id } : {}) }); save(); flow = null; stack.pop();
+    // 신고한 글의 상세 화면에서 왔다면 그 화면도 닫아서 목록으로 돌아가요
+    if (id && stack.length > 1 && stack[stack.length - 1].p?.id === id) stack.pop();
+    render('b'); toast(id ? '신고했어요. 이 글은 내 피드에서 숨겼어요' : '신고했어요. 운영진이 확인할게요');
+  },
 
   /* 팀·공간 프로필 */
   newTeam() { flow = { k: 'team', i: 0, d: { kind: '아티스트', name: '', bio: '', hood: S.hoods[0], verify: null, proof: '' } }; go('team'); },
