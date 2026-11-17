@@ -290,6 +290,43 @@ textarea.inp{height:120px;padding:14px 16px;resize:none;line-height:1.5;font-wei
 .send .inp{height:46px;border-radius:23px;font-size:15px;font-weight:500}
 .sharePrev{display:block;width:100%;border-radius:16px;margin-top:8px;box-shadow:0 8px 24px rgba(25,31,40,.14)}
 .sharePrev.story{width:58%;margin:8px auto 0}
+/* 관련 사진: 상세 화면의 가로 띠와, 그 자리에서 크게 펼쳐 보는 보기 */
+.galh{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.galh span{font-size:14px;font-weight:600;color:var(--sub)}
+.gal{display:flex;gap:10px;overflow-x:auto;margin:0 -20px;padding:2px 20px 6px;scroll-padding-inline:20px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.gal::-webkit-scrollbar{display:none}
+.gt{flex:none;width:148px;scroll-snap-align:start;text-align:left;display:flex;flex-direction:column;gap:6px}
+.gt .im{width:148px;height:184px;border-radius:14px;background:var(--soft) center/cover;position:relative;overflow:hidden}
+.gt .im em{position:absolute;left:8px;bottom:8px;font-style:normal;font-size:11px;font-weight:700;padding:3px 7px;border-radius:8px;background:color-mix(in srgb,var(--ink) 55%,transparent);color:var(--bg)}
+.gt p{font-size:13px;line-height:1.45;color:var(--sub);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.gt.add .im{display:grid;place-items:center;color:var(--sub);box-shadow:inset 0 0 0 1.5px var(--line);background:var(--bg);cursor:pointer}
+.gt.add .im span{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.gpick{margin-top:22px}
+.gpick .lbl2{display:flex;justify-content:space-between;font-size:14px;color:var(--sub);font-weight:600;margin-bottom:8px}
+.gpick .lbl2 span{font-weight:500;color:var(--mute)}
+.gitem{display:flex;gap:12px;align-items:center;padding:8px 0}
+.gitem .im{width:64px;height:64px;border-radius:12px;flex:none;background:var(--soft) center/cover}
+.gitem .inp{height:46px;font-size:15px;font-weight:500}
+.gitem .x{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--sub);flex:none}
+.gitem .x svg{width:18px;height:18px}
+.gadd{display:flex;align-items:center;justify-content:center;gap:6px;height:52px;border-radius:14px;margin-top:6px;box-shadow:inset 0 0 0 1.5px var(--line);font-weight:600;color:var(--sub);cursor:pointer}
+.gadd:focus-within,.gt.add .im:focus-within{outline:2px solid var(--brand);outline-offset:2px}
+.lb{position:absolute;inset:0;z-index:12;background:var(--ink);color:var(--bg);display:flex;flex-direction:column;animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+.lb .top{flex:none;display:flex;align-items:center;justify-content:space-between;padding:12px 8px 4px}
+.lb .top button{width:44px;height:44px;display:grid;place-items:center;color:var(--bg)}
+.lb .top b{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.lb .stagebox{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative;touch-action:pan-y}
+.lb .stagebox img{max-width:100%;max-height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
+.lb .nv{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--bg) 18%,transparent);color:var(--bg)}
+.lb .nv.l{left:10px}.lb .nv.r{right:10px}
+.lb .nv:disabled{opacity:0;pointer-events:none}
+.lb .foot{flex:none;padding:16px 20px calc(20px + env(safe-area-inset-bottom))}
+.lb .foot p{font-size:16px;line-height:1.55;min-height:24px}
+.lb .foot small{display:block;font-size:13px;opacity:.7;margin-top:6px}
+.lb .dots{display:flex;gap:6px;justify-content:center;margin-bottom:14px}
+.lb .dots i{width:6px;height:6px;border-radius:50%;background:var(--bg);opacity:.35}.lb .dots i.on{opacity:1}
+.lb .foot .mini{color:var(--bg);opacity:.8;margin-top:10px}
 .copyrow{display:flex;gap:8px;margin-top:12px}.copyrow .btn{flex:1;min-width:0}
 .blogt{font-size:17px;font-weight:700;color:var(--ink);padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--line)}
 .kchat{background:var(--soft);border-radius:18px;padding:16px;margin-top:8px;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
@@ -339,7 +376,8 @@ const iso = (d, t) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDa
 const plusDays = (n) => { const d = new Date(NOW); d.setDate(d.getDate() + n); return d; };
 const nextDow = (dow, weeks = 0) => { const d = new Date(NOW); d.setDate(d.getDate() + (((dow - d.getDay() + 7) % 7) || 7) + weeks * 7); return d; };
 
-function seed() {
+function seed() { return fillGal(seedBase()); }
+function seedBase() {
   return {
     me: null, hoods: [], seq: 1, tickets: [], follows: [], notifs: [], chats: [], teams: [], reports: [],
     settings: { push: true, kakao: true, weekly: true },
@@ -401,10 +439,17 @@ function seed() {
     ],
   };
 }
+// 예시 게시물에 넣는 그림. 실제 사진이 아니라 앱이 그린 '예시 이미지'예요
+const DEMO_GAL = {
+  e1: [{ src: 'demo:stage', cap: '지난 가을 소리굴 무대. 통기타 두 대로 시작해요' }, { src: 'demo:crowd', cap: '40석이 꽉 찬 날. 앞줄은 바닥에 앉아서 들어요' }, { src: 'demo:encore', cap: '앙코르 때는 조명을 낮추고 한 곡을 더 불러요' }],
+  e3: [{ src: 'demo:wall', cap: '세 작가의 사진이 한 벽에 나란히 걸려요' }, { src: 'demo:wall2', cap: '주말 오후에는 작가가 자리를 지켜요' }],
+  e4: [{ src: 'demo:books', cap: '낭독회가 열리는 책방 늘보의 서가' }, { src: 'demo:reading', cap: '작가가 자기 글을 직접 읽어 주는 시간' }, { src: 'demo:solo', cap: '사이사이 기타 연주가 이어져요' }],
+  c3: [{ src: 'demo:drums', cap: '합주실 드럼. 여기서 처음 맞춰 봐요' }, { src: 'demo:stage', cap: '단독 공연을 열 소리굴 무대' }],
+};
 function load() {
   try {
     const s = JSON.parse(localStorage.getItem(KEY));
-    if (s && s.posts && s.profiles) { s.profiles = Object.assign(Object.create(null), s.profiles); return s; }
+    if (s && s.posts && s.profiles) { s.profiles = Object.assign(Object.create(null), s.profiles); return fillGal(s); }
   } catch (e) {}
   return seed();
 }
@@ -443,17 +488,129 @@ const grad = (p) => (p.photo ? (photoImg(p), `background:linear-gradient(color-m
 const PHOTO_IMG = {};
 function photoImg(p) { if (!p.photo) return null; const c = PHOTO_IMG[p.id]; if (c && c.src === p.photo) return c; const im = new Image(); im.src = p.photo; return (PHOTO_IMG[p.id] = im); }
 // 고른 사진을 긴 변 1080px의 JPG로 줄여요. 브라우저 저장 공간이 작아서예요
-function shrinkPhoto(file) {
+function shrinkPhoto(file, max = 1080, qual = 0.8) {
   return new Promise((ok, no) => {
     if (!file || !/^image\//.test(file.type)) return no(new Error('type'));
     const r = new FileReader(); r.onerror = () => no(new Error('read'));
     r.onload = () => { const im = new Image(); im.onerror = () => no(new Error('decode')); im.onload = () => {
-      const k = Math.min(1, 1080 / Math.max(im.naturalWidth, im.naturalHeight)), cv = document.createElement('canvas');
+      const k = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight)), cv = document.createElement('canvas');
       cv.width = Math.round(im.naturalWidth * k); cv.height = Math.round(im.naturalHeight * k);
-      cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); ok(cv.toDataURL('image/jpeg', 0.8));
+      cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height); ok(cv.toDataURL('image/jpeg', qual));
     }; im.src = r.result; };
     r.readAsDataURL(file);
   });
+}
+
+/* ───────── 관련 사진 ───────── */
+const GAL_MAX = 6;
+function fillGal(st) { st.posts.forEach((p) => { if (DEMO_GAL[p.id] && !p.gallery) p.gallery = DEMO_GAL[p.id].map((g) => ({ ...g })); }); return st; }
+const DEMO_URL = {};
+function demoArt(key) {
+  if (DEMO_URL[key]) return DEMO_URL[key];
+  const W = 960, H = 1200, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const x = cv.getContext('2d'), lin = (y0, y1, a, b) => { const g = x.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, a); g.addColorStop(1, b); return g; };
+  const glow = (cx, cy, r, c) => { const g = x.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, c); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.fillRect(cx - r, cy - r, r * 2, r * 2); };
+  const cone = (cx, w, c) => { const g = x.createLinearGradient(0, 0, 0, H * .8); g.addColorStop(0, c); g.addColorStop(1, 'rgba(255,220,160,0)'); x.fillStyle = g; x.beginPath(); x.moveTo(cx - 30, 0); x.lineTo(cx + 30, 0); x.lineTo(cx + w, H * .8); x.lineTo(cx - w, H * .8); x.fill(); };
+  const person = (cx, base, s, c, guitar) => {
+    x.fillStyle = c; x.beginPath(); x.arc(cx, base - 300 * s, 46 * s, 0, 7); x.fill();
+    x.beginPath(); x.ellipse(cx, base - 130 * s, 92 * s, 150 * s, 0, 0, 7); x.fill();
+    if (guitar) { x.fillStyle = guitar; x.beginPath(); x.ellipse(cx + 18 * s, base - 110 * s, 70 * s, 54 * s, -.5, 0, 7); x.fill(); x.fillRect(cx + 40 * s, base - 250 * s, 14 * s, 150 * s); }
+  };
+  const heads = (y, n, c, r) => { x.fillStyle = c; for (let i = 0; i < n; i++) { const cx = (i + .5) * W / n + ((i * 37) % 23) - 11; x.beginPath(); x.arc(cx, y - r * 1.6, r, 0, 7); x.fill(); x.beginPath(); x.ellipse(cx, y + r * .6, r * 1.7, r * 1.4, 0, 0, 7); x.fill(); } };
+  const kind = key.slice(5);
+  if (['stage', 'encore', 'solo', 'drums'].includes(kind)) {
+    const warm = kind === 'encore' ? ['#1A0E20', '#3B1530'] : kind === 'drums' ? ['#0F1420', '#20283A'] : ['#170F12', '#33191F'];
+    x.fillStyle = lin(0, H, warm[0], warm[1]); x.fillRect(0, 0, W, H);
+    if (kind === 'encore') { glow(W / 2, H * .45, 520, 'rgba(255,90,140,.35)'); cone(W / 2, 260, 'rgba(255,170,200,.5)'); }
+    else if (kind === 'drums') { cone(W / 2, 320, 'rgba(180,200,255,.45)'); }
+    else { cone(W * .32, 220, 'rgba(255,214,150,.55)'); if (kind === 'stage') cone(W * .68, 220, 'rgba(255,214,150,.55)'); }
+    x.fillStyle = lin(H * .74, H, '#2A1A14', '#120B09'); x.fillRect(0, H * .74, W, H * .26);
+    if (kind === 'drums') {
+      x.fillStyle = '#C9D3EA'; x.beginPath(); x.ellipse(W / 2, H * .66, 150, 110, 0, 0, 7); x.fill();
+      x.fillStyle = '#7E8AA8'; [[-260, .6, 80], [260, .6, 80], [-120, .5, 70], [120, .5, 70]].forEach(([dx, yy, r]) => { x.beginPath(); x.ellipse(W / 2 + dx, H * yy, r, r * .55, 0, 0, 7); x.fill(); });
+      x.strokeStyle = '#E8C66A'; x.lineWidth = 8; [[-360, .42], [360, .4]].forEach(([dx, yy]) => { x.beginPath(); x.ellipse(W / 2 + dx, H * yy, 110, 18, dx < 0 ? .15 : -.15, 0, 7); x.stroke(); });
+    } else {
+      const g = '#C8894E';
+      if (kind === 'solo') person(W * .32, H * .76, 1.1, '#0B0708', g);
+      else { person(W * .32, H * .76, 1.1, '#0B0708', g); person(W * .68, H * .76, 1.1, '#0B0708', kind === 'encore' ? null : g); }
+      x.strokeStyle = '#0B0708'; x.lineWidth = 10; x.beginPath(); x.moveTo(W * .5, H * .76); x.lineTo(W * .5, H * .52); x.stroke();
+      if (kind === 'encore') heads(H * .96, 7, '#07040A', 44);
+    }
+  } else if (kind === 'crowd') {
+    x.fillStyle = lin(0, H, '#2B1418', '#120A0C'); x.fillRect(0, 0, W, H);
+    [[.2, .2, 'rgba(255,190,120,.5)'], [.5, .12, 'rgba(255,120,150,.45)'], [.8, .22, 'rgba(255,210,140,.5)'], [.35, .35, 'rgba(255,160,90,.3)'], [.68, .38, 'rgba(255,200,170,.3)']].forEach(([a, b, c]) => glow(W * a, H * b, 220, c));
+    heads(H * .7, 5, '#3A2328', 58); heads(H * .82, 6, '#24151A', 66); heads(H * .97, 5, '#0D0709', 78);
+  } else if (kind === 'books' || kind === 'reading') {
+    x.fillStyle = lin(0, H, '#3A2A1E', '#1E150F'); x.fillRect(0, 0, W, H);
+    glow(W * .78, H * .18, 360, 'rgba(255,205,130,.45)');
+    const cols = ['#B4553F', '#D9A441', '#5E7F6B', '#3F5C8A', '#A7826A', '#C9B79C', '#7A3E4E', '#8FA2A8'];
+    const rows = kind === 'books' ? [.1, .3, .5, .7] : [.08, .26];
+    rows.forEach((ry, j) => { let bx = 60; x.fillStyle = '#5A4130'; x.fillRect(40, H * ry + 170, W - 80, 16); while (bx < W - 90) { const w = 34 + ((bx * 7 + j * 13) % 30), h = 120 + ((bx * 3 + j * 11) % 50); x.fillStyle = cols[(bx + j * 3) % cols.length]; x.fillRect(bx, H * ry + 170 - h, w, h); bx += w + 6; } });
+    if (kind === 'reading') {
+      x.fillStyle = '#6B4A33'; x.fillRect(W * .2, H * .78, W * .6, 22);
+      person(W * .5, H * .78, 1.15, '#140D09', null);
+      x.fillStyle = '#F2E6CF'; x.save(); x.translate(W * .5, H * .6); x.rotate(-.08); x.fillRect(-90, -50, 180, 110); x.restore();
+      heads(H * 1.0, 5, '#0C0806', 60);
+    }
+  } else {
+    x.fillStyle = lin(0, H, '#EDEAE4', '#D9D4CC'); x.fillRect(0, 0, W, H);
+    x.fillStyle = lin(H * .8, H, '#B9AF9F', '#9C917F'); x.fillRect(0, H * .8, W, H * .2);
+    const frames = kind === 'wall' ? [[.08, .2, .26, .3], [.38, .16, .24, .36], [.66, .22, .26, .28]] : [[.14, .18, .34, .4], [.56, .24, .3, .3]];
+    const art = [['#4E6D8C', '#E9B872'], ['#2F4F4F', '#C7D3C0'], ['#8C4E5A', '#F0C9A5'], ['#3D3A5C', '#E3A8A0'], ['#506C52', '#E9E2B8']];
+    frames.forEach(([fx, fy, fw, fh], i) => { x.fillStyle = '#2B2622'; x.fillRect(W * fx - 10, H * fy - 10, W * fw + 20, H * fh + 20); x.fillStyle = lin(H * fy, H * (fy + fh), art[(i + (kind === 'wall' ? 0 : 3)) % 5][0], art[(i + (kind === 'wall' ? 0 : 3)) % 5][1]); x.fillRect(W * fx, H * fy, W * fw, H * fh); });
+    person(W * (kind === 'wall' ? .5 : .8), H * .98, 1.2, '#3A3430', null);
+  }
+  return (DEMO_URL[key] = cv.toDataURL('image/jpeg', .82));
+}
+const gsrc = (g) => (g.src.startsWith('demo:') ? demoArt(g.src) : g.src);
+const isDemo = (g) => g.src.startsWith('demo:');
+// 상세 화면의 '사진으로 미리 보기' 띠. 누르면 그 자리에서 크게 펼쳐 봐요
+function galleryHTML(p) {
+  const g = p.gallery || [], can = p.mine && g.length < GAL_MAX;
+  if (!g.length && !p.mine) return '';
+  const what = p.type === 'event' ? '이 무대가 어떤 자리인지 사진으로 먼저 느껴 보세요' : p.type === 'request' ? '어떤 자리에 모시는지 사진으로 보여드려요' : '함께할 활동을 사진으로 보여드려요';
+  return `<div class="h2 galh">사진으로 미리 보기 ${g.length ? `<span>${g.length}장</span>` : ''}</div>
+    <p class="cap" style="margin:-4px 0 12px">${g.length ? what : '관련 사진을 올리면 이웃이 이 자리를 미리 느껴 볼 수 있어요'}</p>
+    <div class="gal">${g.map((it, i) => `<button class="gt" data-a="lbOpen" data-id="${p.id}" data-i="${i}" aria-label="사진 ${i + 1} 크게 보기"><div class="im" style="background-image:url('${gsrc(it)}')">${isDemo(it) ? '<em>예시</em>' : ''}</div>${it.cap ? `<p>${esc(it.cap)}</p>` : ''}</button>`).join('')}
+    ${can ? `<label class="gt add"><div class="im"><span>${icon('plus')}사진 더하기</span></div><input type="file" accept="image/*" multiple data-gal="${p.id}" hidden></label>` : ''}</div>`;
+}
+// 글 올리기 마지막 단계의 사진 고르기
+function galleryPicker(d) {
+  const g = d.gallery || [];
+  return `<div class="gpick"><div class="lbl2">관련 사진 (선택) <span>${g.length} / ${GAL_MAX}장</span></div>
+    <p class="cap" style="margin-bottom:6px">지난 무대, 공간, 작업 모습처럼 이 글을 보여줄 사진을 올려 주세요. 사진마다 한 줄 설명을 붙일 수 있어요.</p>
+    ${g.map((it, i) => `<div class="gitem"><div class="im" style="background-image:url('${it.src}')"></div><input class="inp" data-gcap="${i}" placeholder="한 줄 설명 (선택)" maxlength="40" value="${esc(it.cap)}"><button class="x" data-a="galDel" data-i="${i}" aria-label="사진 ${i + 1} 빼기">${icon('x')}</button></div>`).join('')}
+    ${g.length < GAL_MAX ? `<label class="gadd">${icon('plus', 'width:20px;height:20px')}사진 고르기<input type="file" accept="image/*" multiple data-gal="new" hidden></label>` : ''}</div>`;
+}
+/* 크게 보기: 화면을 바꾸지 않고 지금 화면 위에 펼쳐요 */
+let lb = null;
+function lbDraw() {
+  const p = post(lb.id), g = p.gallery || [], it = g[lb.i]; document.querySelector('.lb')?.remove(); if (!it) { lb = null; return; }
+  const el = document.createElement('div'); el.className = 'lb'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', `${p.title} 관련 사진`);
+  el.innerHTML = `<div class="top"><button data-a="lbClose" aria-label="닫기">${icon('x')}</button><b>${lb.i + 1} / ${g.length}</b><span style="width:44px"></span></div>
+    <div class="stagebox"><img src="${gsrc(it)}" alt="${esc(it.cap || p.title)}">
+      <button class="nv l" data-a="lbGo" data-d="-1" aria-label="이전 사진" ${lb.i ? '' : 'disabled'}>${icon('back')}</button>
+      <button class="nv r" data-a="lbGo" data-d="1" aria-label="다음 사진" ${lb.i < g.length - 1 ? '' : 'disabled'}>${icon('next')}</button></div>
+    <div class="foot">${g.length > 1 ? `<div class="dots">${g.map((_, i) => `<i class="${i === lb.i ? 'on' : ''}"></i>`).join('')}</div>` : ''}
+      <p>${esc(it.cap || '')}</p><small>${esc(p.title)} · ${esc(p.by)}${isDemo(it) ? ' · 앱이 그린 예시 이미지예요' : ''}</small>
+      ${p.mine ? `<button class="mini" data-a="lbDel">이 사진 빼기</button>` : ''}</div>`;
+  $('#app').appendChild(el);
+  const box = el.querySelector('.stagebox'); let sx = null;
+  box.addEventListener('pointerdown', (e) => { sx = e.clientX; });
+  box.addEventListener('pointerup', (e) => { if (sx === null) return; const dx = e.clientX - sx; sx = null; if (Math.abs(dx) > 40) A.lbGo({ d: dx < 0 ? 1 : -1 }); });
+  el.querySelector('[data-a=lbClose]').focus();
+}
+async function addGallery(files, to) {
+  const target = to === 'new' ? (flow && flow.k === 'compose' ? flow.d : null) : post(to); if (!target) return;
+  target.gallery = target.gallery || [];
+  const room = GAL_MAX - target.gallery.length, pick = [...files].slice(0, Math.max(0, room));
+  let bad = 0, added = 0;
+  for (const f of pick) { try { target.gallery.push({ src: await shrinkPhoto(f, 960, 0.76), cap: '' }); added++; } catch (e) { bad++; } }
+  if (to === 'new') { render(); }
+  else { render(); if (!save()) return toast('사진이 커서 이 브라우저에 저장하지 못했어요. 새로고침하면 사라져요'); }
+  toast(bad && !added ? '사진으로 열 수 없는 파일이에요. JPG나 PNG 사진을 골라 주세요'
+    : files.length > pick.length ? `사진은 ${GAL_MAX}장까지 올릴 수 있어요. ${added}장을 넣었어요`
+    : bad ? `${added}장을 넣었어요. 열 수 없는 파일 ${bad}개는 뺐어요` : to === 'new' ? `사진 ${added}장을 넣었어요` : `사진 ${added}장을 더했어요`);
 }
 const photoPicker = (to, label) => `<label class="pbtn">${icon('camera')}${label}<input type="file" accept="image/*" data-photo="${to}" hidden></label>`;
 const kind = (p) => (p.type === 'event' ? p.genre : p.type === 'request' ? '섭외' : '협업');
@@ -462,7 +619,7 @@ const ICON = {
   home:'<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
   ticket:'<path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z"/>',
   chat:'<path d="M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-8l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/>',
-  plus:'<path d="M12 5v14M5 12h14"/>', camera:'<path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L16 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/>', up:'<path d="M12 19V5M6 11l6-6 6 6"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>', x:'<path d="M6 6l12 12M18 6L6 18"/>', camera:'<path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L16 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/>', up:'<path d="M12 19V5M6 11l6-6 6 6"/>',
   bell:'<path d="M6 9a6 6 0 0 1 12 0c0 6 2 7 2 7H4s2-1 2-7M10 20a2 2 0 0 0 4 0"/>',
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   back:'<path d="M15 5l-7 7 7 7"/>', check:'<path d="M5 12l5 5 9-10"/>', next:'<path d="M9 5l7 7-7 7"/>', down:'<path d="M6 9l6 6 6-6"/>', share:'<path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>', search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
@@ -916,7 +1073,7 @@ const V = {
       body: `<div class="poster" style="${grad(p)}">${p.mine ? `<div class="pact">${p.photo ? `<button class="pbtn" data-a="photoOff" data-id="${p.id}">사진 빼기</button>` : ''}${photoPicker(p.id, p.photo ? '사진 바꾸기' : '사진 추가')}</div>` : ''}<small>${p.genre} · ${p.hood}</small><h1>${esc(p.title)}</h1></div>${reportedBox(p)}
         <dl class="info"><div><dt>언제</dt><dd>${when(p)}</dd></div><div><dt>어디서</dt><dd>${esc(p.venue)}</dd></div>
         <div><dt>입장료</dt><dd>${p.price.mode === 'fixed' ? won(p.price.amount) : p.price.mode === 'flex' ? `${won(p.price.min)}부터, 낼 만큼` : '무료, 끝난 뒤 앱에서 후원'}</dd></div></dl>
-        <div class="h2">소개</div><p class="body">${esc(p.desc || '소개가 아직 없어요.')}</p>
+        <div class="h2">소개</div><p class="body">${esc(p.desc || '소개가 아직 없어요.')}</p>${galleryHTML(p)}
         <div class="h2">만드는 사람</div>${followRow(p.by, prof(p.by).kind || '팔로우하면 새 무대를 알려드려요')}
         ${p.venue && p.venue !== p.by ? followRow(p.venue, `${p.hood}의 공간`) : ''}
         ${p.mine ? '' : `<button class="btn ghost" style="margin-top:12px" data-a="ask" data-id="${id}">${esc(p.by)}에게 문의하기</button>`}
@@ -1031,7 +1188,7 @@ const V = {
       body: `<div class="lbl c-dark" style="margin-top:8px">섭외 · ${p.hood}</div><h1 class="big" style="margin-top:6px">${esc(p.title)}</h1>${reportedBox(p)}
         ${followRow(p.by, prof(p.by).kind || '요청한 곳')}
         <dl class="info"><div><dt>언제</dt><dd>${when(p)}</dd></div><div><dt>어디서</dt><dd>${esc(p.place || p.hood)}</dd></div><div><dt>예산</dt><dd>${man(p.budget)}</dd></div></dl>
-        <div class="h2">이런 무대를 원해요</div><p class="body">${esc(p.mood)}</p>
+        <div class="h2">이런 무대를 원해요</div><p class="body">${esc(p.mood)}</p>${galleryHTML(p)}
         ${mine ? `<div class="h2">진행 상황</div>${tl.map((x, i) => `<div class="line ${i < at ? 'on' : i === at ? 'now on' : ''}">${chk(i <= at)}<div><b>${x[0]}</b><span>${x[1]}</span></div></div>`).join('')}` : ''}
         <div class="h2" style="${mine ? 'margin-top:12px' : ''}">응답한 팀 ${p.responses.length}</div>
         ${p.responses.map((r) => `<div class="row" style="align-items:flex-start"><button class="who" style="align-items:flex-start" data-a="profile" data-name="${esc(r.by)}"><div class="ava">${esc(r.by[0])}</div><div class="tx"><b>${esc(r.by)}${badge(r.by)}${p.chosen === r.by ? ' · 확정' : ''}</b><span>${esc(r.msg)}</span></div></button>
@@ -1062,7 +1219,7 @@ const V = {
     const p = post(id);
     return { nav: true, right: postRight(p), body: `<div class="lbl c-teal" style="margin-top:8px">협업 · ${SEEK[seekOf(p)][1]} · ${p.hood}</div><h1 class="big" style="margin-top:6px">${esc(p.title)}</h1>${reportedBox(p)}
       ${p.at ? `<dl class="info"><div><dt>언제</dt><dd>${when(p)}</dd></div><div><dt>어디서</dt><dd>${esc(p.venue || p.by)}</dd></div></dl>` : ''}
-      <div class="h2">내용</div><p class="body">${esc(p.desc)}</p><div class="h2">${seekOf(p) === 'team' ? '올린 사람' : '제안한 팀'}</div>${followRow(p.by, `${p.hood}에서 활동해요`)}
+      <div class="h2">내용</div><p class="body">${esc(p.desc)}</p>${galleryHTML(p)}<div class="h2">${seekOf(p) === 'team' ? '올린 사람' : '제안한 팀'}</div>${followRow(p.by, `${p.hood}에서 활동해요`)}
       ${p.mine ? `<div class="h2">응답한 팀 ${(p.responses || []).length}</div>${(p.responses || []).map((r) => `<div class="row" style="align-items:flex-start"><button class="who" style="align-items:flex-start" data-a="profile" data-name="${esc(r.by)}"><div class="ava">${esc(r.by[0])}</div><div class="tx"><b>${esc(r.by)}${badge(r.by)}${p.chosen === r.by ? ' · 함께해요' : ''}</b><span>${esc(r.msg)}</span></div></button>
           <button class="btn sm ${p.chosen ? 'on' : ''}" data-a="talk" data-id="${id}" data-by="${esc(r.by)}">대화하기</button></div>`).join('') || '<p class="cap">아직 응답이 없어요.</p>'}` : ''}
 `,
@@ -1160,7 +1317,7 @@ const V = {
         { body: () => preview() + `<div class="ppick"><div class="ph" style="${d.photo ? `background-image:url('${d.photo}')` : ''}">${d.photo ? '' : icon('camera')}</div>
             <div class="tx"><b>포스터 사진 (선택)</b><span>${d.photo ? '피드와 행사 화면에 이 사진이 보여요' : '없으면 색 배경으로 보여요. 나중에 행사 화면에서도 넣을 수 있어요'}</span></div>
             <div class="acts">${photoPicker('new', d.photo ? '바꾸기' : '사진 추가')}${d.photo ? '<button class="mini" data-a="photoOff" data-id="new">빼기</button>' : ''}</div></div>`
-            + area('desc', '소개 (선택)', '어떤 자리인지 편하게 적어 주세요') },
+            + area('desc', '소개 (선택)', '어떤 자리인지 편하게 적어 주세요') + galleryPicker(d) },
       ],
       request: [
         { body: () => `<h1 class="big">어떤 자리에<br>모시고 싶나요?</h1>${inp('title', '제목', '예: 동아리 정기 모임에 와 줄 밴드를 찾아요')}${who('요청하는 모임이나 가게', '예: 온고을대 사진 동아리')}${area('mood', '원하는 분위기', '인원, 분위기, 공연 시간을 알려주세요')}`, valid: () => d.title.trim() && d.by.trim() && d.mood.trim() },
@@ -1168,13 +1325,13 @@ const V = {
         { body: () => `<h1 class="big">예산은 얼마인가요?</h1><p class="lead">유명한 팀이 아니어도 괜찮아요. 동네 아티스트는 작은 예산에도 응답해요.</p>
             <div class="chips">${[100000, 200000, 400000].map((v) => `<button class="chip ${num(d.budget) === v ? 'on' : ''}" data-a="setD" data-f="budget" data-v="${v}">${man(v)}</button>`).join('')}</div>
             ${inp('budget', '직접 적기 (원)', '150,000', 'inputmode="numeric"')}`, valid: () => num(d.budget) > 0 },
-        { body: () => preview() },
+        { body: () => preview() + galleryPicker(d) },
       ],
       collab: [
         { body: () => `<h1 class="big">누구와 함께하고 싶나요?</h1><p class="lead">고른 쪽에 따라 함께하기에서 '팀원 구하기'나 '팀 구하기'로 나뉘어 보여요.</p>
             ${['member', 'team'].map((k) => `<button class="opt ${d.seek === k ? 'on' : ''}" data-a="setD" data-f="seek" data-v="${k}"><div style="flex:1"><b>${SEEK[k][0]}</b><span>${SEEK[k][2]} · ${SEEK[k][3]}</span></div>${chk(d.seek === k)}</button>`).join('')}`, valid: () => d.seek },
         { body: () => `<h1 class="big">${d.seek === 'member' ? '어떤 팀원을 찾나요?' : '어떤 팀을 찾나요?'}</h1>${inp('title', '제목', d.seek === 'member' ? '예: 함께할 드러머를 찾아요' : '예: 주말에 같이 공연할 밴드를 찾아요')}${who(d.seek === 'member' ? '우리 팀 이름' : '내 이름', d.seek === 'member' ? '예: 파도소리 밴드' : '예: 기타 치는 도윤')}${area('desc', '내용', d.seek === 'member' ? '맡을 역할, 연습 일정, 수익 나누는 방식을 알려주세요' : '할 수 있는 것, 가능한 시간, 원하는 장르를 알려주세요')}${hoods}`, valid: () => d.title.trim() && d.by.trim() && d.desc.trim() },
-        { body: () => preview() },
+        { body: () => preview() + galleryPicker(d) },
       ],
     }[T];
     const s = steps[i], last = i === steps.length - 1;
@@ -1227,6 +1384,7 @@ const V = {
 
 /* ───────── 그리기 ───────── */
 function render(dir) {
+  if (lb && !document.querySelector('.lb')) lb = null;
   if (!S.me && stack[0].n !== 'onboard') stack = [{ n: 'onboard' }];
   const top = stack[stack.length - 1], v = V[top.n](top.p || {});
   const app = $('#app'), old = app.querySelector('.scroll'), keep = !dir && old ? old.scrollTop : 0, c = v.cta;
@@ -1248,7 +1406,7 @@ function render(dir) {
 const go = (n, p) => { stack.push({ n, p }); render('f'); };
 const root = (...rest) => { stack = [{ n: 'home' }, ...rest]; };
 function build() {
-  const d = flow.d, at = d.date && d.time ? `${d.date}T${d.time}` : null, base = { id: 'u' + S.seq, type: flow.type, title: d.title.trim(), by: d.by.trim(), hood: d.hood, mine: true, g: S.seq % GRADS.length };
+  const d = flow.d, at = d.date && d.time ? `${d.date}T${d.time}` : null, base = { id: 'u' + S.seq, type: flow.type, title: d.title.trim(), by: d.by.trim(), hood: d.hood, mine: true, g: S.seq % GRADS.length, ...(d.gallery && d.gallery.length ? { gallery: d.gallery.map((it) => ({ src: it.src, cap: clean((it.cap || '').trim()) })) } : {}) };
   if (flow.type === 'event') return { ...base, genre: d.genre, venue: d.venue.trim(), at, desc: clean((d.desc || '').trim()), ...(d.photo ? { photo: d.photo } : {}),
     price: d.mode === 'fixed' ? { mode: 'fixed', amount: num(d.amount) } : d.mode === 'flex' ? { mode: 'flex', min: num(d.min), rec: num(d.rec) } : { mode: 'donate' } };
   if (flow.type === 'request') return { ...base, at, place: d.venue.trim(), budget: num(d.budget), mood: clean(d.mood.trim()), status: 'open', responses: [] };
@@ -1425,6 +1583,15 @@ const A = {
     typingChat = null; scriptInit(c); chatDraft = ''; save(); render(); toast('대화를 처음부터 다시 시작해요');
   },
   settle({ id }) { const p = post(id); p.status = 'settled'; notify({ title: `${p.chosen}에게 ${man(p.budget)}이 전달됐어요`, body: `${p.title} · 정산 완료`, to: id }); save(); render(); toast('공연이 끝났어요. 정산을 마쳤어요'); },
+  galDel({ i }) { flow.d.gallery.splice(Number(i), 1); render(); },
+  lbOpen({ id, i }) { lb = { id, i: Number(i) }; lbDraw(); },
+  lbGo({ d }) { if (!lb) return; const n = (post(lb.id).gallery || []).length, j = lb.i + Number(d); if (j < 0 || j >= n) return; lb.i = j; lbDraw(); },
+  lbClose() { document.querySelector('.lb')?.remove(); const at = lb; lb = null; if (at) document.querySelector(`.gt[data-i="${at.i}"]`)?.focus(); },
+  lbDel() {
+    const p = post(lb.id); p.gallery.splice(lb.i, 1); save();
+    if (!p.gallery.length) { A.lbClose(); render(); return toast('사진을 뺐어요'); }
+    lb.i = Math.min(lb.i, p.gallery.length - 1); render(); lbDraw(); toast('사진을 뺐어요');
+  },
   photoOff({ id }) {
     if (id === 'new') { delete flow.d.photo; return render(); }
     const p = post(id); delete p.photo; delete PHOTO_IMG[id]; shareImg = null; save(); render(); toast('사진을 뺐어요. 색 배경으로 보여요');
@@ -1510,11 +1677,14 @@ function duo(on) {
 }
 document.addEventListener('click', (e) => { const el = e.target.closest('[data-a]'); if (!el || el.disabled) return; const f = A[el.dataset.a]; if (f) f({ ...el.dataset }); });
 document.addEventListener('keydown', (e) => {
+  if (lb) { if (e.key === 'Escape') { e.preventDefault(); return A.lbClose(); } if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); return A.lbGo({ d: e.key === 'ArrowLeft' ? -1 : 1 }); } }
   if (e.target.id === 'chatIn' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); A.send(); return; }
   if (PANE || /^(INPUT|TEXTAREA)$/.test(e.target.tagName) || e.altKey || e.ctrlKey || e.metaKey) return;
   const scene = ['home', 'book', 'next', 'hire', 'dash'][Number(e.key) - 1]; if (scene) A.scene({ scene });
 });
 document.addEventListener('change', async (e) => {
+  const gal = e.target.dataset && e.target.dataset.gal;
+  if (gal) { const fs = [...(e.target.files || [])]; e.target.value = ''; if (fs.length) addGallery(fs, gal); return; }
   const el = e.target, to = el.dataset && el.dataset.photo; if (!to) return;
   const file = el.files && el.files[0]; el.value = ''; if (!file) return;
   let url; try { url = await shrinkPhoto(file); } catch (err) { return toast('이 파일은 사진으로 열 수 없어요. JPG나 PNG 사진을 골라 주세요'); }
@@ -1526,6 +1696,7 @@ document.addEventListener('change', async (e) => {
 document.addEventListener('input', (e) => {
   const el = e.target;
   if (el.id === 'chatIn') { chatDraft = el.value; return; }
+  if (el.dataset.gcap !== undefined) { const it = flow && flow.d.gallery && flow.d.gallery[Number(el.dataset.gcap)]; if (it) it.cap = el.value; return; }
   if (el.dataset.s !== undefined) { q = el.value; $('#list').innerHTML = listHTML(); return; }
   const f = el.dataset.f; if (!f || !flow) return;
   flow.d[f] = el.value;
