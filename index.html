@@ -1029,6 +1029,8 @@ const reported = (p) => S.reports.some((r) => r.postId === p.id);
 const shown = (p) => !reported(p);
 const postRight = (p) => [...(p.mine ? [] : [reported(p) ? { label: '신고함', a: 'report', disabled: true } : { label: '신고', a: 'report', id: p.id, target: p.title }]), { label: '공유', a: 'share', id: p.id }];
 const reportedBox = (p) => (reported(p) ? `<div class="box" style="margin-top:14px"><b>신고한 글이에요.</b> 내 피드에서는 숨겼고, 운영진이 확인하고 있어요.</div>` : '');
+// 개요 한 줄: '전시 > 서학동 전시'처럼 행사 종류 > 동네와 종류
+const crumbRow = (p) => `<div><dt>개요</dt><dd class="crumb"><span>${p.genre}</span><i aria-hidden="true">&gt;</i><span>${esc(p.hood)} ${p.genre}</span></dd></div>`;
 const reportLink = (target) => `<button class="mini" data-a="report" data-target="${esc(target)}">신고하기</button>`;
 
 /* ───────── 화면 ───────── */
@@ -1116,7 +1118,7 @@ const V = {
     return {
       nav: true, right: postRight(p),
       body: `<div class="poster" style="${grad(p)}">${p.mine ? `<div class="pact">${p.photo ? `<button class="pbtn" data-a="photoOff" data-id="${p.id}">사진 빼기</button>` : ''}${photoPicker(p.id, p.photo ? '사진 바꾸기' : '사진 추가')}</div>` : ''}<small>${p.genre} · ${p.hood}</small><h1>${esc(p.title)}</h1></div>${reportedBox(p)}
-        <dl class="info"><div><dt>개요</dt><dd class="crumb"><span>${p.genre}</span><i aria-hidden="true">&gt;</i><span>${esc(p.hood)} ${p.genre}</span></dd></div>
+        <dl class="info">${crumbRow(p)}
         <div><dt>기간</dt><dd>${when(p)}</dd></div><div><dt>장소</dt><dd>${esc(p.venue)}</dd></div>
         <div><dt>입장료</dt><dd>${p.price.mode === 'fixed' ? won(p.price.amount) : p.price.mode === 'flex' ? `${won(p.price.min)}부터, 낼 만큼` : '무료, 끝난 뒤 앱에서 후원'}</dd></div></dl>
         <div class="h2">소개</div><p class="body">${esc(p.desc || '소개가 아직 없어요.')}</p>${galleryHTML(p)}
@@ -1182,7 +1184,7 @@ const V = {
       nav: true, title: '티켓',
       body: `<div class="ticket"><div class="lbl ${x ? '' : kindColor(p)}" style="${x ? 'color:var(--mute)' : ''}">${x ? `${word} 취소` : kind(p)}</div><h1 class="big" style="margin:6px 0 2px">${esc(p.title)}</h1><p class="lead">${esc(p.by)}</p>
         ${x ? `<p class="cap" style="text-align:center;padding:28px 0 8px">취소한 ${word}${bat(word) ? '이라' : '라'} 입장할 수 없어요</p>` : `<div class="qr">${cells}</div><p class="cap" style="text-align:center">입구에서 이 화면을 보여주세요</p>`}</div>
-        <dl class="info"><div><dt>언제</dt><dd>${when(p)}</dd></div><div><dt>어디서</dt><dd>${esc(p.venue)}</dd></div><div><dt>인원</dt><dd>${t.qty}명</dd></div>
+        <dl class="info">${crumbRow(p)}<div><dt>기간</dt><dd>${when(p)}</dd></div><div><dt>장소</dt><dd>${esc(p.venue)}</dd></div><div><dt>인원</dt><dd>${t.qty}명</dd></div>
         <div><dt>결제</dt><dd>${t.total ? won(t.total) : '무료'}${t.tip ? ` · 후원 ${won(t.tip)}` : ''}</dd></div>
         ${x ? `<div><dt>환불</dt><dd>${t.total ? `${won(x.refund)} 환불 요청` : '돌려받을 돈 없음'}</dd></div><div><dt>취소 사유</dt><dd>${esc(x.why)}</dd></div>` : ''}</dl>
         ${!x && !t.attended ? `<div style="text-align:center;margin-top:24px"><button class="mini" data-a="cancel" data-id="${t.id}">${word} 취소하기</button></div>` : ''}`,
