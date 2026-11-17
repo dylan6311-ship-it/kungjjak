@@ -327,6 +327,9 @@ textarea.inp{height:120px;padding:14px 16px;resize:none;line-height:1.5;font-wei
 .lb .dots{display:flex;gap:6px;justify-content:center;margin-bottom:14px}
 .lb .dots i{width:6px;height:6px;border-radius:50%;background:var(--bg);opacity:.35}.lb .dots i.on{opacity:1}
 .lb .foot .mini{color:var(--bg);opacity:.8;margin-top:10px}
+.linkbox{display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 10px 10px 14px;border-radius:14px;background:var(--soft)}
+.linkbox code{flex:1;min-width:0;font:600 13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;user-select:all}
+.linkbox .btn.sm{flex:none}
 .copyrow{display:flex;gap:8px;margin-top:12px}.copyrow .btn{flex:1;min-width:0}
 .blogt{font-size:17px;font-weight:700;color:var(--ink);padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--line)}
 .kchat{background:var(--soft);border-radius:18px;padding:16px;margin-top:8px;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
@@ -652,12 +655,49 @@ function shareRows(p) {
   return [['누가', p.by], ['동네', '전주 ' + p.hood]];
 }
 const shareFoot = (p) => (p.type === 'event' ? '쿵짝에서 예매하기' : p.type === 'request' ? '쿵짝에서 응답하기' : '쿵짝에서 함께하기');
+/* 게시물 링크: 누르면 쿵짝 앱에서 그 글이 바로 열려요
+   - 앱 주소는 GitHub Pages(저장소 main의 index.html). 웹에서 열려 있으면 지금 주소를 그대로 써요
+   - 예시 글은 번호만, 직접 올린 글은 글 내용(사진 제외)을 링크에 담아 다른 사람의 브라우저에서도 열려요 */
+const APP_URL = 'https://dylan6311-ship-it.github.io/kungjjak/';
+const appBase = () => (/^https?:$/.test(location.protocol) && !/colab|googleusercontent/.test(location.hostname) ? location.origin + location.pathname : APP_URL);
+const LINK_KEYS = ['type', 'genre', 'seek', 'title', 'by', 'venue', 'place', 'hood', 'at', 'end', 'price', 'budget', 'mood', 'desc', 'g'];
+const b64e = (o) => btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const b64d = (t) => JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(t.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0))));
+function postLink(p) {
+  if (!p.mine && !p.shared) return `${appBase()}#post=${p.id}`;
+  const o = {}; LINK_KEYS.forEach((k) => { if (p[k] !== undefined && p[k] !== '') o[k] = k === 'desc' || k === 'mood' ? String(p[k]).slice(0, 300) : p[k]; });
+  return `${appBase()}#post=${p.id}.${b64e(o)}`;
+}
+// 링크로 들어온 글을 찾거나, 링크에 담긴 내용으로 다시 만들어요
+function postFromHash() {
+  const m = /[#&]post=([A-Za-z0-9]+)(?:\.([A-Za-z0-9_-]+))?/.exec(location.hash); if (!m) return null;
+  let p = post(m[1]);
+  if (!p && m[2]) {
+    try {
+      const o = b64d(m[2]), keep = {}; LINK_KEYS.forEach((k) => { if (o[k] !== undefined) keep[k] = o[k]; });
+      if (!['event', 'request', 'collab'].includes(keep.type) || !keep.title || !keep.by) throw new Error('bad');
+      p = { ...keep, id: m[1], shared: true, title: clean(String(keep.title)), by: clean(String(keep.by)), ...(keep.type === 'request' ? { status: 'open', responses: [] } : {}), ...(keep.type === 'collab' ? { joined: false, responses: [] } : {}) };
+      if (keep.desc) p.desc = clean(String(keep.desc)); if (keep.mood) p.mood = clean(String(keep.mood));
+      S.posts.push(p); save();
+    } catch (e) { p = null; }
+  }
+  return p || 'missing';
+}
+let linkPending = null; // 처음 온 사람이 이름·동네를 정한 뒤 돌아갈 글
+function openFromLink() {
+  const p = postFromHash(); if (!p) return;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+  if (p === 'missing') { stack = [{ n: 'home' }]; render(); return toast('링크의 글을 찾지 못했어요. 지워졌거나 올린 사람의 브라우저에만 있는 글이에요'); }
+  flow = null; lb = null;
+  stack = S.me ? [{ n: 'home' }, { n: p.type, p: { id: p.id } }] : [{ n: 'onboard' }, { n: p.type, p: { id: p.id } }];
+  render('f');
+}
 function caption(p) {
   const head = p.type === 'event' ? p.title : `[${kind(p)}] ${p.title}`;
   const rows = shareRows(p).map(([k, v]) => `${k} ${v}`).join('\n');
   const desc = p.type === 'request' ? p.mood : p.desc;
   const tags = ['#쿵짝', '#전주' + (p.type === 'event' ? p.genre : kind(p)), '#전주' + p.hood, '#동네무대'].join(' ');
-  return [head, rows, desc, `${shareFoot(p)} · ${p.by}`, tags].filter(Boolean).join('\n\n');
+  return [head, rows, desc, `${shareFoot(p)} · ${p.by}\n${postLink(p)}`, tags].filter(Boolean).join('\n\n');
 }
 const blogTitle = (p) => `${p.title} | 전주 ${p.hood} ${p.type === 'event' ? p.genre : kind(p)} 소식`;
 function blogText(p) {
@@ -665,10 +705,10 @@ function blogText(p) {
   const rows = shareRows(p).map(([k, v]) => `■ ${k}: ${v}`).join('\n');
   const desc = p.type === 'request' ? p.mood : p.desc;
   const tags = ['#쿵짝', '#전주' + (p.type === 'event' ? p.genre : kind(p)), '#전주' + p.hood, '#동네무대', '#전주가볼만한곳'].join(' ');
-  return [intro, rows, desc, `${shareFoot(p)}: 쿵짝 앱에서 '${p.title}'${eul(p.title)} 찾아보세요. (${p.by})`, tags].filter(Boolean).join('\n\n');
+  return [intro, rows, desc, `${shareFoot(p)} (${p.by})\n${postLink(p)}`, tags].filter(Boolean).join('\n\n');
 }
 function kakaoText(p) {
-  return [`[쿵짝] ${p.title}`, shareRows(p).map(([k, v]) => `${k} ${v}`).join('\n'), `${shareFoot(p)}: 쿵짝 앱에서 '${p.title}'${eul(p.title)} 찾아보세요`].join('\n\n');
+  return [`[쿵짝] ${p.title}`, shareRows(p).map(([k, v]) => `${k} ${v}`).join('\n'), `${shareFoot(p)}\n${postLink(p)}`].join('\n\n');
 }
 const SHARE_TO = [['insta', '인스타그램'], ['blog', '네이버 블로그'], ['kakao', '카카오톡']];
 function fitText(x, t, w) { if (x.measureText(t).width <= w) return t; while (t && x.measureText(t + '…').width > w) t = t.slice(0, -1); return t + '…'; }
@@ -723,7 +763,7 @@ function downloadImage(img, p) { const a = document.createElement('a'); a.href =
 async function shareFile(img, p, text) {
   let file = null; try { file = dataFile(img.url, `kungjjak-${p.id}.png`); } catch (e) { return false; }
   if (!(navigator.canShare && navigator.share && navigator.canShare({ files: [file] }))) return false;
-  try { await navigator.share({ files: [file], text, title: p.title }); return true; } catch (e) { return e && e.name === 'AbortError' ? 'cancel' : false; }
+  try { await navigator.share({ files: [file], text, title: p.title, url: postLink(p) }); return true; } catch (e) { return e && e.name === 'AbortError' ? 'cancel' : false; }
 }
 async function saveImage(img, p, copied) {
   const a = document.createElement('a'); a.href = img.url; a.download = `kungjjak-${p.id}-${img.fmt}.png`; document.body.appendChild(a); a.click(); a.remove();
@@ -1000,6 +1040,7 @@ const V = {
       nav: true, title: '공유하기',
       body: `${pick}<p class="lead" style="margin-top:4px">블로그에 올릴 포스터 이미지와 글을 만들었어요.</p>${img}
         <div class="h2">블로그에 올릴 글</div><div class="box" style="white-space:pre-line;margin-top:0;color:var(--ink)"><div class="blogt">${esc(blogTitle(p))}</div>${esc(blogText(p))}</div>
+        <div class="h2" style="margin-top:24px">게시물 링크</div><div class="linkbox"><code>${esc(postLink(p))}</code><button class="btn sm" data-a="copyLink" data-id="${id}">링크 복사</button></div><p class="cap" style="margin-top:8px">본문 끝에도 이 링크가 들어 있어요. 블로그에서 누르면 쿵짝의 이 글이 바로 열려요.</p>
         <div class="copyrow"><button class="btn ghost" data-a="copyBlog" data-part="title" data-id="${id}">제목 복사</button><button class="btn ghost" data-a="copyBlog" data-part="body" data-id="${id}">본문 복사</button></div>
         <p class="cap" style="margin-top:12px">휴대폰에서는 공유 창에서 네이버 블로그를 골라 주세요. PC에서는 이미지를 내려받고 본문을 복사한 뒤 블로그 글쓰기 화면을 열어요. 제목은 '제목 복사'로 따로 넣어 주세요.</p>`,
       cta: { label: '네이버 블로그에 올리기', a: 'sendBlog', id, cap: '본문은 자동으로 복사돼요. 글쓰기 화면에 붙여 넣으세요' },
@@ -1008,6 +1049,7 @@ const V = {
       nav: true, title: '공유하기',
       body: `${pick}<p class="lead" style="margin-top:4px">친구나 단체방에 보낼 포스터 이미지와 글을 만들었어요.</p>
         <div class="kchat" aria-label="카카오톡에서 보이는 모양 예시"><span class="when">카카오톡 대화방에서는 이렇게 보여요</span><img src="${shareImg.url}" alt="${esc(p.title)} 포스터 이미지"><div class="kb">${esc(kakaoText(p))}</div></div>
+        <div class="h2" style="margin-top:24px">게시물 링크</div><div class="linkbox"><code>${esc(postLink(p))}</code><button class="btn sm" data-a="copyLink" data-id="${id}">링크 복사</button></div><p class="cap" style="margin-top:8px">카카오톡에서 링크를 누르면 쿵짝의 이 글이 바로 열려요.</p>
         <button class="btn ghost" style="margin-top:12px" data-a="copyKakao" data-id="${id}">글만 복사하기</button>
         <p class="cap" style="margin-top:12px">휴대폰에서는 공유 창에서 카카오톡을 고르고 대화방을 고르면 돼요. PC에서는 이미지를 내려받고 글을 복사하니, 카카오톡 대화방에 붙여 넣어 주세요.</p>`,
       cta: { label: '카카오톡으로 보내기', a: 'sendKakao', id, cap: '글은 자동으로 복사돼요' },
@@ -1020,6 +1062,7 @@ const V = {
         ${img}
         ${story ? '' : `<div class="h2">함께 올릴 글</div><div class="box" style="white-space:pre-line;margin-top:0;color:var(--ink)">${esc(caption(p))}</div>
         <button class="btn ghost" style="margin-top:12px" data-a="copyCap" data-id="${id}">글만 복사하기</button>`}
+        <div class="h2" style="margin-top:24px">게시물 링크</div><div class="linkbox"><code>${esc(postLink(p))}</code><button class="btn sm" data-a="copyLink" data-id="${id}">링크 복사</button></div><p class="cap" style="margin-top:8px">인스타그램 글 속 주소는 눌리지 않아요. ${story ? '스토리의 링크 스티커에 이 링크를 붙여 넣어 주세요' : '프로필 링크나 스토리 링크 스티커에 붙여 넣어 주세요'}.</p>
         <p class="cap" style="margin-top:12px">휴대폰에서는 공유 창이 열려요. PC에서는 이미지를 내려받으니, 인스타그램에서 ${story ? '스토리' : '새 게시물'}로 올려 주세요. 내려받기가 안 되면 이미지를 길게 누르거나 오른쪽 클릭해 저장하세요.</p>`,
       cta: story ? { label: '인스타그램 스토리로 보내기', a: 'sendInsta', id }
         : { label: '인스타그램으로 보내기', a: 'sendInsta', id, cap: '글은 자동으로 복사돼요. 인스타그램에서 붙여 넣으세요' },
@@ -1406,7 +1449,7 @@ function render(dir) {
 const go = (n, p) => { stack.push({ n, p }); render('f'); };
 const root = (...rest) => { stack = [{ n: 'home' }, ...rest]; };
 function build() {
-  const d = flow.d, at = d.date && d.time ? `${d.date}T${d.time}` : null, base = { id: 'u' + S.seq, type: flow.type, title: d.title.trim(), by: d.by.trim(), hood: d.hood, mine: true, g: S.seq % GRADS.length, ...(d.gallery && d.gallery.length ? { gallery: d.gallery.map((it) => ({ src: it.src, cap: clean((it.cap || '').trim()) })) } : {}) };
+  const d = flow.d, at = d.date && d.time ? `${d.date}T${d.time}` : null, base = { id: 'u' + S.seq + (flow.uid || (flow.uid = Math.random().toString(36).slice(2, 7))), type: flow.type, title: d.title.trim(), by: d.by.trim(), hood: d.hood, mine: true, g: S.seq % GRADS.length, ...(d.gallery && d.gallery.length ? { gallery: d.gallery.map((it) => ({ src: it.src, cap: clean((it.cap || '').trim()) })) } : {}) };
   if (flow.type === 'event') return { ...base, genre: d.genre, venue: d.venue.trim(), at, desc: clean((d.desc || '').trim()), ...(d.photo ? { photo: d.photo } : {}),
     price: d.mode === 'fixed' ? { mode: 'fixed', amount: num(d.amount) } : d.mode === 'flex' ? { mode: 'flex', min: num(d.min), rec: num(d.rec) } : { mode: 'donate' } };
   if (flow.type === 'request') return { ...base, at, place: d.venue.trim(), budget: num(d.budget), mood: clean(d.mood.trim()), status: 'open', responses: [] };
@@ -1419,7 +1462,7 @@ const A = {
   start() {
     S.me = { name: flow.d.name.trim() }; S.hoods = HOODS.filter((h) => flow.hoods.includes(h)); flow = null;
     notify({ title: `이번 주 ${hoodLabel()} 가까이에서 무대 ${S.posts.filter((p) => p.type === 'event').length}개가 열려요`, body: '공연, 전시, 북토크를 모아 봤어요', to: 'home' });
-    save(); stack = [{ n: 'home' }]; render('f');
+    save(); stack = [{ n: 'home' }, ...(linkPending ? [linkPending] : [])]; linkPending = null; render('f');
   },
   saveHoods() { S.hoods = HOODS.filter((h) => flow.hoods.includes(h)); save(); flow = null; stack.pop(); render('b'); toast('내 동네를 바꿨어요'); },
   filter({ c }) { filter = c; render(); },
@@ -1456,6 +1499,10 @@ const A = {
   },
   shareFmt({ v }) { shareFmt = v; render(); },
   shareTo({ v }) { shareTo = v; render(); },
+  async copyLink({ id }) {
+    const t = postLink(post(id));
+    if (await copyText(t)) toast('링크를 복사했어요. 누르면 쿵짝의 이 글이 바로 열려요'); else shareSheet(t, '게시물 링크');
+  },
   async copyBlog({ id, part }) {
     const p = post(id), t = part === 'title' ? blogTitle(p) : blogText(p), what = part === 'title' ? '제목' : '본문';
     if (await copyText(t)) toast(`${what}을 복사했어요. 블로그 글쓰기 화면에 붙여 넣어 주세요`); else shareSheet(t, `블로그 ${what}`);
@@ -1675,7 +1722,13 @@ function duo(on) {
   ph.insertAdjacentHTML('beforeend', '<i class="hinge"></i><div class="pane2"><iframe title="협업 과정 예시"></iframe></div>');
   ph.querySelector('iframe').srcdoc = PAGE_SRC.replace('<head>', '<head><script>window.PANE = "collab";<\/script>');
 }
-document.addEventListener('click', (e) => { const el = e.target.closest('[data-a]'); if (!el || el.disabled) return; const f = A[el.dataset.a]; if (f) f({ ...el.dataset }); });
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-a]'); if (!el || el.disabled) return; const f = A[el.dataset.a]; if (!f) return;
+  if (!S.me && !PANE && ['book', 'ask', 'respond', 'join', 'talk', 'follow', 'report', 'compose', 'tab', 'go', 'choose'].includes(el.dataset.a) && stack[0].n === 'onboard' && stack.length > 1) {
+    linkPending = stack[stack.length - 1]; flow = null; stack = [{ n: 'onboard' }]; render('f'); return toast('먼저 이름과 동네를 알려 주세요. 끝나면 이 글로 돌아와요');
+  }
+  f({ ...el.dataset });
+});
 document.addEventListener('keydown', (e) => {
   if (lb) { if (e.key === 'Escape') { e.preventDefault(); return A.lbClose(); } if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); return A.lbGo({ d: e.key === 'ArrowLeft' ? -1 : 1 }); } }
   if (e.target.id === 'chatIn' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); A.send(); return; }
@@ -1707,6 +1760,7 @@ document.addEventListener('input', (e) => {
 });
 if (PANE === 'collab') { SCENES.collab(); save(); } // 오른쪽 휴대폰: 책방이 올린 협업 글에서 시작
 render();
+if (!PANE) { openFromLink(); window.addEventListener('hashchange', openFromLink); }
 </script>
 </body>
 </html>
