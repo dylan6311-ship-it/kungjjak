@@ -385,7 +385,7 @@ function seed() { return fillGal(seedBase()); }
 function seedBase() {
   return {
     me: null, hoods: [], seq: 1, tickets: [], follows: [], notifs: [], chats: [], teams: [], reports: [],
-    settings: { push: true, kakao: true, weekly: true },
+    settings: { push: true, kakao: true, weekly: true, follow: true },
     // 프로토타입이 없는 객체: '__proto__', 'constructor' 같은 이름도 평범한 키로 다뤄요
     profiles: Object.assign(Object.create(null), {
       '새벽세시': { kind: '아티스트', hood: '덕진동', verify: 'insta', bio: '통기타 두 대로 노래하는 2인조. 전주에서 5년째 무대에 서고 있어요.', reviews: [{ by: '서신동 이웃', text: '작은 공간인데 소리가 꽉 찼어요. 다음 공연도 갈게요.', title: '가을 저녁 라이브' }, { by: '효자동 이웃', text: '처음 들었는데 노래가 계속 맴돌아요.', title: '가을 저녁 라이브' }] },
@@ -454,7 +454,7 @@ const DEMO_GAL = {
 function load() {
   try {
     const s = JSON.parse(localStorage.getItem(KEY));
-    if (s && s.posts && s.profiles) { s.profiles = Object.assign(Object.create(null), s.profiles); return fillGal(s); }
+    if (s && s.posts && s.profiles) { s.profiles = Object.assign(Object.create(null), s.profiles); if (s.settings && s.settings.follow === undefined) s.settings.follow = true; return fillGal(s); }
   } catch (e) {}
   return seed();
 }
@@ -1000,7 +1000,7 @@ function listHTML() {
 function followRow(name, sub) {
   const on = following(name);
   return `<div class="row"><button class="who" data-a="profile" data-name="${esc(name)}"><div class="ava">${esc(name[0])}</div><div class="tx"><b>${esc(name)}${badge(name)}</b><span>${sub}</span></div></button>
-    ${isMine(name) ? '' : `<button class="btn sm ${on ? 'on' : ''}" data-a="follow" data-name="${esc(name)}">${on ? '팔로잉' : '팔로우'}</button>`}</div>`;
+    ${`<button class="btn sm ${on ? 'on' : ''}" data-a="follow" data-name="${esc(name)}">${on ? '팔로잉' : '팔로우'}</button>`}</div>`;
 }
 function pickRows(names) {
   return names.map((n) => `<button class="row" data-a="pick" data-name="${esc(n.name)}"><div class="ava">${esc(n.name[0])}</div>
@@ -1313,8 +1313,9 @@ const V = {
         <h1 class="big" style="margin:0">${esc(name)}${badge(name)}</h1><p class="lead">${[pr.kind, pr.hood].filter(Boolean).join(' · ') || '쿵짝 이웃'}</p>
         ${pr.verify ? `<p class="cap c-teal" style="font-weight:600;margin-top:6px">${VERIFY[pr.verify]}을 마쳤어요</p>` : `<p class="cap" style="margin-top:6px">아직 인증하지 않았어요</p>`}</div>
       ${pr.bio ? `<p class="body" style="margin-top:18px;text-align:center">${esc(pr.bio)}</p>` : ''}
-      ${mine ? (pr.verify ? '' : `<button class="btn ghost" style="margin-top:20px" data-a="verifyTeam" data-name="${esc(name)}">인증하기</button>`)
-        : `<button class="btn ${on ? 'ghost' : ''}" style="margin-top:20px" data-a="follow" data-name="${esc(name)}">${on ? '팔로잉' : '팔로우하고 새 무대 알림 받기'}</button>`}
+      ${mine && !pr.verify ? `<button class="btn ghost" style="margin-top:20px" data-a="verifyTeam" data-name="${esc(name)}">인증하기</button>` : ''}
+      ${`<button class="btn ${on ? 'ghost' : ''}" style="margin-top:20px" data-a="follow" data-name="${esc(name)}">${on ? '팔로잉' : '팔로우하고 새 무대 알림 받기'}</button>`}
+      ${mine ? `<p class="cap" style="text-align:center;margin-top:8px">시연용: 내 프로필을 팔로우하면, 이 이름으로 행사를 올릴 때 나에게도 알림이 와요</p>` : ''}
       <div class="h2">다가오는 무대</div>${ev.map(card).join('') || '<p class="cap">잡힌 무대가 아직 없어요.</p>'}
       ${etc.length ? `<div class="h2">올린 글</div>${etc.map(card).join('')}` : ''}
       <div class="h2">후기 ${pr.reviews.length}</div>${pr.reviews.map(reviewHTML).join('') || '<p class="cap">아직 후기가 없어요. 무대를 예매하고 본 사람만 남길 수 있어요.</p>'}
@@ -1397,7 +1398,7 @@ const V = {
     return { nav: true, title: '알림 설정', body: `<div class="h2" style="margin-top:12px">어디로 받을까요?</div>
       ${sw('push', '앱 알림', '쿵짝 앱에서 알려드려요')}${sw('kakao', '카카오톡', '앱을 열지 않아도 받을 수 있어요')}
       <div class="h2">얼마나 자주 받을까요?</div>
-      <div class="row"><div class="tx"><b>팔로우한 팀의 새 무대</b><span>잡히는 대로 바로 알려드려요</span></div></div>
+      ${sw('follow', '팔로우한 팀의 새 무대', '새 공연·전시가 올라오면 바로 알려드려요')}
       ${sw('weekly', '우리 동네 무대 모아 보기', '일주일에 한 번, 묶어서 알려드려요')}
       <div class="box"><b>이번 주 ${S.hoods.join('·')} 무대</b><br>${S.posts.filter((p) => p.type === 'event' && shown(p)).sort((a, b) => S.hoods.includes(b.hood) - S.hoods.includes(a.hood)).slice(0, 3).map((p) => `· ${esc(p.title)} (${when(p)})`).join('<br>')}<br><span class="cap">매주 이런 모양으로 도착해요</span></div>` };
   },
@@ -1679,8 +1680,14 @@ const A = {
       p.responses = [{ by: '새벽세시', msg: '어쿠스틱 2인조예요. 그날 시간 괜찮아요. 40분 공연할 수 있어요.' }, { by: '파도소리 밴드', msg: '4인조 밴드예요. 신나는 곡 위주로 준비할게요.' }];
       notify({ title: '섭외 글에 응답 2개가 왔어요', body: p.title, to: p.id });
     }
+    // 팔로우한 팀이나 공간이 새 행사를 올리면 팔로워에게 바로 알려요 (알림 설정에서 끌 수 있어요)
+    const fans = p.type === 'event' && S.settings.follow !== false ? [p.by, p.venue].filter((n, i, a) => n && a.indexOf(n) === i && following(n)) : [];
+    if (fans.length) {
+      const who = fans[0], ga = (w) => (bat(w) ? '이' : '가');
+      notify({ title: who === p.by ? `팔로우한 ${who}${ga(who)} 새 ${p.genre}${eul(p.genre)} 올렸어요` : `팔로우한 ${who}에서 새 ${p.genre}${ga(p.genre)} 열려요`, body: `${p.title} · ${when(p)}`, to: p.id });
+    }
     S.posts.unshift(p); save(); flow = null; filter = '전체'; subs = []; q = ''; genre = ''; homeTab = { event: 'see', request: 'hire', collab: 'with' }[p.type]; root({ n: p.type, p: { id: p.id } }); render('f');
-    toast(masked ? '바르지 않은 표현은 *로 가려서 올렸어요' : p.type === 'request' ? '올렸어요. 벌써 두 팀이 응답했어요' : `올렸어요. ${p.hood} 이웃의 피드에 보여요`);
+    toast(masked ? '바르지 않은 표현은 *로 가려서 올렸어요' : fans.length ? `올렸어요. ${fans[0]}${eul(fans[0])} 팔로우한 사람에게 알림을 보냈어요` : p.type === 'request' ? '올렸어요. 벌써 두 팀이 응답했어요' : `올렸어요. ${p.hood} 이웃의 피드에 보여요`);
   },
 
   openNoti({ id }) { const n = S.notifs.find((x) => x.id === id); n.read = true; save(); if (n.to === 'home' || !post(n.to)) { stack = [{ n: 'home' }]; return render('f'); } go(post(n.to).type, { id: n.to }); },
