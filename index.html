@@ -1106,7 +1106,7 @@ const V = {
         <div class="seg">${Object.entries(HOME_TABS).map(([k, v]) => `<button class="${homeTab === k ? 'on' : ''}" data-a="homeTab" data-t="${k}">${v.label}</button>`).join('')}</div>
         <h2 class="ask">${T.ask}</h2>
         ${see ? `<div class="fchips">${chip('이번 주')}${chip('무료')}${chip('인증 팀')}<button class="fchip ${genre ? 'on' : ''}" data-a="genreOpen">${genre || '장르'}${icon('down')}</button></div>`
-          : (homeTab === 'with' ? `<div class="fchips">${chip(SEEK.member[0])}${chip(SEEK.team[0])}</div>` : '') + (!T.invite ? '' : `<button class="invite" data-a="composeAs" data-t="${T.type}"><div class="tx"><b>${T.invite[0]}</b><span>${T.invite[1]}</span></div>${icon('next', 'width:20px;height:20px;color:var(--mute)')}</button>`)}
+          : (homeTab === 'with' ? `<div class="fchips">${chip(SEEK.team[0])}${chip(SEEK.member[0])}</div>` : '') + (!T.invite ? '' : `<button class="invite" data-a="composeAs" data-t="${T.type}"><div class="tx"><b>${T.invite[0]}</b><span>${T.invite[1]}</span></div>${icon('next', 'width:20px;height:20px;color:var(--mute)')}</button>`)}
         <div id="list">${listHTML()}</div>`,
     };
   },
