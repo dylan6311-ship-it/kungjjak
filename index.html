@@ -144,6 +144,9 @@ svg.i{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .picker{display:flex;flex-direction:column;gap:4px}
 .picker button{display:flex;justify-content:space-between;align-items:center;padding:14px 4px;font-size:16px;font-weight:600}
 .picker button.on{color:var(--brand-ink)}
+.picker .pcap{font-size:13px;color:var(--sub);padding:0 4px 4px}
+.pcustom{display:flex;gap:8px;padding:2px 0 6px}.pcustom .inp{flex:1;min-width:0;height:50px;font-size:16px;font-variant-numeric:tabular-nums}.pcustom .btn{flex:none;height:50px}
+.perr{font-size:13px;font-weight:600;color:var(--danger);padding:0 4px}
 /* 홈 (예전 목록 모양: 프로필·내 정보 화면에서 씀) */
 .top{display:flex;align-items:center;justify-content:space-between;padding-top:10px}
 .top .logo{font-size:22px}
@@ -375,7 +378,18 @@ const PAGE_SRC = PANE ? '' : '<!doctype html>\n' + document.documentElement.oute
 const KEY = 'kungjjak-v2' + (PANE ? '-' + PANE : '');
 const HOODS = ['덕진동', '서신동', '효자동', '서학동', '중앙동'];
 const GENRES = ['공연', '전시', '북토크', '마켓'];
-const CHEAP = 10000; // 설문: 소규모 공연·전시에 한 번에 낼 수 있는 금액은 1만 원 미만이 가장 많았어요(50%)
+// 가격 구간: 앞 금액 이상, 뒤 금액 미만. 설문에서 한 번에 낼 수 있는 금액은 1만 원 미만이 가장 많았어요(50%)
+const PRICE_RANGES = [{ min: 0, max: 10000, label: '무료~10,000원' }, { min: 10000, max: 20000, label: '10,000~20,000원' }, { min: 20000, max: 30000, label: '20,000~30,000원' }];
+const comma = (n) => Number(n).toLocaleString('ko-KR');
+// '5000~15000', '5,000 ~ 15,000', '~15000', '5000~' 모두 받아요. 직접 적은 구간은 두 금액 모두 포함해요
+function parsePrice(t) {
+  const m = /^\s*([\d,]*)\s*[~\-]\s*([\d,]*)\s*$/.exec(t || '');
+  if (!m || (!m[1] && !m[2])) return { err: "'5,000~15,000'처럼 금액 두 개를 ~로 이어 적어 주세요" };
+  const a = m[1] ? num(m[1]) : 0, b = m[2] ? num(m[2]) : Infinity;
+  if (a > b) return { err: '앞 금액이 뒤 금액보다 작아야 해요' };
+  return { min: a, max: b, incl: true, custom: true, label: b === Infinity ? `${comma(a)}원부터` : `${a ? comma(a) : '무료'}~${comma(b)}원` };
+}
+const inPrice = (p, r) => { const v = entryPrice(p); return v >= r.min && (r.incl ? v <= r.max : v < r.max); };
 const entryPrice = (p) => (p.price.mode === 'fixed' ? p.price.amount : p.price.mode === 'flex' ? p.price.min : 0);
 /* 관심 분야·키워드: 팔로우하지 않은 팀의 글이라도, 고른 장르나 적어 둔 낱말이 맞으면 알려줘요 */
 const INT = () => (S.interests = S.interests || { genres: [], keywords: [] });
@@ -481,7 +495,7 @@ let S = load();
 let stack = [{ n: 'home' }];
 let flow = null, filter = '전체', subs = [], q = '', chatDraft = '', curValid = null, toastT;
 let shareFmt = 'feed', shareImg = null, shareTo = 'insta';
-let homeTab = 'see', genre = '', searchOpen = false;
+let homeTab = 'see', genre = '', price = null, priceDraft = '', searchOpen = false;
 
 /* ───────── 도우미 ───────── */
 const $ = (s) => document.querySelector(s);
@@ -1014,7 +1028,7 @@ function listHTML() {
   const list = S.posts.filter(shown).filter((p) => (!T.type || p.type === T.type) && (p.type !== 'event' || upcomingEv(p)))
     .filter((p) => !see || !subs.includes('이번 주') || thisWeek(p))
     .filter((p) => !see || !subs.includes('무료') || p.price.mode === 'donate')
-    .filter((p) => !see || !subs.includes('1만 원 미만') || entryPrice(p) < CHEAP)
+    .filter((p) => !see || !price || inPrice(p, price))
     .filter((p) => !see || !genre || p.genre === genre)
     .filter((p) => !see || !subs.includes('인증 팀') || prof(p.by).verify)
     .filter((p) => homeTab !== 'with' || subs.includes(SEEK.member[0]) === subs.includes(SEEK.team[0]) || subs.includes(SEEK[seekOf(p)][0]))
@@ -1135,7 +1149,7 @@ const V = {
         ${searchOpen ? `<div class="sbar"><label>${icon('search')}<input data-s placeholder="${T.search}" value="${esc(q)}" autocomplete="off"></label><button data-a="searchClose">취소</button></div>` : ''}
         <div class="seg">${Object.entries(HOME_TABS).map(([k, v]) => `<button class="${homeTab === k ? 'on' : ''}" data-a="homeTab" data-t="${k}">${v.label}</button>`).join('')}</div>
         <h2 class="ask">${T.ask}</h2>
-        ${see ? `<div class="fchips">${chip('이번 주')}${chip('무료')}${chip('1만 원 미만')}${chip('인증 팀')}<button class="fchip ${genre ? 'on' : ''}" data-a="genreOpen">${genre || '장르'}${icon('down')}</button></div>`
+        ${see ? `<div class="fchips">${chip('이번 주')}${chip('무료')}${chip('인증 팀')}<button class="fchip ${genre ? 'on' : ''}" data-a="genreOpen">${genre || '장르'}${icon('down')}</button><button class="fchip ${price ? 'on' : ''}" data-a="priceOpen">${price ? price.label : '가격'}${icon('down')}</button></div>`
           : (homeTab === 'with' ? `<div class="fchips">${chip(SEEK.team[0])}${chip(SEEK.member[0])}</div>` : '') + (!T.invite ? '' : `<button class="invite" data-a="composeAs" data-t="${T.type}"><div class="tx"><b>${T.invite[0]}</b><span>${T.invite[1]}</span></div>${icon('next', 'width:20px;height:20px;color:var(--mute)')}</button>`)}
         <div id="list">${listHTML()}</div>`,
     };
@@ -1515,7 +1529,7 @@ const A = {
   },
   saveHoods() { S.hoods = HOODS.filter((h) => flow.hoods.includes(h)); save(); flow = null; stack.pop(); render('b'); toast('내 동네를 바꿨어요'); },
   filter({ c }) { filter = c; render(); },
-  homeTab({ t }) { homeTab = t; subs = []; genre = ''; render(); },
+  homeTab({ t }) { homeTab = t; subs = []; genre = ''; price = null; render(); },
   searchOpen() { searchOpen = true; render(); setTimeout(() => $('[data-s]')?.focus(), 0); },
   searchClose() { searchOpen = false; q = ''; render(); },
   genreOpen() {
@@ -1525,6 +1539,29 @@ const A = {
     $('#app').appendChild(s);
   },
   genrePick({ g }) { genre = g; A.closeSheet(); render(); },
+  priceOpen({ err } = {}) {
+    document.querySelector('.sheet')?.remove();
+    if (price && price.custom && !priceDraft) priceDraft = `${price.min ? comma(price.min) : ''}~${price.max === Infinity ? '' : comma(price.max)}`;
+    const on = (r) => price && !price.custom && price.min === r.min && price.max === r.max;
+    const row = (k, label, sel) => `<button class="${sel ? 'on' : ''}" data-a="pricePick" data-k="${k}">${label}${sel ? icon('check', 'width:20px;height:20px') : ''}</button>`;
+    const s = document.createElement('div'); s.className = 'sheet'; s.dataset.a = 'closeSheet';
+    s.innerHTML = `<div class="sheet-in" data-a="stay"><b>얼마까지 낼 수 있나요?</b><div class="picker">
+      ${row('', '모든 가격', !price)}${PRICE_RANGES.map((r, i) => row(i, r.label, on(r))).join('')}
+      <p class="pcap">입장할 때 드는 가장 적은 금액으로 찾아요. 각 구간은 앞 금액 이상, 뒤 금액 미만이에요.</p>
+      <b style="font-size:16px;padding:10px 4px 2px${price && price.custom ? ';color:var(--brand-ink)' : ''}">직접 입력</b>
+      <div class="pcustom"><input id="priceIn" class="inp" inputmode="numeric" placeholder="예: 5,000~15,000" value="${esc(priceDraft)}" autocomplete="off" aria-label="가격 구간 직접 입력"><button class="btn sm" data-a="priceApply">적용</button></div>
+      ${err ? `<p class="perr" role="alert">${esc(err)}</p>` : ''}</div></div>`;
+    $('#app').appendChild(s);
+    if (err) { const i = document.getElementById('priceIn'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
+  },
+  pricePick({ k }) { price = k === '' ? null : PRICE_RANGES[Number(k)]; priceDraft = ''; A.closeSheet(); render(); },
+  priceApply() {
+    const r = parsePrice(priceDraft);
+    if (r.err) return A.priceOpen({ err: r.err });
+    price = r; priceDraft = ''; A.closeSheet(); render();
+    const n = document.querySelectorAll('#list [data-id]').length;
+    toast(n ? `${r.label} 행사 ${n}개를 찾았어요` : `${r.label}에 맞는 행사가 아직 없어요`);
+  },
   composeAs({ t }) { A.compose(); flow.direct = true; A.type({ t }); }, // 홈 입구에서 바로 시작하면 뒤로 갈 때 홈으로
   sub({ c }) { subs = subs.includes(c) ? subs.filter((x) => x !== c) : [...subs, c]; render(); },
   tab({ n }) { flow = null; stack = [{ n }]; render(); },
@@ -1740,7 +1777,7 @@ const A = {
       notify({ title: hit.kw ? `관심 키워드 '${hit.kw}'${bat(hit.kw) ? '이' : '가'} 들어간 새 ${what}${ga(what)} 올라왔어요` : `관심 분야인 ${hit.genre}${ga(hit.genre)} 새로 올라왔어요`,
         body: p.type === 'request' ? `${p.title} · 예산 ${man(p.budget)}` : p.at ? `${p.title} · ${when(p)}` : p.title, to: p.id });
     }
-    S.posts.unshift(p); save(); flow = null; filter = '전체'; subs = []; q = ''; genre = ''; homeTab = { event: 'see', request: 'hire', collab: 'with' }[p.type]; root({ n: p.type, p: { id: p.id } }); render('f');
+    S.posts.unshift(p); save(); flow = null; filter = '전체'; subs = []; q = ''; genre = ''; price = null; homeTab = { event: 'see', request: 'hire', collab: 'with' }[p.type]; root({ n: p.type, p: { id: p.id } }); render('f');
     toast(masked ? '바르지 않은 표현은 *로 가려서 올렸어요' : hit ? `올렸어요. ${hit.kw ? `'${hit.kw}'${eul(hit.kw)} 관심 키워드로 둔` : `${hit.genre}${eul(hit.genre)} 관심 분야로 고른`} 사람에게 알림을 보냈어요` : fans.length ? `올렸어요. ${p.type === 'request' ? '두 팀이 벌써 응답했고, ' : ''}${fans[0]}${eul(fans[0])} 팔로우한 사람에게 알림을 보냈어요` : p.type === 'request' ? '올렸어요. 벌써 두 팀이 응답했어요' : `올렸어요. ${p.hood} 이웃의 피드에 보여요`);
   },
 
@@ -1758,14 +1795,14 @@ const A = {
     toast(n ? `'${k}' 키워드를 더했어요. 지금 맞는 글이 ${n}개 있어요` : `'${k}'${bat(k) ? '이' : '가'} 들어간 글이 올라오면 알려드릴게요`);
   },
   kwDel({ i }) { const k = INT().keywords.splice(Number(i), 1)[0]; save(); render(); toast(`'${k}' 키워드를 뺐어요`); },
-  reset() { kwDraft = ''; duo(false); try { localStorage.removeItem(KEY); } catch (e) {} S = seed(); flow = null; filter = '전체'; subs = []; homeTab = 'see'; genre = ''; searchOpen = false; q = ''; chatDraft = ''; stack = [{ n: 'onboard' }]; render('f'); },
+  reset() { kwDraft = ''; priceDraft = ''; duo(false); try { localStorage.removeItem(KEY); } catch (e) {} S = seed(); flow = null; filter = '전체'; subs = []; homeTab = 'see'; genre = ''; price = null; searchOpen = false; q = ''; chatDraft = ''; stack = [{ n: 'onboard' }]; render('f'); },
   scene({ scene }) { if (PANE || !SCENES[scene]) return; A.closeSheet(); duo(scene === 'hire'); SCENES[scene](); save(); render('f'); },
   duoOff() { duo(false); },
 };
 
 /* ───────── 시연 바로가기: 발표 중 장면을 바로 불러와요 ───────── */
 function demoBase() {
-  S = seed(); flow = null; filter = '전체'; subs = []; q = ''; chatDraft = ''; homeTab = 'see'; genre = ''; searchOpen = false;
+  S = seed(); flow = null; filter = '전체'; subs = []; q = ''; chatDraft = ''; homeTab = 'see'; genre = ''; price = null; searchOpen = false;
   S.me = { name: '덕진동 고양이' }; S.hoods = ['덕진동', '서신동'];
   notify({ title: `이번 주 ${hoodLabel()} 가까이에서 무대 ${S.posts.filter((p) => p.type === 'event').length}개가 열려요`, body: '공연, 전시, 북토크를 모아 봤어요', to: 'home' });
 }
@@ -1802,7 +1839,7 @@ const SCENES = {
   // 발표 시연 ②: 같은 앱을 이웃(하은)의 휴대폰으로 넘겨요. 방금 올린 공연은 그대로 두고 홈으로 가요
   viewer() {
     flow = null; S.teams = []; S.posts.forEach((p) => { if (p.type === 'event') p.mine = false; });
-    homeTab = 'see'; filter = '전체'; subs = []; q = ''; genre = ''; stack = [{ n: 'home' }];
+    homeTab = 'see'; filter = '전체'; subs = []; q = ''; genre = ''; price = null; stack = [{ n: 'home' }];
   },
   collab() {
     demoBase(); homeTab = 'with'; S.me = { name: '하람' }; // 밴드에 들어가고 싶은 드러머(가상)
@@ -1830,6 +1867,7 @@ document.addEventListener('keydown', (e) => {
   if (lb) { if (e.key === 'Escape') { e.preventDefault(); return A.lbClose(); } if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); return A.lbGo({ d: e.key === 'ArrowLeft' ? -1 : 1 }); } }
   if (e.target.id === 'chatIn' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); A.send(); return; }
   if (e.target.id === 'kwIn' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); return A.kwAdd(); }
+  if (e.target.id === 'priceIn' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); return A.priceApply(); }
   if (PANE || /^(INPUT|TEXTAREA)$/.test(e.target.tagName) || e.altKey || e.ctrlKey || e.metaKey) return;
   const scene = ['home', 'book', 'next', 'hire', 'dash'][Number(e.key) - 1]; if (scene) A.scene({ scene });
 });
@@ -1848,6 +1886,12 @@ document.addEventListener('input', (e) => {
   const el = e.target;
   if (el.id === 'chatIn') { chatDraft = el.value; return; }
   if (el.id === 'kwIn') { kwDraft = el.value; return; }
+  if (el.id === 'priceIn') {
+    const parts = el.value.replace(/[^\d~\-]/g, '').replace(/-/g, '~').split('~').slice(0, 2);
+    const v = parts.map((x) => (x ? comma(Number(x.slice(0, 9))) : '')).join(parts.length > 1 ? '~' : '');
+    if (v !== el.value) { el.value = v; el.setSelectionRange(v.length, v.length); }
+    priceDraft = v; document.querySelector('.perr')?.remove(); return;
+  }
   if (el.dataset.gcap !== undefined) { const it = flow && flow.d.gallery && flow.d.gallery[Number(el.dataset.gcap)]; if (it) it.cap = el.value; return; }
   if (el.dataset.s !== undefined) { q = el.value; $('#list').innerHTML = listHTML(); return; }
   const f = el.dataset.f; if (!f || !flow) return;
