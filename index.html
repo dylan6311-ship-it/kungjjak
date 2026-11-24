@@ -145,7 +145,8 @@ svg.i{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .picker button{display:flex;justify-content:space-between;align-items:center;padding:14px 4px;font-size:16px;font-weight:600}
 .picker button.on{color:var(--brand-ink)}
 .picker .pcap{font-size:13px;color:var(--sub);padding:0 4px 4px}
-.pcustom{display:flex;gap:8px;padding:2px 0 6px}.pcustom .inp{flex:1;min-width:0;height:50px;font-size:16px;font-variant-numeric:tabular-nums}.pcustom .btn{flex:none;height:50px}
+.pcustom{display:flex;align-items:center;gap:8px;padding:2px 0 6px}.pcustom .inp{flex:1;min-width:0;height:50px;font-size:16px;text-align:right;padding:0 12px;font-variant-numeric:tabular-nums}.pcustom .btn{flex:none;height:50px}
+.pcustom .sep,.pcustom .won{flex:none;font-size:16px;font-weight:600;color:var(--sub)}
 .perr{font-size:13px;font-weight:600;color:var(--danger);padding:0 4px}
 /* 홈 (예전 목록 모양: 프로필·내 정보 화면에서 씀) */
 .top{display:flex;align-items:center;justify-content:space-between;padding-top:10px}
@@ -381,13 +382,12 @@ const GENRES = ['공연', '전시', '북토크', '마켓'];
 // 가격 구간: 앞 금액 이상, 뒤 금액 미만. 설문에서 한 번에 낼 수 있는 금액은 1만 원 미만이 가장 많았어요(50%)
 const PRICE_RANGES = [{ min: 0, max: 10000, label: '무료~10,000원' }, { min: 10000, max: 20000, label: '10,000~20,000원' }, { min: 20000, max: 30000, label: '20,000~30,000원' }];
 const comma = (n) => Number(n).toLocaleString('ko-KR');
-// '5000~15000', '5,000 ~ 15,000', '~15000', '5000~' 모두 받아요. 직접 적은 구간은 두 금액 모두 포함해요
-function parsePrice(t) {
-  const m = /^\s*([\d,]*)\s*[~\-]\s*([\d,]*)\s*$/.exec(t || '');
-  if (!m || (!m[1] && !m[2])) return { err: "'5,000~15,000'처럼 금액 두 개를 ~로 이어 적어 주세요" };
-  const a = m[1] ? num(m[1]) : 0, b = m[2] ? num(m[2]) : Infinity;
-  if (a > b) return { err: '앞 금액이 뒤 금액보다 작아야 해요' };
-  return { min: a, max: b, incl: true, custom: true, label: b === Infinity ? `${comma(a)}원부터` : `${a ? comma(a) : '무료'}~${comma(b)}원` };
+// 직접 입력: 두 칸 중 한쪽만 적어도 돼요. 앞 칸만 → 그 금액부터, 뒤 칸만 → 무료부터 그 금액까지. 두 금액 모두 포함해요
+function parsePrice(d) {
+  if (!d.a && !d.b) return { err: '금액을 한 칸 이상 적어 주세요' };
+  const lo = d.a ? num(d.a) : 0, hi = d.b ? num(d.b) : Infinity;
+  if (lo > hi) return { err: '앞 칸 금액이 뒤 칸보다 작아야 해요' };
+  return { min: lo, max: hi, incl: true, custom: true, label: hi === Infinity ? `${comma(lo)}원부터` : `${lo ? comma(lo) : '무료'}~${comma(hi)}원` };
 }
 const inPrice = (p, r) => { const v = entryPrice(p); return v >= r.min && (r.incl ? v <= r.max : v < r.max); };
 const entryPrice = (p) => (p.price.mode === 'fixed' ? p.price.amount : p.price.mode === 'flex' ? p.price.min : 0);
@@ -495,7 +495,7 @@ let S = load();
 let stack = [{ n: 'home' }];
 let flow = null, filter = '전체', subs = [], q = '', chatDraft = '', curValid = null, toastT;
 let shareFmt = 'feed', shareImg = null, shareTo = 'insta';
-let homeTab = 'see', genre = '', price = null, priceDraft = '', searchOpen = false;
+let homeTab = 'see', genre = '', price = null, priceDraft = { a: '', b: '' }, searchOpen = false;
 
 /* ───────── 도우미 ───────── */
 const $ = (s) => document.querySelector(s);
@@ -1539,9 +1539,9 @@ const A = {
     $('#app').appendChild(s);
   },
   genrePick({ g }) { genre = g; A.closeSheet(); render(); },
-  priceOpen({ err } = {}) {
+  priceOpen({ err, focusId } = {}) {
     document.querySelector('.sheet')?.remove();
-    if (price && price.custom && !priceDraft) priceDraft = `${price.min ? comma(price.min) : ''}~${price.max === Infinity ? '' : comma(price.max)}`;
+    if (price && price.custom && !priceDraft.a && !priceDraft.b) priceDraft = { a: price.min ? comma(price.min) : '', b: price.max === Infinity ? '' : comma(price.max) };
     const on = (r) => price && !price.custom && price.min === r.min && price.max === r.max;
     const row = (k, label, sel) => `<button class="${sel ? 'on' : ''}" data-a="pricePick" data-k="${k}">${label}${sel ? icon('check', 'width:20px;height:20px') : ''}</button>`;
     const s = document.createElement('div'); s.className = 'sheet'; s.dataset.a = 'closeSheet';
@@ -1549,16 +1549,17 @@ const A = {
       ${row('', '모든 가격', !price)}${PRICE_RANGES.map((r, i) => row(i, r.label, on(r))).join('')}
       <p class="pcap">입장할 때 드는 가장 적은 금액으로 찾아요. 각 구간은 앞 금액 이상, 뒤 금액 미만이에요.</p>
       <b style="font-size:16px;padding:10px 4px 2px${price && price.custom ? ';color:var(--brand-ink)' : ''}">직접 입력</b>
-      <div class="pcustom"><input id="priceIn" class="inp" inputmode="numeric" placeholder="예: 5,000~15,000" value="${esc(priceDraft)}" autocomplete="off" aria-label="가격 구간 직접 입력"><button class="btn sm" data-a="priceApply">적용</button></div>
+      <div class="pcustom"><input id="priceA" class="inp" inputmode="numeric" placeholder="5,000" value="${esc(priceDraft.a)}" autocomplete="off" aria-label="최소 금액"><span class="sep" aria-hidden="true">~</span><input id="priceB" class="inp" inputmode="numeric" placeholder="15,000" value="${esc(priceDraft.b)}" autocomplete="off" aria-label="최대 금액"><span class="won">원</span><button class="btn sm" data-a="priceApply">적용</button></div>
+      <p class="pcap">한 칸만 적어도 돼요. 앞 칸만 적으면 그 금액부터, 뒤 칸만 적으면 그 금액까지 찾아요.</p>
       ${err ? `<p class="perr" role="alert">${esc(err)}</p>` : ''}</div></div>`;
     $('#app').appendChild(s);
-    if (err) { const i = document.getElementById('priceIn'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
+    if (err) { const i = document.getElementById(focusId || 'priceA'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }
   },
-  pricePick({ k }) { price = k === '' ? null : PRICE_RANGES[Number(k)]; priceDraft = ''; A.closeSheet(); render(); },
+  pricePick({ k }) { price = k === '' ? null : PRICE_RANGES[Number(k)]; priceDraft = { a: '', b: '' }; A.closeSheet(); render(); },
   priceApply() {
     const r = parsePrice(priceDraft);
-    if (r.err) return A.priceOpen({ err: r.err });
-    price = r; priceDraft = ''; A.closeSheet(); render();
+    if (r.err) return A.priceOpen({ err: r.err, focusId: !priceDraft.a && !priceDraft.b ? 'priceA' : 'priceB' });
+    price = r; priceDraft = { a: '', b: '' }; A.closeSheet(); render();
     const n = document.querySelectorAll('#list [data-id]').length;
     toast(n ? `${r.label} 행사 ${n}개를 찾았어요` : `${r.label}에 맞는 행사가 아직 없어요`);
   },
@@ -1795,7 +1796,7 @@ const A = {
     toast(n ? `'${k}' 키워드를 더했어요. 지금 맞는 글이 ${n}개 있어요` : `'${k}'${bat(k) ? '이' : '가'} 들어간 글이 올라오면 알려드릴게요`);
   },
   kwDel({ i }) { const k = INT().keywords.splice(Number(i), 1)[0]; save(); render(); toast(`'${k}' 키워드를 뺐어요`); },
-  reset() { kwDraft = ''; priceDraft = ''; duo(false); try { localStorage.removeItem(KEY); } catch (e) {} S = seed(); flow = null; filter = '전체'; subs = []; homeTab = 'see'; genre = ''; price = null; searchOpen = false; q = ''; chatDraft = ''; stack = [{ n: 'onboard' }]; render('f'); },
+  reset() { kwDraft = ''; priceDraft = { a: '', b: '' }; duo(false); try { localStorage.removeItem(KEY); } catch (e) {} S = seed(); flow = null; filter = '전체'; subs = []; homeTab = 'see'; genre = ''; price = null; searchOpen = false; q = ''; chatDraft = ''; stack = [{ n: 'onboard' }]; render('f'); },
   scene({ scene }) { if (PANE || !SCENES[scene]) return; A.closeSheet(); duo(scene === 'hire'); SCENES[scene](); save(); render('f'); },
   duoOff() { duo(false); },
 };
@@ -1867,7 +1868,7 @@ document.addEventListener('keydown', (e) => {
   if (lb) { if (e.key === 'Escape') { e.preventDefault(); return A.lbClose(); } if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); return A.lbGo({ d: e.key === 'ArrowLeft' ? -1 : 1 }); } }
   if (e.target.id === 'chatIn' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); A.send(); return; }
   if (e.target.id === 'kwIn' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); return A.kwAdd(); }
-  if (e.target.id === 'priceIn' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); return A.priceApply(); }
+  if ((e.target.id === 'priceA' || e.target.id === 'priceB') && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); return A.priceApply(); }
   if (PANE || /^(INPUT|TEXTAREA)$/.test(e.target.tagName) || e.altKey || e.ctrlKey || e.metaKey) return;
   const scene = ['home', 'book', 'next', 'hire', 'dash'][Number(e.key) - 1]; if (scene) A.scene({ scene });
 });
@@ -1886,11 +1887,10 @@ document.addEventListener('input', (e) => {
   const el = e.target;
   if (el.id === 'chatIn') { chatDraft = el.value; return; }
   if (el.id === 'kwIn') { kwDraft = el.value; return; }
-  if (el.id === 'priceIn') {
-    const parts = el.value.replace(/[^\d~\-]/g, '').replace(/-/g, '~').split('~').slice(0, 2);
-    const v = parts.map((x) => (x ? comma(Number(x.slice(0, 9))) : '')).join(parts.length > 1 ? '~' : '');
+  if (el.id === 'priceA' || el.id === 'priceB') {
+    const d = el.value.replace(/\D/g, '').slice(0, 9), v = d ? comma(Number(d)) : '';
     if (v !== el.value) { el.value = v; el.setSelectionRange(v.length, v.length); }
-    priceDraft = v; document.querySelector('.perr')?.remove(); return;
+    priceDraft[el.id === 'priceA' ? 'a' : 'b'] = v; document.querySelector('.perr')?.remove(); return;
   }
   if (el.dataset.gcap !== undefined) { const it = flow && flow.d.gallery && flow.d.gallery[Number(el.dataset.gcap)]; if (it) it.cap = el.value; return; }
   if (el.dataset.s !== undefined) { q = el.value; $('#list').innerHTML = listHTML(); return; }
