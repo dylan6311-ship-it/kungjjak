@@ -63,6 +63,24 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Ne
 .bub{max-width:78%;padding:13px 16px;border-radius:20px;font-size:19px;line-height:1.45;background:var(--bubble);align-self:flex-start}
 .bub.me{align-self:flex-end;background:var(--ink);color:var(--white)}
 .pic{width:230px;height:170px;border-radius:18px;align-self:flex-start;background:linear-gradient(135deg,#C9D6E8,#E9D9C7);display:flex;align-items:flex-end;padding:14px;font-size:15px;font-weight:700;color:#4B5563}
+.mph .scr{position:absolute;inset:0;background:var(--white)}
+.hook .say.stack{position:relative;height:420px}
+.hook .say.stack>div{position:absolute;left:0;right:0;top:0}
+.tkapp{padding:52px 18px 0}
+.tkhead{display:flex;align-items:baseline;justify-content:space-between}
+.tkhead b{font-size:24px;font-weight:800}
+.tkhead span{font-size:14px;color:var(--sub);font-weight:600}
+.tklabel{font-size:15px;font-weight:700;color:var(--sub);margin:18px 0 10px}
+.tkview{height:580px;overflow:hidden}
+.tklist{animation:tkscroll 14s linear infinite}
+@keyframes tkscroll{to{transform:translateY(-50%)}}
+.tk{display:flex;gap:12px;align-items:center;padding:9px 0}
+.tk i{flex:none;width:58px;height:74px;border-radius:10px}
+.tk b{display:block;font-size:16px;font-weight:700;line-height:1.35}
+.tk span{display:block;font-size:13px;color:var(--sub);margin-top:3px}
+.tksearch{padding:12px 16px;border-radius:14px;background:#F2F3F5;font-size:17px;font-weight:600}
+.tkfew .tk{opacity:.6}
+.tkempty{margin-top:22px;padding:22px 16px;border-radius:16px;background:#F7F7F9;text-align:center;font-size:16px;line-height:1.5;color:var(--sub);font-weight:600}
 .hook{display:flex;align-items:center;gap:110px;height:100%;padding:0 40px}
 .hook .say{flex:1}
 .hook .say p{font-size:30px;line-height:1.6;color:var(--night-sub);font-weight:600}
@@ -259,21 +277,44 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Ne
   <div class="foot"><span>지역문제 해결 AI 바이브코딩 아이디어 경진대회 · 결선</span><span>강한엽 · 이종민 · 정현욱 (동국대학교)</span></div>
 </section>
 
-<!-- 2. ① 후킹: 금요일 밤 단톡방 -->
+<!-- 2. ① 후킹: 금요일 밤. 휴대폰 화면이 단톡방 → 예매 앱(서울) → '전주 공연' 검색 → 답장 순서로 바뀌어요. 앱과 공연은 모두 가상 -->
 <section class="slide dark">
   <div class="hook">
     <div class="mph">
-      <div class="bar">고등학교 친구들 <small>금요일 밤 9:12</small></div>
-      <div class="body">
-        <p class="who">서울 사는 친구</p>
-        <div class="pic">이번 주 전시 다녀옴 📷</div>
-        <div class="bub">너는 주말에 뭐 해?</div>
-        <div class="bub me" data-b="1">전주는 볼 게 없어 ㅎㅎ<br>그냥 집에 있으려고</div>
+      <div class="scr" data-r="0-0">
+        <div class="bar">고등학교 친구들 <small>금요일 밤 9:12</small></div>
+        <div class="body">
+          <p class="who">서울 사는 친구</p>
+          <div class="pic">이번 주 전시 다녀옴 📷</div>
+          <div class="bub">너는 주말에 뭐 해?</div>
+        </div>
+      </div>
+      <div class="scr tkapp" data-r="1-1">
+        <div class="tkhead"><b>공연 · 전시</b><span>지역 전체 ▾</span></div>
+        <p class="tklabel">이번 주말 추천</p>
+        <div class="tkview"><div class="tklist"><div class="tk"><i style="background:#5B6CF0"></i><div><b>뮤지컬 〈별빛 정류장〉</b><span>서울 · 대학로</span></div></div><div class="tk"><i style="background:#F08A5B"></i><div><b>밴드 새벽파도 단독 콘서트</b><span>서울 · 홍대</span></div></div><div class="tk"><i style="background:#3FB6A8"></i><div><b>미디어아트전 〈빛의 정원〉</b><span>서울 · 성수</span></div></div><div class="tk"><i style="background:#B45BF0"></i><div><b>연극 〈옥탑방 일기〉</b><span>서울 · 대학로</span></div></div><div class="tk"><i style="background:#F0C35B"></i><div><b>재즈 나이트</b><span>서울 · 이태원</span></div></div><div class="tk"><i style="background:#F05B8A"></i><div><b>뮤지컬 〈시간의 문〉</b><span>서울 · 한남</span></div></div><div class="tk"><i style="background:#5BA8F0"></i><div><b>사진전 〈도시의 얼굴〉</b><span>서울 · 종로</span></div></div><div class="tk"><i style="background:#8AD05B"></i><div><b>인디 페스티벌 〈소리마당〉</b><span>서울 · 마포</span></div></div><div class="tk"><i style="background:#7B6BD9"></i><div><b>클래식 갈라 〈겨울 소나타〉</b><span>서울 · 서초</span></div></div><div class="tk"><i style="background:#E07A5F"></i><div><b>북토크 〈밤의 문장들〉</b><span>서울 · 연남</span></div></div><div class="tk"><i style="background:#5B6CF0"></i><div><b>뮤지컬 〈별빛 정류장〉</b><span>서울 · 대학로</span></div></div><div class="tk"><i style="background:#F08A5B"></i><div><b>밴드 새벽파도 단독 콘서트</b><span>서울 · 홍대</span></div></div><div class="tk"><i style="background:#3FB6A8"></i><div><b>미디어아트전 〈빛의 정원〉</b><span>서울 · 성수</span></div></div><div class="tk"><i style="background:#B45BF0"></i><div><b>연극 〈옥탑방 일기〉</b><span>서울 · 대학로</span></div></div><div class="tk"><i style="background:#F0C35B"></i><div><b>재즈 나이트</b><span>서울 · 이태원</span></div></div><div class="tk"><i style="background:#F05B8A"></i><div><b>뮤지컬 〈시간의 문〉</b><span>서울 · 한남</span></div></div><div class="tk"><i style="background:#5BA8F0"></i><div><b>사진전 〈도시의 얼굴〉</b><span>서울 · 종로</span></div></div><div class="tk"><i style="background:#8AD05B"></i><div><b>인디 페스티벌 〈소리마당〉</b><span>서울 · 마포</span></div></div><div class="tk"><i style="background:#7B6BD9"></i><div><b>클래식 갈라 〈겨울 소나타〉</b><span>서울 · 서초</span></div></div><div class="tk"><i style="background:#E07A5F"></i><div><b>북토크 〈밤의 문장들〉</b><span>서울 · 연남</span></div></div></div></div>
+      </div>
+      <div class="scr tkapp" data-r="2-2">
+        <div class="tksearch">🔍 전주 공연</div>
+        <p class="tklabel">검색 결과</p>
+        <div class="tkfew"><div class="tk"><i style="background:#C9CDD3"></i><div><b>가족뮤지컬 〈숲속 음악대〉</b><span>전주 · 공공 공연장 · 아동극</span></div></div><div class="tk"><i style="background:#C9CDD3"></i><div><b>어린이 마술쇼 〈반짝 산타〉</b><span>전주 · 공공 공연장 · 아동극</span></div></div><div class="tk"><i style="background:#C9CDD3"></i><div><b>기획공연 〈피아노 리사이틀〉</b><span>전주 · 공공 공연장 · 기획공연</span></div></div></div>
+        <div class="tkempty">'인디 공연' · '낭독회'와<br>맞는 공연이 없어요</div>
+      </div>
+      <div class="scr" data-r="3-3">
+        <div class="bar">고등학교 친구들 <small>금요일 밤 9:12</small></div>
+        <div class="body">
+          <p class="who">서울 사는 친구</p>
+          <div class="pic">이번 주 전시 다녀옴 📷</div>
+          <div class="bub">너는 주말에 뭐 해?</div>
+          <div class="bub me">전주는 볼 게 없어 ㅎㅎ<br>그냥 집에 있으려고</div>
+        </div>
       </div>
     </div>
-    <div class="say">
-      <p>덕진동에 사는 대학생, 하은 씨의 금요일 밤</p>
-      <h2>예매 앱에서<br>'전주 공연'을 검색해 봐도<br><span>마음 가는 게 없습니다.</span></h2>
+    <div class="say stack">
+      <div data-r="0-0"><p>덕진동에 사는 대학생, 하은 씨의 금요일 밤</p><h2>서울 친구가 묻습니다.<br><span>"너는 주말에 뭐 해?"</span></h2></div>
+      <div data-r="1-1"><p>주말에 뭘 볼까, 예매 앱을 열면</p><h2>첫 화면은<br>서울 공연으로<br><span>끝없이 이어집니다.</span></h2></div>
+      <div data-r="2-2"><p>이번엔 '전주 공연'을 검색하면</p><h2>몇 개뿐,<br><span>관심 가질 만한 무대는<br>보이지 않습니다.</span></h2></div>
+      <div data-r="3-3"><p>그래서 하은 씨는</p><h2><span>"전주는 볼 게 없어."</span><br>그 주말도<br>집에 있었습니다.</h2></div>
     </div>
   </div>
 </section>
@@ -562,7 +603,7 @@ const MAIN = 17;                       // → 로는 17장까지만. 18 출처 �
 let cur = 0, build = 0, typed = '';
 function fit() { const k = Math.min(innerWidth / 1600, innerHeight / 900); deck.style.transform = `translate(-50%,-50%) scale(${k})`; }
 addEventListener('resize', fit); fit();
-const maxBuild = (i) => Math.max(0, ...[...slides[i].querySelectorAll('[data-b]')].map((e) => Number(e.dataset.b)));
+const maxBuild = (i) => Math.max(0, ...[...slides[i].querySelectorAll('[data-b]')].map((e) => Number(e.dataset.b)), ...[...slides[i].querySelectorAll('[data-r]')].map((e) => Number(e.dataset.r.split('-')[1])));
 function paint() {
   slides.forEach((s, i) => s.classList.toggle('on', i === cur));
   slides[cur].querySelectorAll('[data-b]').forEach((e) => e.classList.toggle('show', Number(e.dataset.b) <= build));
