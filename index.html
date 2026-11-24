@@ -125,6 +125,9 @@ svg.i{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .fchip{flex:none;white-space:nowrap;height:34px;padding:0 14px;border-radius:17px;font-size:14px;font-weight:600;color:var(--sub);background:var(--bg);box-shadow:inset 0 0 0 1px var(--line);display:flex;align-items:center;gap:4px}
 .fchip.on{background:var(--brand-soft);color:var(--brand-ink);box-shadow:inset 0 0 0 1px var(--brand)}
 .fchip svg{width:16px;height:16px}
+.kwrow{display:flex;gap:8px;margin-top:10px}.kwrow .inp{height:46px;font-size:15px;font-weight:500;flex:1;min-width:0}.kwrow .btn{flex:none}
+.kwchips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.kwchips .fchip svg{width:14px;height:14px;margin-left:2px}
 .sec{font-size:14px;font-weight:700;color:var(--sub);margin:24px 0 2px}
 .ev{display:flex;gap:16px;width:100%;padding:12px 0;align-items:flex-start;text-align:left;transition:transform .12s}
 .ev:active{transform:scale(.975)}
@@ -372,6 +375,20 @@ const PAGE_SRC = PANE ? '' : '<!doctype html>\n' + document.documentElement.oute
 const KEY = 'kungjjak-v2' + (PANE ? '-' + PANE : '');
 const HOODS = ['덕진동', '서신동', '효자동', '서학동', '중앙동'];
 const GENRES = ['공연', '전시', '북토크', '마켓'];
+const CHEAP = 10000; // 설문: 소규모 공연·전시에 한 번에 낼 수 있는 금액은 1만 원 미만이 가장 많았어요(50%)
+const entryPrice = (p) => (p.price.mode === 'fixed' ? p.price.amount : p.price.mode === 'flex' ? p.price.min : 0);
+/* 관심 분야·키워드: 팔로우하지 않은 팀의 글이라도, 고른 장르나 적어 둔 낱말이 맞으면 알려줘요 */
+const INT = () => (S.interests = S.interests || { genres: [], keywords: [] });
+const KW_MAX = 8;
+let kwDraft = '';
+function interestHit(p) {
+  const it = INT(), hay = [p.title, p.desc, p.mood, p.by, p.venue, p.place, p.hood, p.genre].filter(Boolean).join(' ').toLowerCase();
+  const kw = it.keywords.find((k) => hay.includes(k.toLowerCase()));
+  if (kw) return { kw };
+  if (p.type === 'event' && it.genres.includes(p.genre)) return { genre: p.genre };
+  return null;
+}
+const interestMatches = () => S.posts.filter((p) => shown(p) && !p.mine && interestHit(p));
 // 0번은 전주 레드→핑크, 5번은 전주 마젠타→옅은 핑크. 나머지는 행사마다 다른 포스터 색
 const GRADS = [['#A7001F','#F84264'],['#1C1C22','#5B5F6B'],['#2BB39A','#E4C94A'],['#FFC23C','#FF7A36'],['#5B6CFF','#9B8CFF'],['#F81340','#FF8FA3']];
 const VERIFY = { school: '학교 이메일 인증', insta: '인스타그램 연결', biz: '사업자 확인' };
@@ -997,6 +1014,7 @@ function listHTML() {
   const list = S.posts.filter(shown).filter((p) => (!T.type || p.type === T.type) && (p.type !== 'event' || upcomingEv(p)))
     .filter((p) => !see || !subs.includes('이번 주') || thisWeek(p))
     .filter((p) => !see || !subs.includes('무료') || p.price.mode === 'donate')
+    .filter((p) => !see || !subs.includes('1만 원 미만') || entryPrice(p) < CHEAP)
     .filter((p) => !see || !genre || p.genre === genre)
     .filter((p) => !see || !subs.includes('인증 팀') || prof(p.by).verify)
     .filter((p) => homeTab !== 'with' || subs.includes(SEEK.member[0]) === subs.includes(SEEK.team[0]) || subs.includes(SEEK[seekOf(p)][0]))
@@ -1117,7 +1135,7 @@ const V = {
         ${searchOpen ? `<div class="sbar"><label>${icon('search')}<input data-s placeholder="${T.search}" value="${esc(q)}" autocomplete="off"></label><button data-a="searchClose">취소</button></div>` : ''}
         <div class="seg">${Object.entries(HOME_TABS).map(([k, v]) => `<button class="${homeTab === k ? 'on' : ''}" data-a="homeTab" data-t="${k}">${v.label}</button>`).join('')}</div>
         <h2 class="ask">${T.ask}</h2>
-        ${see ? `<div class="fchips">${chip('이번 주')}${chip('무료')}${chip('인증 팀')}<button class="fchip ${genre ? 'on' : ''}" data-a="genreOpen">${genre || '장르'}${icon('down')}</button></div>`
+        ${see ? `<div class="fchips">${chip('이번 주')}${chip('무료')}${chip('1만 원 미만')}${chip('인증 팀')}<button class="fchip ${genre ? 'on' : ''}" data-a="genreOpen">${genre || '장르'}${icon('down')}</button></div>`
           : (homeTab === 'with' ? `<div class="fchips">${chip(SEEK.team[0])}${chip(SEEK.member[0])}</div>` : '') + (!T.invite ? '' : `<button class="invite" data-a="composeAs" data-t="${T.type}"><div class="tx"><b>${T.invite[0]}</b><span>${T.invite[1]}</span></div>${icon('next', 'width:20px;height:20px;color:var(--mute)')}</button>`)}
         <div id="list">${listHTML()}</div>`,
     };
@@ -1416,7 +1434,16 @@ const V = {
       <p class="cap" style="margin:-4px 0 4px">받고 싶은 글 종류만 켜 두세요. 올라오는 대로 바로 알려드려요.</p>
       ${sw('follow', '새 행사', '공연·전시·북토크·마켓')}
       ${sw('followCollab', '함께하기 제안', '팀원을 구하거나 함께할 팀을 찾는 글')}
-      ${sw('followRequest', '섭외 요청', '무대에 설 아티스트를 찾는 글')}` };
+      ${sw('followRequest', '섭외 요청', '무대에 설 아티스트를 찾는 글')}
+      <div class="h2">관심 분야·키워드</div>
+      <p class="cap" style="margin:-4px 0 4px">팔로우하지 않은 팀의 글이라도, 고른 분야나 적어 둔 낱말이 들어 있으면 바로 알려드려요.</p>
+      <div class="lbl" style="margin-top:12px">관심 분야</div>
+      <div class="kwchips">${GENRES.map((g) => `<button class="fchip ${INT().genres.includes(g) ? 'on' : ''}" data-a="intGenre" data-g="${g}" aria-pressed="${INT().genres.includes(g)}">${INT().genres.includes(g) ? icon('check') : ''}${g}</button>`).join('')}</div>
+      <div class="lbl" style="margin-top:20px">키워드 <span class="cap" style="font-weight:500">${INT().keywords.length} / ${KW_MAX}</span></div>
+      ${INT().keywords.length < KW_MAX ? `<div class="kwrow"><input id="kwIn" class="inp" placeholder="예: 재즈, 낭독, 사진, 버스킹" maxlength="12" value="${esc(kwDraft)}" autocomplete="off"><button class="btn sm" data-a="kwAdd">더하기</button></div>` : ''}
+      ${INT().keywords.length ? `<div class="kwchips">${INT().keywords.map((k, i) => `<button class="fchip on" data-a="kwDel" data-i="${i}" aria-label="키워드 ${esc(k)} 빼기">${esc(k)}${icon('x')}</button>`).join('')}</div>` : ''}
+      ${(() => { if (!INT().genres.length && !INT().keywords.length) return '<p class="cap" style="margin-top:14px">아직 고른 관심 분야나 키워드가 없어요.</p>';
+        const m = interestMatches(); return `<div class="box" style="margin-top:16px"><b>지금 올라온 글 중 ${m.length}개가 맞아요</b>${m.slice(0, 3).map((x) => { const h = interestHit(x); return `<br>· ${esc(x.title)} <span class="cap">(${h.kw ? `'${esc(h.kw)}'` : h.genre})</span>`; }).join('')}<br><span class="cap">앞으로 맞는 글이 올라오면 알림이 와요. 시연용: 내가 올린 글이 맞아도 나에게 알림이 와요</span></div>`; })()}` };
   },
 
   my() {
@@ -1707,13 +1734,31 @@ const A = {
       const body = p.type === 'request' ? `${p.title} · 예산 ${man(p.budget)}` : p.at ? `${p.title} · ${when(p)}` : p.title;
       notify({ title, body, to: p.id });
     }
+    const hit = fans.length ? null : interestHit(p);
+    if (hit) {
+      const what = p.type === 'event' ? p.genre : p.type === 'collab' ? '함께하기 글' : '섭외 요청', ga = (w) => (bat(w) ? '이' : '가');
+      notify({ title: hit.kw ? `관심 키워드 '${hit.kw}'${bat(hit.kw) ? '이' : '가'} 들어간 새 ${what}${ga(what)} 올라왔어요` : `관심 분야인 ${hit.genre}${ga(hit.genre)} 새로 올라왔어요`,
+        body: p.type === 'request' ? `${p.title} · 예산 ${man(p.budget)}` : p.at ? `${p.title} · ${when(p)}` : p.title, to: p.id });
+    }
     S.posts.unshift(p); save(); flow = null; filter = '전체'; subs = []; q = ''; genre = ''; homeTab = { event: 'see', request: 'hire', collab: 'with' }[p.type]; root({ n: p.type, p: { id: p.id } }); render('f');
-    toast(masked ? '바르지 않은 표현은 *로 가려서 올렸어요' : fans.length ? `올렸어요. ${p.type === 'request' ? '두 팀이 벌써 응답했고, ' : ''}${fans[0]}${eul(fans[0])} 팔로우한 사람에게 알림을 보냈어요` : p.type === 'request' ? '올렸어요. 벌써 두 팀이 응답했어요' : `올렸어요. ${p.hood} 이웃의 피드에 보여요`);
+    toast(masked ? '바르지 않은 표현은 *로 가려서 올렸어요' : hit ? `올렸어요. ${hit.kw ? `'${hit.kw}'${eul(hit.kw)} 관심 키워드로 둔` : `${hit.genre}${eul(hit.genre)} 관심 분야로 고른`} 사람에게 알림을 보냈어요` : fans.length ? `올렸어요. ${p.type === 'request' ? '두 팀이 벌써 응답했고, ' : ''}${fans[0]}${eul(fans[0])} 팔로우한 사람에게 알림을 보냈어요` : p.type === 'request' ? '올렸어요. 벌써 두 팀이 응답했어요' : `올렸어요. ${p.hood} 이웃의 피드에 보여요`);
   },
 
   openNoti({ id }) { const n = S.notifs.find((x) => x.id === id); n.read = true; save(); if (n.to === 'home' || !post(n.to)) { stack = [{ n: 'home' }]; return render('f'); } go(post(n.to).type, { id: n.to }); },
   toggle({ k }) { S.settings[k] = !S.settings[k]; save(); render(); },
-  reset() { duo(false); try { localStorage.removeItem(KEY); } catch (e) {} S = seed(); flow = null; filter = '전체'; subs = []; homeTab = 'see'; genre = ''; searchOpen = false; q = ''; chatDraft = ''; stack = [{ n: 'onboard' }]; render('f'); },
+  intGenre({ g }) { const it = INT(), on = it.genres.includes(g); it.genres = on ? it.genres.filter((x) => x !== g) : GENRES.filter((x) => x === g || it.genres.includes(x)); save(); render(); toast(on ? `${g} 관심 분야를 뺐어요` : `새 ${g}${bat(g) ? '이' : '가'} 올라오면 알려드릴게요`); },
+  kwAdd() {
+    const it = INT(), k = kwDraft.trim().replace(/\s+/g, ' ');
+    if (!k) return document.getElementById('kwIn')?.focus();
+    if (hasBad(k)) return toast('바르지 않은 표현은 키워드로 쓸 수 없어요');
+    if (it.keywords.some((x) => x.toLowerCase() === k.toLowerCase())) return toast('이미 있는 키워드예요');
+    if (it.keywords.length >= KW_MAX) return toast(`키워드는 ${KW_MAX}개까지 둘 수 있어요`);
+    it.keywords.push(k); kwDraft = ''; save(); render(); document.getElementById('kwIn')?.focus();
+    const n = interestMatches().filter((p) => interestHit(p).kw === k).length;
+    toast(n ? `'${k}' 키워드를 더했어요. 지금 맞는 글이 ${n}개 있어요` : `'${k}'${bat(k) ? '이' : '가'} 들어간 글이 올라오면 알려드릴게요`);
+  },
+  kwDel({ i }) { const k = INT().keywords.splice(Number(i), 1)[0]; save(); render(); toast(`'${k}' 키워드를 뺐어요`); },
+  reset() { kwDraft = ''; duo(false); try { localStorage.removeItem(KEY); } catch (e) {} S = seed(); flow = null; filter = '전체'; subs = []; homeTab = 'see'; genre = ''; searchOpen = false; q = ''; chatDraft = ''; stack = [{ n: 'onboard' }]; render('f'); },
   scene({ scene }) { if (PANE || !SCENES[scene]) return; A.closeSheet(); duo(scene === 'hire'); SCENES[scene](); save(); render('f'); },
   duoOff() { duo(false); },
 };
@@ -1784,6 +1829,7 @@ document.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if (lb) { if (e.key === 'Escape') { e.preventDefault(); return A.lbClose(); } if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); return A.lbGo({ d: e.key === 'ArrowLeft' ? -1 : 1 }); } }
   if (e.target.id === 'chatIn' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); A.send(); return; }
+  if (e.target.id === 'kwIn' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); return A.kwAdd(); }
   if (PANE || /^(INPUT|TEXTAREA)$/.test(e.target.tagName) || e.altKey || e.ctrlKey || e.metaKey) return;
   const scene = ['home', 'book', 'next', 'hire', 'dash'][Number(e.key) - 1]; if (scene) A.scene({ scene });
 });
@@ -1801,6 +1847,7 @@ document.addEventListener('change', async (e) => {
 document.addEventListener('input', (e) => {
   const el = e.target;
   if (el.id === 'chatIn') { chatDraft = el.value; return; }
+  if (el.id === 'kwIn') { kwDraft = el.value; return; }
   if (el.dataset.gcap !== undefined) { const it = flow && flow.d.gallery && flow.d.gallery[Number(el.dataset.gcap)]; if (it) it.cap = el.value; return; }
   if (el.dataset.s !== undefined) { q = el.value; $('#list').innerHTML = listHTML(); return; }
   const f = el.dataset.f; if (!f || !flow) return;
