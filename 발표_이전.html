@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>쿵짝 결선 발표</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+/* 발표 자료라서 배경은 크림색을 써요 (앱 화면은 흰색). 색은 앱과 같은 전주 BI 토큰이에요. */
+:root{
+  --cream:#FBF6EE; --cream2:#F3EBDD; --line:#E6DCCB;
+  --ink:#191F28; --sub:#6B7684; --mute:#AEB5BE; --bar:#CBC3B6;
+  --pink:#F84264; --red:#A7001F; --magenta:#F81340; --soft:#FEECEF;
+  --grad:linear-gradient(135deg,var(--magenta),var(--pink));
+  --night:#16161B; --night-sub:#9A9AA6;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#0E0E12}
+body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  color:var(--ink);-webkit-font-smoothing:antialiased;letter-spacing:-.02em;word-break:keep-all}
+
+/* 1600×900 무대를 창 크기에 맞춰 늘리고 줄여요 */
+#deck{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform-origin:center}
+.slide{position:absolute;inset:0;background:var(--cream);padding:96px 120px;display:none;overflow:hidden}
+.slide.on{display:block;animation:fade .35s ease}
+@keyframes fade{from{opacity:0}}
+.slide.dark{background:var(--night);color:#fff}
+
+/* 한 장 안에서 → 로 하나씩 나타나는 요소 */
+[data-b]{opacity:0;transform:translateY(14px);transition:opacity .45s ease,transform .45s ease}
+[data-b].show{opacity:1;transform:none}
+
+.kicker{font-size:26px;font-weight:700;color:var(--red);margin-bottom:14px}
+.title{font-size:64px;font-weight:800;line-height:1.2;letter-spacing:-.035em}
+.lead{font-size:30px;line-height:1.5;color:var(--sub);font-weight:500}
+.hl{color:var(--pink)}
+.src{position:absolute;left:120px;bottom:44px;font-size:17px;color:var(--mute)}
+.dark .src{color:#5E5E6A}
+.logo{font-weight:900;letter-spacing:-.05em}
+.logo b{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.center{height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+
+/* 1 표지 */
+.cover .logo{font-size:150px;line-height:1}
+.cover h1{font-size:58px;font-weight:800;line-height:1.3;margin-top:56px}
+.cover .lead{margin-top:20px}
+.cover .foot{position:absolute;left:120px;right:120px;bottom:64px;display:flex;justify-content:space-between;font-size:20px;color:var(--sub)}
+
+/* 2·14 질문 */
+.q{font-size:76px;font-weight:800;line-height:1.35;letter-spacing:-.04em}
+.q small{display:block;font-size:30px;font-weight:600;color:var(--night-sub);margin-bottom:28px;letter-spacing:-.02em}
+
+/* 3 숫자 대비 */
+.s3{display:flex;gap:96px;align-items:center;height:100%}
+.phone{flex:none;width:340px;height:700px;border:10px solid var(--ink);border-radius:46px;background:#fff;overflow:hidden;position:relative;box-shadow:0 30px 60px rgba(40,30,10,.14)}
+.phone img{width:100%;height:100%;object-fit:contain;object-position:top;display:block;background:#fff}
+.phone .ph{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;align-items:center;gap:10px;text-align:center;color:var(--mute);font-size:20px;line-height:1.5;padding:30px;border:3px dashed var(--line);border-radius:34px;margin:14px}
+.phone.missing img{visibility:hidden}
+.nums{flex:1;display:flex;flex-direction:column;gap:36px}
+.num-row{display:flex;align-items:baseline;gap:28px}
+.num-row .n{font-size:132px;font-weight:900;line-height:1;letter-spacing:-.05em;min-width:250px;text-align:right}
+.num-row .n small{font-size:40px;font-weight:700;margin-left:6px}
+.num-row .t{font-size:30px;line-height:1.4;color:var(--sub);font-weight:600}
+.num-row .t b{color:var(--ink)}
+.num-row.zero .n{color:var(--pink);font-size:180px}
+.num-row.zero .t b{color:var(--pink)}
+
+/* 4 한 문장 */
+.big-line{font-size:72px;font-weight:800;line-height:1.4;letter-spacing:-.04em}
+.big-line .soft{color:var(--sub);font-weight:700}
+
+/* 5 발견의 단절 */
+.s5{display:grid;grid-template-columns:1.15fr 1fr;gap:80px;margin-top:46px;height:560px}
+.accts{position:relative}
+.acct{position:absolute;padding:16px 22px;border-radius:20px;background:#fff;font-size:24px;font-weight:700;box-shadow:0 10px 24px rgba(40,30,10,.08);display:flex;align-items:center;gap:12px}
+.acct i{width:38px;height:38px;border-radius:12px;background:var(--grad);display:grid;place-items:center;color:#fff;font-style:normal;font-size:18px;font-weight:800}
+.acct span{font-size:17px;color:var(--sub);font-weight:600;display:block}
+.accts p{position:absolute;left:0;bottom:0;font-size:26px;color:var(--sub);font-weight:600}
+.stats{display:flex;flex-direction:column;justify-content:center;gap:34px}
+.stat{display:flex;align-items:baseline;gap:22px}
+.stat .n{font-size:104px;font-weight:900;line-height:1;letter-spacing:-.05em;min-width:170px;text-align:right}
+.stat .t{font-size:28px;font-weight:600;color:var(--sub);line-height:1.4}
+
+/* 6 관심의 휘발 */
+.s6top{display:flex;justify-content:space-between;align-items:flex-end}
+.s6top .big{text-align:right}
+.s6top .big b{font-size:110px;font-weight:900;letter-spacing:-.05em;line-height:1}
+.s6top .big span{display:block;font-size:24px;color:var(--sub);font-weight:600;margin-top:6px}
+.chart{position:relative;margin-top:26px}
+.chart svg{display:block;overflow:visible}
+.tag{position:absolute;font-size:26px;font-weight:800;white-space:nowrap}
+.tag.pink{color:var(--pink)}
+.tag.red{color:var(--red)}
+
+/* 7 대구 */
+.s7{display:grid;grid-template-columns:1fr 1fr;gap:70px;margin-top:40px;align-items:center}
+.legend{display:flex;gap:28px;font-size:22px;font-weight:700;margin-top:14px}
+.legend i{display:inline-block;width:26px;height:6px;border-radius:3px;vertical-align:middle;margin-right:10px}
+.s7 .say{font-size:28px;line-height:1.55;color:var(--sub);font-weight:600}
+.s7 .say b{color:var(--ink)}
+.conclude{position:absolute;left:120px;right:120px;bottom:120px;font-size:62px;font-weight:800;line-height:1.35;letter-spacing:-.04em}
+
+/* 8 기존 서비스 */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:52px}
+.card{background:#fff;border-radius:28px;padding:36px 34px;min-height:250px}
+.card .y{font-size:20px;color:var(--sub);font-weight:700}
+.card h3{font-size:36px;font-weight:800;margin:10px 0 18px;line-height:1.25}
+.card p{font-size:24px;line-height:1.5;color:var(--sub);font-weight:600}
+.card p b{color:var(--red)}
+.common{margin-top:46px;display:flex;flex-direction:column;gap:18px}
+.common div{font-size:36px;font-weight:800;display:flex;gap:18px;align-items:center}
+.common div i{flex:none;width:44px;height:44px;border-radius:50%;background:var(--ink);color:#fff;font-style:normal;font-size:22px;display:grid;place-items:center}
+
+/* 9 조건 */
+.conds{display:grid;grid-template-columns:1fr 1fr;gap:36px;margin-top:70px}
+.cond{border-radius:36px;padding:52px 50px;background:#fff;min-height:330px}
+.cond .k{display:inline-block;padding:8px 18px;border-radius:999px;background:var(--soft);color:var(--red);font-size:22px;font-weight:800}
+.cond h3{font-size:50px;font-weight:800;line-height:1.3;margin-top:28px;letter-spacing:-.035em}
+.cond p{font-size:24px;color:var(--sub);font-weight:600;margin-top:20px;line-height:1.5}
+
+/* 10 시연 */
+.slide.demo{padding:56px 90px;display:none}
+.slide.demo.on{display:flex;gap:84px;align-items:center}
+.dphone{flex:none;width:377px;height:792px;border:10px solid var(--ink);border-radius:52px;overflow:hidden;background:#fff;position:relative;box-shadow:0 34px 70px rgba(40,30,10,.18)}
+.dwrap{position:absolute;left:0;top:0;width:390px;height:844px;transform-origin:0 0}
+.dwrap iframe{width:390px;height:844px;border:0;display:block;background:#fff}
+.fx{position:absolute;inset:0;pointer-events:none}
+.tap{position:absolute;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;background:rgba(248,66,100,.32);border:3px solid var(--pink);animation:tap .7s ease-out forwards}
+@keyframes tap{0%{transform:scale(.35);opacity:1}100%{transform:scale(1.25);opacity:0}}
+.look{position:absolute;border:4px solid var(--pink);border-radius:16px;box-shadow:0 0 0 6px rgba(248,66,100,.18);animation:look 1.2s ease-in-out infinite}
+@keyframes look{50%{box-shadow:0 0 0 12px rgba(248,66,100,.08)}}
+.dside{flex:1;display:flex;flex-direction:column;height:100%;justify-content:center}
+.badges{display:flex;gap:14px}
+.badge{padding:12px 22px;border-radius:999px;font-size:22px;font-weight:800;background:var(--cream2);color:var(--mute);transition:all .4s}
+.badge.ok{background:var(--grad);color:#fff}
+.dcap{font-size:58px;font-weight:800;line-height:1.3;letter-spacing:-.04em;margin-top:44px;min-height:150px}
+.dsub{font-size:28px;line-height:1.5;color:var(--sub);font-weight:600;margin-top:18px;min-height:84px}
+.dmini{margin-top:30px;height:200px}
+#dflag{position:absolute;right:28px;top:24px;width:14px;height:14px;border-radius:50%;background:var(--red);display:none}
+#dflag.on{display:block}
+#dflag.busy{display:block;background:var(--mute)}
+
+/* 11 시작 */
+.s11{display:grid;grid-template-columns:.9fr 1.1fr;gap:40px;margin-top:30px;align-items:center}
+.pangyo{font-size:30px;line-height:1.6;color:var(--sub);font-weight:600}
+.pangyo b{color:var(--ink)}
+.pangyo .roles{margin-top:40px;font-size:24px;line-height:1.7}
+.rings{position:relative;height:600px}
+.ring{position:absolute;left:50%;top:50%;border-radius:50%;transform:translate(-50%,-50%);display:flex;justify-content:center;font-weight:800}
+.ring.r3{width:600px;height:600px;background:#F1E7D7;align-items:flex-start;padding-top:44px;font-size:26px}
+.ring.r2{width:410px;height:410px;background:#EADCC6;align-items:flex-start;padding-top:40px;font-size:26px}
+.ring.r1{width:220px;height:220px;background:var(--grad);color:#fff;align-items:center;font-size:30px;flex-direction:column;text-align:center;line-height:1.3}
+.ring.r1 small{font-size:17px;font-weight:700;opacity:.9}
+.ring span{text-align:center;line-height:1.35}
+.ring small.g{display:block;font-size:18px;color:var(--sub);font-weight:600}
+[data-b].ring{transform:translate(-50%,-50%) scale(.92)}
+[data-b].ring.show{transform:translate(-50%,-50%)}
+
+/* 12 목표 */
+.goals{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:70px}
+.goal{background:#fff;border-radius:32px;padding:44px 40px}
+.goal .t{font-size:26px;font-weight:700;color:var(--sub)}
+.goal .n{font-size:110px;font-weight:900;letter-spacing:-.05em;line-height:1.05;margin-top:14px}
+.goal .n small{font-size:38px;font-weight:800;margin-left:6px}
+.goal.main{background:var(--ink);color:#fff}
+.goal.main .t{color:#C9CBD1}
+.goal.main .n{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.caveat{margin-top:40px;font-size:24px;color:var(--sub);font-weight:600;line-height:1.5}
+
+/* 13 지속 */
+.s13{display:grid;grid-template-columns:1fr 1fr;gap:70px;margin-top:60px;align-items:center}
+.fee{font-size:170px;font-weight:900;letter-spacing:-.06em;line-height:1}
+.fee small{font-size:60px;font-weight:800;margin-left:8px}
+.s13 .lead{margin-top:20px}
+.flow{display:flex;flex-direction:column;gap:22px}
+.flow div{background:#fff;border-radius:24px;padding:28px 32px;font-size:30px;font-weight:700;line-height:1.4}
+.flow div.end{background:var(--ink);color:#fff}
+
+/* 14 마무리 */
+.fin{position:absolute;inset:0;display:flex;align-items:center;gap:100px;padding:0 150px}
+.fin .phone{width:330px;height:690px;border-color:#2C2C34}
+.fin-app .dwrap{pointer-events:none}
+.fin h2{font-size:68px;font-weight:800;line-height:1.35;letter-spacing:-.04em}
+.fin h2 span{color:var(--night-sub)}
+.fin .thanks{margin-top:56px;font-size:40px;font-weight:800}
+.fin .thanks .logo{font-size:40px}
+.s14q{transition:opacity .5s,transform .5s}
+.s14q.gone{opacity:0;transform:translateY(-30px)}
+
+/* 15 백업 영상 · 16 출처 */
+.video{margin-top:40px;width:100%;height:600px;border-radius:28px;background:#000;display:block}
+.vmiss{margin-top:40px;height:600px;border-radius:28px;background:#000;display:none;place-items:center;text-align:center;font-size:26px;color:var(--sub);line-height:1.6}
+.vbox.missing video{display:none}.vbox.missing .vmiss{display:grid}
+.refs{margin-top:44px;display:grid;grid-template-columns:1fr 1fr;gap:16px 60px;font-size:22px;line-height:1.5}
+.refs div{padding:16px 0;border-bottom:1px solid var(--line)}
+.refs b{display:block;font-size:24px}
+.refs span{color:var(--sub);font-weight:500}
+
+/* 쪽 번호 */
+#pg{position:absolute;right:44px;bottom:36px;font-size:18px;font-weight:700;color:var(--mute);z-index:5}
+.dark ~ #pg{color:#4A4A55}
+</style>
+</head>
+<body>
+<div id="deck">
+
+<!-- 1. 표지 (발표 시작 전 띄워 둬요) -->
+<section class="slide cover">
+  <div class="logo">쿵<b>짝</b></div>
+  <h1>지방에도 무대는 있다.<br>보이지 않을 뿐.</h1>
+  <p class="lead">동네 공연·전시·북토크를 발견하고, 다시 찾고, 직접 여는 앱</p>
+  <div class="foot"><span>지역문제 해결 AI 바이브코딩 아이디어 경진대회 · 결선</span><span>강한엽 · 이종민 · 정현욱 (동국대학교)</span></div>
+</section>
+
+<!-- 2. 후킹 질문 -->
+<section class="slide dark">
+  <div class="center"><p class="q">이번 주 금요일 밤,<br>전주에서 볼 공연을<br>찾아보세요.</p></div>
+</section>
+
+<!-- 3. 47 → 11 → 0 -->
+<section class="slide">
+  <div class="s3">
+    <div class="phone" id="nolPhone">
+      <img src="캡처/NOL_전주공연.png" alt="NOL에서 전주 공연을 검색한 화면" onerror="this.parentNode.classList.add('missing')">
+    </div>
+    <div class="nums">
+      <div class="num-row" data-b="2"><div class="n">47<small>건</small></div><div class="t">같은 기간<br><b>공연예술통합전산망(KOPIS)</b></div></div>
+      <div class="num-row" data-b="1"><div class="n">11<small>건</small></div><div class="t">예매 앱 NOL에서<br><b>'전주 공연'</b> 검색</div></div>
+      <div class="num-row zero" data-b="3"><div class="n">0<small>건</small></div><div class="t">그중<br><b>지역 인디 공연</b></div></div>
+    </div>
+  </div>
+  <p class="src">2026년 11월 6일 조회 · KOPIS는 2026.11.6~12.31 전주 등록 공연</p>
+</section>
+
+<!-- 4. 무대는 있다 -->
+<section class="slide">
+  <div class="center"><p class="big-line"><span class="soft">전주에 무대가 없는 게 아닙니다.</span><br>보이지 않을 뿐입니다.</p></div>
+</section>
+
+<!-- 5. 발견의 단절 -->
+<section class="slide">
+  <p class="kicker">문제 1</p>
+  <h2 class="title">발견의 단절</h2>
+  <div class="s5">
+    <div class="accts">
+      <div class="acct" style="left:0;top:10px"><i>늘</i><div>@책방_늘보<span>북토크 공지</span></div></div>
+      <div class="acct" style="left:300px;top:70px"><i>소</i><div>@livepub_sorigul<span>이번 주 라이브</span></div></div>
+      <div class="acct" style="left:40px;top:150px"><i>골</i><div>@gallery_golmok<span>사진전 오픈</span></div></div>
+      <div class="acct" style="left:360px;top:220px"><i>새</i><div>@saebyeok3si<span>단독 공연 예고</span></div></div>
+      <div class="acct" style="left:10px;top:300px"><i>온</i><div>@cafe_ongi<span>재즈 트리오</span></div></div>
+      <p>작은 행사는 <b style="color:var(--ink)">각자의 SNS 계정</b>에서만 보입니다</p>
+    </div>
+    <div class="stats">
+      <div class="stat" data-b="1"><div class="n">19</div><div class="t">문화행사를 여는<br>동네책방</div></div>
+      <div class="stat" data-b="2"><div class="n">7</div><div class="t">2025년 이후 인디 행사가<br>열린 공간</div></div>
+      <div class="stat" data-b="3"><div class="n">25</div><div class="t">지역에서 활동하는<br>인디 뮤지션 팀</div></div>
+    </div>
+  </div>
+  <p class="src">동네책방: 전주시 발표(2025) · 공간·뮤지션: 팀 자료 조사(2026.11)</p>
+</section>
+
+<!-- 6. 관심의 휘발 -->
+<section class="slide">
+  <div class="s6top">
+    <div><p class="kicker">문제 2</p><h2 class="title">관심의 휘발</h2></div>
+    <div class="big"><b>10,300<span style="display:inline;font-size:44px;font-weight:800;color:var(--ink)">명</span></b><span>2026 독립출판 북페어 '전주책쾌' 방문객</span></div>
+  </div>
+  <div class="chart" id="c6" data-b="1"></div>
+  <p class="src">네이버 데이터랩 검색어트렌드 '전주책쾌' 월간 상대지수, 2023.1~2026.10</p>
+</section>
+
+<!-- 7. 대구도 같다 + 결론 -->
+<section class="slide">
+  <p class="kicker">대구도 같습니다</p>
+  <div class="s7">
+    <div><div id="c7"></div>
+      <div class="legend"><span><i style="background:var(--ink)"></i>'대구 콘서트' 검색</span><span><i style="background:var(--pink)"></i>'대구 인디' 검색</span></div></div>
+    <p class="say">다른 지역 인기 밴드의 순회공연은 매진되지만,<br><b>지역 싱어송라이터의 공연에는 관객이 적습니다.</b><br><span style="font-size:20px;color:var(--mute)">B tv(2026) · 네이버 데이터랩 2023.1~2026.10</span></p>
+  </div>
+  <p class="conclude" data-b="1">부족한 건 무대가 아니라,<br>무대와 사람을 잇는 <span class="hl">연결</span>입니다.</p>
+</section>
+
+<!-- 8. 기존 서비스 -->
+<section class="slide">
+  <p class="kicker">왜 지금까지 못 풀었나</p>
+  <h2 class="title">시도는 이미 있었습니다</h2>
+  <div class="cards">
+    <div class="card"><p class="y">네이버 온스테이지</p><h3>로컬 라이브 보드</h3><p>대구·광주·인천 라이브 소개<br><b>2023년 모체 종료와 함께 멈춤</b></p></div>
+    <div class="card"><p class="y">전주시 · 2020~</p><h3>전주티켓박스</h3><p>수수료 없는 예매<br><b>4년 뒤에도 시민 대부분이 모름</b></p></div>
+    <div class="card"><p class="y">한국문화정보원 · 2026~</p><h3>지역공연 ON</h3><p>예술인도 정보 등록 가능<br><b>기관 양식의 목록에서 끝남</b></p></div>
+  </div>
+  <div class="common" data-b="1">
+    <div><i>1</i>운영 기관의 예산이 멈추면, 정보도 멈췄다</div>
+    <div><i>2</i>정보가 모여 있어도, 다시 찾아올 이유가 없었다</div>
+  </div>
+  <p class="src">전북일보(2024) · 각 서비스 공개 자료</p>
+</section>
+
+<!-- 9. 조건 두 가지 -->
+<section class="slide">
+  <p class="kicker">그래서 두 가지 조건을 걸었습니다</p>
+  <h2 class="title">쿵짝이 갖춰야 할 것</h2>
+  <div class="conds">
+    <div class="cond"><span class="k">조건 1</span><h3>기관 예산 없이도<br>정보가 채워질 것</h3><p>올리는 사람이 직접 채우는 구조</p></div>
+    <div class="cond"><span class="k">조건 2</span><h3>한 번 온 사람이<br>다시 찾아올 것</h3><p>관심이 가장 높은 순간을 다음 관람으로</p></div>
+  </div>
+</section>
+
+<!-- 10. 시연: → 한 번이 앱에서 한 번 누르기 -->
+<section class="slide demo" id="demo">
+  <div class="dphone"><div class="dwrap" id="dwrap"><iframe id="app" src="index.html" title="쿵짝 앱 시연"></iframe><div class="fx" id="fx"></div></div></div>
+  <div class="dside">
+    <div class="badges"><span class="badge" id="b1">조건 1 · 정보가 채워진다</span><span class="badge" id="b2">조건 2 · 다시 찾아온다</span></div>
+    <p class="dcap" id="dcap"></p>
+    <p class="dsub" id="dsub"></p>
+    <div class="dmini" id="dmini"></div>
+  </div>
+  <i id="dflag"></i>
+</section>
+
+<!-- 11. 좁게 시작 -->
+<section class="slide">
+  <p class="kicker">어디서 시작하나</p>
+  <h2 class="title">좁게 시작해, 밀도를 만든다</h2>
+  <div class="s11">
+    <div class="pangyo">당근마켓도 처음에는<br><b>판교 IT 회사 직원들의 '판교장터'</b>로<br>시작했습니다.
+      <div class="roles"><b>학생회·동아리 행사</b> → 첫 섭외 수요<br><b>공연·창작 동아리</b> → 첫 공급자</div></div>
+    <div class="rings">
+      <div class="ring r3" data-b="3"><span>대구 라이브클럽 · 다른 지방 도시</span></div>
+      <div class="ring r2" data-b="2"><span>전주 시내<small class="g">책방 19곳 · 인디 공간 7곳</small></span></div>
+      <div class="ring r1" data-b="1">전주대<small>첫 시범 그룹 제안</small></div>
+    </div>
+  </div>
+</section>
+
+<!-- 12. 시범 목표 -->
+<section class="slide">
+  <p class="kicker">시범 6개월 목표</p>
+  <h2 class="title">가장 중요하게 보는 숫자</h2>
+  <div class="goals">
+    <div class="goal main"><p class="t">재관람자 (두 번 이상 관람)</p><p class="n">50<small>명</small></p></div>
+    <div class="goal"><p class="t">이웃이 직접 올린 행사</p><p class="n">20<small>건/월</small></p></div>
+    <div class="goal"><p class="t">섭외 성사</p><p class="n">10<small>건</small></p></div>
+  </div>
+</section>
+
+<!-- 13. 지속 -->
+<section class="slide">
+  <p class="kicker">어떻게 지속하나</p>
+  <h2 class="title">예산이 끊겨도 멈추지 않는 구조</h2>
+  <div class="s13">
+    <div><p class="fee">0<small>원</small></p><p class="lead">플랫폼 수수료는 받지 않고<br>결제 대행 비용만 실비로<br><span style="font-size:22px;color:var(--mute)">카드 3.4% 기준, 1만 원 티켓 한 장에 약 370원 (토스페이먼츠)</span></p></div>
+    <div class="flow">
+      <div>표를 팔고 싶은 아티스트,<br>손님을 모으고 싶은 공간이 직접 올린다</div>
+      <div>실제 거래가 오가는 정보라<br>운영진이 손대지 않아도 최신으로</div>
+      <div class="end">기관 예산이 멈춰도 정보는 계속 채워진다</div>
+    </div>
+  </div>
+</section>
+
+<!-- 14. 마무리 -->
+<section class="slide dark" id="s14">
+  <div class="center s14q" id="s14q"><p class="q"><small>처음 질문으로 돌아가 볼게요</small>이번 주 금요일 밤,<br>전주에서 볼 공연을<br>찾아보세요.</p></div>
+  <div class="fin" data-b="1">
+    <div class="phone fin-app"><div class="dwrap" id="fwrap"><iframe id="app2" src="index.html" title="쿵짝 홈 화면" tabindex="-1"></iframe></div></div>
+    <div><h2><span>지방에도 무대는 있습니다.</span><br>보이지 않았을 뿐입니다.</h2>
+      <p class="thanks"><span class="logo">쿵<b>짝</b></span>이 그 무대를 보이게 만들겠습니다. 감사합니다.</p></div>
+  </div>
+</section>
+
+<!-- 15. 예비: 백업 영상 (번호 15 + Enter) -->
+<section class="slide">
+  <h2 class="title" style="font-size:48px">시연 영상</h2>
+  <div class="vbox" id="vbox">
+    <video class="video" src="캡처/시연_백업.mp4" controls preload="metadata" onerror="this.parentNode.classList.add('missing')"></video>
+    <div class="vmiss"></div>
+  </div>
+</section>
+
+<!-- 16. 예비: 근거 출처 (번호 16 + Enter) -->
+<section class="slide">
+  <h2 class="title" style="font-size:48px">근거와 출처</h2>
+  <div class="refs">
+    <div><b>전주 공연 47건 · NOL 11건 · 인디 0건</b><span>KOPIS 2026.11.6~12.31 등록분, NOL 검색 2026.11.6 조회</span></div>
+    <div><b>전주책쾌 방문객 1만 300여 명(2026)</b><span>2025년 7,800명, 2025년 관람객 48%가 다른 지역</span></div>
+    <div><b>검색량: 행사 달 평균 2.07, 그 밖 38개월 평균 0.07 (약 30배)</b><span>네이버 데이터랩 2023.1~2026.10, 38개월 중 27개월 0.05 미만</span></div>
+    <div><b>공연 티켓 판매액 81.0% 수도권</b><span>2026 상반기, 지디넷코리아(KOPIS 분석)</span></div>
+    <div><b>전국 공연장 평균 가동률 44.1%</b><span>2023 전국문예회관 운영현황조사</span></div>
+    <div><b>동네책방 19곳 · 인디 공간 7곳 · 뮤지션 25팀</b><span>전주시 발표(2025), 팀 자료 조사(2026.11)</span></div>
+    <div><b>"제값 내고 볼 공연이 적다" · 전주티켓박스 인지도</b><span>전북일보(2024)</span></div>
+    <div><b>대구 지역 싱어송라이터 관객 부족</b><span>B tv(2026)</span></div>
+  </div>
+</section>
+
+<div id="pg"></div>
+</div>
+
+<script>
+/* ───────── 데이터: 네이버 데이터랩 월간 상대지수 2023.1~2026.10 (팀 Drive 원자료) ───────── */
+const CHAEK = [0,0,0,0.01105,0.03747,0.69904,0.60343,0.00528,0,0.0024,0,0,
+  0,0,0,0.09032,0.13212,0.68607,1.59459,0.09272,0.0245,0.02161,0.01873,0.01537,
+  0.00528,0.01585,0.23541,0.38243,1.07138,2.09857,0.03843,0.03459,0.03315,0,0.00816,0.01008,
+  0.02161,0.12155,0.35216,0.29931,0.30892,0.96617,3.96413,0.12491,0.07975,0.03459];
+const EVENT = [6, 18, 29, 42];   // 행사 달: 2023.7 · 2024.7 · 2025.6 · 2026.7
+const PRE = [5, 17, 28, 41];     // 행사 직전 달
+const DG_CONCERT = [35.69648,27.25215,32.18469,34.09813,48.85279,35.63633,36.00297,39.58064,42.85182,70.1498,92.33479,100,
+  37.43232,28.26329,35.68789,37.47529,44.04628,35.17515,31.17642,30.87565,41.70891,60.69433,74.82455,71.02059,
+  31.60894,27.83936,35.51029,31.65477,34.88585,27.95966,30.01346,33.90335,38.5695,49.24808,63.79078,64.00847,
+  34.07235,25.45329,23.90364,25.88009,26.69645,25.21554,26.89123,26.92561,33.60545,49.75795];
+const DG_INDIE = [0,0,0.01432,0.07733,0.04869,0,0,0,0,0,0,0.01718,0.02291,0.01432,0,0,0,0.0315,0.04583,0.0315,0.01432,0.01432,0,0.01432,
+  0,0,0,0,0.02005,0.01432,0,0.02577,0,0.01432,0.04869,0.01432,0.01432,0,0,0.02005,0.01432,0,0,0.01432,0,0.01718];
+
+/* 막대그래프 (전주책쾌). 층: 1 회색 막대 · 2 행사 달 핑크 · 3 거의 0인 달 표시 */
+function chaekChart(W, H, opt = {}) {
+  const n = CHAEK.length, padB = opt.mini ? 22 : 40, gap = opt.mini ? 2 : 4, bw = (W - gap * (n - 1)) / n, max = 4.2;
+  const y = (v) => (H - padB) - (v / max) * (H - padB - 10);
+  let base = '', ev = '', zero = '', yr = '';
+  CHAEK.forEach((v, i) => {
+    const x = i * (bw + gap), h = Math.max(2, (H - padB) - y(v));
+    const isEv = EVENT.includes(i);
+    base += `<rect x="${x}" y="${(H - padB) - h}" width="${bw}" height="${h}" rx="${Math.min(4, bw / 3)}" fill="${opt.mini && isEv ? 'var(--pink)' : 'var(--bar)'}"/>`;
+    if (isEv) ev += `<rect x="${x}" y="${(H - padB) - h}" width="${bw}" height="${h}" rx="4" fill="var(--pink)"/>`;
+    if (!isEv && !PRE.includes(i) && v < 0.05) zero += `<rect x="${x}" y="${H - padB + 6}" width="${bw}" height="6" rx="3" fill="var(--red)"/>`;
+    if (i % 12 === 0) yr += `<text x="${x}" y="${H - (opt.mini ? 2 : 6)}" font-size="${opt.mini ? 15 : 20}" font-weight="700" fill="var(--sub)">${2023 + i / 12}</text>`;
+  });
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+    <line x1="0" x2="${W}" y1="${H - padB}" y2="${H - padB}" stroke="var(--line)" stroke-width="2"/>
+    <g>${base}</g>${opt.mini ? '' : `<g class="lay" data-b="2">${ev}</g><g class="lay" data-b="3">${zero}</g>`}<g>${yr}</g></svg>`;
+}
+function dgChart(W, H) {
+  const n = DG_CONCERT.length, padB = 34, x = (i) => (i / (n - 1)) * W, y = (v) => (H - padB) - (v / 100) * (H - padB - 10);
+  const line = (a) => a.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  let yr = ''; for (let i = 0; i < n; i += 12) yr += `<text x="${x(i)}" y="${H - 4}" font-size="18" font-weight="700" fill="var(--sub)">${2023 + i / 12}</text>`;
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><line x1="0" x2="${W}" y1="${H - padB}" y2="${H - padB}" stroke="var(--line)" stroke-width="2"/>
+    <polyline points="${line(DG_CONCERT)}" fill="none" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+    <polyline points="${line(DG_INDIE)}" fill="none" stroke="var(--pink)" stroke-width="6" stroke-linejoin="round"/>${yr}</svg>`;
+}
+document.getElementById('c6').innerHTML = chaekChart(1360, 470) +
+  '<div class="tag pink lay" data-b="2" style="left:880px;top:-14px">행사 달 · 평소의 약 30배</div>' +
+  '<div class="tag red lay" data-b="3" style="left:200px;top:300px;line-height:1.3">행사 없는 38개월 중<br>27개월 ≈ 0</div>';
+document.getElementById('c7').innerHTML = dgChart(640, 330);
+
+/* ───────── 슬라이드 넘기기 ───────── */
+const deck = document.getElementById('deck'), slides = [...document.querySelectorAll('.slide')];
+const MAIN = 14;                       // → 로는 14장까지만. 15·16은 번호 + Enter
+let cur = 0, build = 0, typed = '';
+function fit() { const k = Math.min(innerWidth / 1600, innerHeight / 900); deck.style.transform = `translate(-50%,-50%) scale(${k})`; }
+addEventListener('resize', fit); fit();
+const maxBuild = (i) => Math.max(0, ...[...slides[i].querySelectorAll('[data-b]')].map((e) => Number(e.dataset.b)));
+function paint() {
+  slides.forEach((s, i) => s.classList.toggle('on', i === cur));
+  slides[cur].querySelectorAll('[data-b]').forEach((e) => e.classList.toggle('show', Number(e.dataset.b) <= build));
+  document.getElementById('s14q').classList.toggle('gone', cur === 13 && build >= 1);
+  document.getElementById('pg').textContent = `${cur + 1} / ${MAIN}`;
+}
+function show(i, b = 0) {
+  const from = cur; cur = Math.max(0, Math.min(slides.length - 1, i)); build = b === 'end' ? 0 : b; paint();
+  if (slides[cur].id === 'demo' && from !== cur) return demoEnter(b === 'end');
+  if (slides[cur].id === 's14' && from !== cur) send({ scene: 'home' }, frame2);
+}
+async function next() {
+  if (slides[cur].id === 'demo') { if (await demoNext()) return; }
+  if (build < maxBuild(cur)) { build++; return paint(); }
+  if (cur + 1 < MAIN) return show(cur + 1);
+}
+async function prev() {
+  if (slides[cur].id === 'demo') { if (await demoPrev()) return; }
+  if (build > 0) { build--; return paint(); }
+  if (cur > 0) { const p = cur - 1; return show(p, slides[p].id === 'demo' ? 'end' : maxBuild(p)); }
+}
+const queue = []; let draining = false;
+function key(k) { queue.push(k); if (!draining) drain(); }
+async function drain() {
+  draining = true;
+  while (queue.length) { const k = queue.shift(); if (['ArrowRight', 'PageDown', ' '].includes(k)) await next(); else await prev(); }
+  draining = false;
+}
+addEventListener('keydown', (e) => {
+  if (/^[0-9]$/.test(e.key)) { typed += e.key; return; }
+  if (e.key === 'Enter' && typed) { show(Number(typed) - 1); typed = ''; return; }
+  if (e.key === 'Escape') { typed = ''; return; }
+  if (e.key === 'f' || e.key === 'F') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); return; }
+  if (['ArrowRight', 'PageDown', ' ', 'ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); key(e.key); }
+});
+
+/* ───────── 시연: → 한 번이 앱에서 한 단계 ─────────
+   앱(index.html)이 슬라이드 안에 있을 때만 신호를 받아 버튼을 눌러요. 화면 속 이름은 모두 가상이에요. */
+const frame = document.getElementById('app'), frame2 = document.getElementById('app2'), fx = document.getElementById('fx');
+const K = 772 / 844;   // 휴대폰 틀 안쪽 높이 ÷ 앱 화면 높이
+document.getElementById('dwrap').style.transform = `scale(${K})`;
+document.getElementById('fwrap').style.transform = `scale(${670 / 844})`;   // 14번 휴대폰 틀 안쪽 높이 ÷ 앱 화면 높이
+const W = (ms) => ({ wait: ms });
+const STEPS = [
+  { cap: '덕진동에 사는<br>대학생 A의 휴대폰', sub: '아까 예매 앱에서 0건이던 그 동네예요.', go: [{ scene: 'home' }] },
+  { cap: '올리는 사람이<br>직접 채웁니다', sub: '운영진이 모은 글이 아니라, 표를 팔고 싶은 아티스트와 손님을 모으고 싶은 공간이 올린 글이에요.', badge: 1, go: [] },
+  { cap: '토요일 밤<br>어쿠스틱 라이브', sub: '예매 앱을 따로 열 필요 없이, 여기서 바로 고릅니다.', go: [{ sel: '[data-a="open"][data-id="e1"]' }] },
+  { cap: '다녀온 이웃의<br>한 줄 후기', sub: '관람한 사람만 남길 수 있어요.', go: [{ sel: '.h2', text: '다녀온 사람들', look: true }] },
+  { cap: '앱을 옮기지 않고<br>그 자리에서 예매', sub: '', go: [{ sel: '[data-cta][data-a="book"]' }, W(500), { sel: '[data-cta]' }] },
+  { cap: '예매했어요', sub: '토요일 밤, 라이브 펍에서 만나요.', go: [{ sel: '[data-cta]' }] },
+  { cap: '표를 사는 순간,<br><span class="hl">다음 무대와의 약속</span>도', sub: '이 팀과 이 공연장의 팔로우가 기본으로 선택돼 있어요. 관심이 가장 높은 지금 연결을 걸어 둡니다.', go: [{ sel: '.h2', text: '다음 무대도', look: true }] },
+  { cap: '팔로우하고,<br>내 티켓으로', sub: '', go: [{ sel: '[data-cta]' }, W(500), { sel: '[data-a="ticket"]', text: '토요일 밤' }] },
+  { cap: '공연 당일,<br>입장 체크인', sub: '', go: [{ sel: '[data-cta]' }] },
+  { cap: '오늘 무대,<br>어땠나요?', sub: '관람을 마치면, 하루가 지나갑니다.', go: [{ sel: '[data-cta]' }] },
+  { cap: '0으로 떨어지던 관심이,<br><span class="hl">다음 날 아침에 다시</span>', sub: '어제 본 팀의 다음 무대가 잡히면 바로 알려 줍니다.', mini: true, go: [{ sel: '[data-a="openNoti"]', text: '다음 무대', look: true }] },
+  { cap: '두 번째 무대', sub: '최소 금액만 정하고 낼 만큼 내는 공연이에요. 신인 팀도 부담 없이 무대를 열 수 있어요.', go: [{ sel: '[data-a="openNoti"]', text: '다음 무대' }, W(600), { sel: '[data-cta][data-a="book"]' }] },
+  { cap: 'A가 두 번째 공연을<br>예매합니다', sub: '', go: [{ sel: '[data-cta]' }, W(450), { sel: '[data-cta]' }, W(450), { sel: '[data-cta]' }] },
+  { cap: '재관람자 +1', sub: '쿵짝으로 두 번 이상 무대를 본 사람. 발견과 재방문이 둘 다 일어나야만 늘어나는, 가장 중요한 숫자예요.', badge: 2, go: [{ scene: 'dash' }, W(500), { sel: '.live', look: true }] },
+  { cap: '보는 사람이<br><span class="hl">여는 사람</span>으로', sub: '학과 학생회가 송년회 무대에 세울 밴드를 찾아요. 예산은 40만 원.', go: [{ scene: 'hire' }] },
+  { cap: '동네 팀 세 곳이<br>응답했습니다', sub: '유명 가수만 떠올리던 자리에 지역 아티스트가 손을 들어요.', go: [{ sel: '[data-a="talk"][data-by="파도소리 밴드"]' }] },
+  { cap: '날짜와 장비를<br>채팅으로 맞춥니다', sub: '', go: [{ sel: '[data-a="sugg"][data-k="main"]' }, W(1400), { sel: '[data-a="sugg"][data-k="main"]' }, W(1400), { sel: '[data-a="sugg"][data-k="main"]' }, W(1300)] },
+  { cap: '앱 밖 송금을 권하면<br><span class="hl">경고</span>가 뜹니다', sub: '돈은 쿵짝이 맡아 두었다가 공연이 끝난 뒤 전달해요. 취소나 노쇼에도 서로 보호받아요.', go: [{ sel: '[data-a="sugg"][data-k="main"]' }, W(1900), { sel: '.msg.sys', text: '보호받을 수 없어요', look: true }] },
+  { cap: '유명 가수 대신,<br><span class="hl">동네 밴드</span>라는 선택지', sub: '의뢰자가 먼저 결제하고, 공연이 끝나면 밴드에게 정산돼요.', go: [{ sel: '.mcard [data-a="choose"]' }] },
+];
+let dstep = -1, busy = false, ready = false, ready2 = false, seq = 0;
+const snaps = [];   // 단계마다 앱 화면 상태. 한 단계 뒤로 갈 때 바로 되돌려요
+const waiters = {};
+frame.addEventListener('load', () => { ready = true; });
+frame2.addEventListener('load', () => { ready2 = true; });
+addEventListener('message', (e) => {
+  const m = e.data || {};
+  if (m.kj === 'demo-done' && waiters[m.id]) { waiters[m.id](m); delete waiters[m.id]; }
+  if (m.kj === 'key') key(m.key);
+});
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function send(cmd, to = frame) {
+  for (let i = 0; !(to === frame ? ready : ready2) && i < 40; i++) await sleep(100);
+  const id = ++seq;
+  return new Promise((res) => {
+    waiters[id] = res;
+    setTimeout(() => { if (waiters[id]) { delete waiters[id]; res({ timeout: true }); } }, 3000);
+    to.contentWindow.postMessage({ kj: 'demo', id, ...cmd }, '*');
+  });
+}
+function mark(rect, look) {
+  if (!rect) return;
+  const [x, y, w, h] = rect;
+  if (look) { fx.innerHTML = `<div class="look" style="left:${x - 6}px;top:${y - 6}px;width:${w + 12}px;height:${h + 12}px"></div>`; return; }
+  fx.innerHTML = ''; const d = document.createElement('div'); d.className = 'tap';
+  d.style.left = x + w / 2 + 'px'; d.style.top = y + h / 2 + 'px'; fx.appendChild(d);
+}
+function caption(i) {
+  const s = STEPS[i];
+  document.getElementById('dcap').innerHTML = s.cap;
+  document.getElementById('dsub').textContent = s.sub;
+  document.getElementById('dmini').innerHTML = s.mini ? chaekChart(700, 190, { mini: true }) : '';
+  const got = STEPS.slice(0, i + 1).map((x) => x.badge || 0);
+  document.getElementById('b1').classList.toggle('ok', got.includes(1));
+  document.getElementById('b2').classList.toggle('ok', got.includes(2));
+}
+async function run(i, fast) {
+  let miss = false;
+  for (const c of STEPS[i].go) {
+    if (c.wait) { await sleep(fast ? Math.max(c.wait >= 1300 ? 1150 : 120, 0) : c.wait); continue; }
+    const r = await send({ ...c, fast });
+    if (r.timeout) { flag('on'); console.warn('앱이 시연 신호에 답하지 않아요'); return; }
+    if (r.miss) miss = true;
+    if (!fast) mark(r.rect, c.look);
+    await sleep(fast ? (c.scene ? 250 : 150) : (c.scene ? 350 : c.look ? 0 : 650));
+  }
+  if (miss) { flag('on'); console.warn('이번 단계에서 누를 버튼을 찾지 못했어요'); }
+}
+// 발표자용 표시: 회색 점은 되감는 중, 빨간 점은 이번 단계가 제대로 안 됨 (← 로 되감기)
+function flag(k) { document.getElementById('dflag').className = k || ''; }
+function idle() { busy = false; }
+async function goStep(i, fast) {
+  busy = true; flag(''); caption(i); fx.innerHTML = ''; await run(i, fast); dstep = i;
+  const r = await send({ snap: true }); snaps[i] = r.snap; snaps.length = i + 1;
+  idle();
+}
+async function demoEnter(atEnd) {
+  if (atEnd && dstep >= 0) { caption(dstep); return; }   // 다음 장에서 돌아오면 그 자리 그대로
+  await goStep(0, false);
+}
+async function demoNext() { if (dstep + 1 >= STEPS.length) return false; await goStep(dstep + 1, false); return true; }
+async function demoPrev() {
+  if (dstep <= 0) return false;
+  busy = true; const target = dstep - 1; flag(''); fx.innerHTML = ''; caption(target);
+  if (snaps[target]) {
+    // 받아 둔 화면 상태로 바로 되돌리고, 그 단계의 표시만 다시 그려요
+    await send({ restore: snaps[target] });
+    const looks = STEPS[target].go.filter((c) => c.look);
+    if (looks.length) await sleep(320);
+    for (const c of looks) { const r = await send({ ...c, fast: true }); mark(r.rect, true); }
+    dstep = target; snaps.length = target + 1;
+  } else {
+    // 받아 둔 상태가 없으면 처음부터 빠르게 다시 실행해요
+    flag('busy');
+    let from = target; while (from > 0 && !STEPS[from].go.some((c) => c.scene === 'home' || c.scene === 'hire')) from--;
+    for (let i = from; i < target; i++) { caption(i); await run(i, true); }
+    flag(''); caption(target); await run(target, false); dstep = target;
+    const r = await send({ snap: true }); snaps[target] = r.snap;
+  }
+  idle(); return true;
+}
+show(0);
+</script>
+</body>
+</html>

@@ -1724,6 +1724,13 @@ function demoBase() {
   S.me = { name: '덕진동 고양이' }; S.hoods = ['덕진동', '서신동'];
   notify({ title: `이번 주 ${hoodLabel()} 가까이에서 무대 ${S.posts.filter((p) => p.type === 'event').length}개가 열려요`, body: '공연, 전시, 북토크를 모아 봤어요', to: 'home' });
 }
+// 시연용 가상 포스터 (새벽세시 토요일 공연). 제목은 앱이 포스터 위에 얹으니 그림만 그려요
+function demoPoster() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1B1530"/><stop offset="1" stop-color="#3A1A2E"/></linearGradient></defs>`
+    + `<rect width="600" height="800" fill="url(#g)"/><circle cx="420" cy="230" r="150" fill="#F84264" opacity=".85"/><circle cx="420" cy="230" r="64" fill="#1B1530"/>`
+    + `<circle cx="150" cy="330" r="46" fill="#F84264" opacity=".35"/></svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
 const SCENES = {
   home() { demoBase(); stack = [{ n: 'home' }]; },
   book() { demoBase(); stack = [{ n: 'home' }, { n: 'event', p: { id: 'e1' } }]; },
@@ -1740,6 +1747,18 @@ const SCENES = {
     stack = [{ n: 'home' }, { n: 'request', p: { id: 'r1' } }];
   },
   dash() { if (!S.me) demoBase(); flow = null; stack = [{ n: 'my' }, { n: 'dash' }]; },
+  // 발표 시연 ①: 새벽세시가 토요일 공연을 직접 올려요. 같은 공연(e1)은 숨기고, 내용을 미리 채운 글쓰기에서 시작해요
+  post() {
+    demoBase(); const e = post('e1'); S.posts = S.posts.filter((p) => p.id !== 'e1'); S.teams = ['새벽세시'];
+    flow = { k: 'compose', type: 'event', i: 0, direct: true, d: { genre: '공연', title: e.title, by: '새벽세시', venue: e.venue, hood: e.hood, date: e.at.slice(0, 10), time: e.at.slice(11, 16),
+      mode: 'fixed', amount: '10000', min: '', rec: '', budget: '', mood: '', desc: e.desc, seek: '', photo: demoPoster() } };
+    stack = [{ n: 'home' }, { n: 'compose' }];
+  },
+  // 발표 시연 ②: 같은 앱을 이웃(하은)의 휴대폰으로 넘겨요. 방금 올린 공연은 그대로 두고 홈으로 가요
+  viewer() {
+    flow = null; S.teams = []; S.posts.forEach((p) => { if (p.type === 'event') p.mine = false; });
+    homeTab = 'see'; filter = '전체'; subs = []; q = ''; genre = ''; stack = [{ n: 'home' }];
+  },
   collab() {
     demoBase(); homeTab = 'with'; S.me = { name: '하람' }; // 밴드에 들어가고 싶은 드러머(가상)
     stack = [{ n: 'home' }, { n: 'collab', p: { id: 'c3' } }];
@@ -1791,6 +1810,33 @@ document.addEventListener('input', (e) => {
   if (flow.k === 'team' && f === 'name') { const h = $('#dupHint'); if (h) h.style.display = hasProf(el.value.trim()) ? '' : 'none'; }
   const b = $('[data-cta]'); if (b && curValid) b.disabled = !curValid();
 });
+/* ───────── 발표 슬라이드(발표.html) 안에 띄웠을 때만: 슬라이드가 보낸 시연 단계를 그대로 눌러요 ─────────
+   앱만 따로 열면 이 부분은 아무 일도 하지 않아요. */
+if (!PANE && window.parent !== window) {
+  window.addEventListener('message', (e) => {
+    const m = e.data; if (!m || m.kj !== 'demo') return;
+    const done = (x) => e.source && e.source.postMessage({ kj: 'demo-done', id: m.id, ...x }, '*');
+    if (m.scene) { A.scene({ scene: m.scene }); duo(false); return done({}); }
+    // 단계마다 화면 상태를 받아 두었다가, 한 단계 뒤로 갈 때 그대로 되돌려요
+    if (m.snap) return done({ snap: JSON.stringify({ S, stack, flow, filter, subs, q, homeTab, genre, searchOpen }) });
+    if (m.restore) {
+      ({ S, stack, flow, filter, subs, q, homeTab, genre, searchOpen } = JSON.parse(m.restore));
+      typingChat = null; chatDraft = ''; lb = null; save(); render('b'); return done({});
+    }
+    const el = [...document.querySelectorAll('#app ' + m.sel)].find((x) => !m.text || x.textContent.includes(m.text));
+    if (!el) return done({ miss: true });
+    el.scrollIntoView({ block: m.look ? 'center' : 'nearest' }); // 바로 옮겨야 표시할 자리를 정확히 잴 수 있어요
+    setTimeout(() => {
+      const r = el.getBoundingClientRect(); done({ rect: [r.left, r.top, r.width, r.height] });
+      if (!m.look) setTimeout(() => el.click(), m.fast ? 0 : 320);
+    }, m.fast ? 0 : 260);
+  });
+  // 시연 중에 앱을 눌러도 → ← 키로 슬라이드를 넘길 수 있게 슬라이드에 전해요
+  document.addEventListener('keydown', (e) => {
+    if (/^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
+    if (['ArrowRight', 'ArrowLeft', 'PageDown', 'PageUp', ' '].includes(e.key)) { e.preventDefault(); e.stopImmediatePropagation(); parent.postMessage({ kj: 'key', key: e.key }, '*'); }
+  }, true);
+}
 if (PANE === 'collab') { SCENES.collab(); save(); } // 오른쪽 휴대폰: 책방이 올린 협업 글에서 시작
 render();
 if (!PANE) { openFromLink(); window.addEventListener('hashchange', openFromLink); }
