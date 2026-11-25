@@ -47,7 +47,7 @@ body{font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Ne
 h2.big{font-size:56px;font-weight:800;line-height:1.28;letter-spacing:-.04em}
 .lead{font-size:28px;line-height:1.5;color:var(--sub);font-weight:500}
 .hl{color:var(--pink)}
-h1,h2,h3,.q,.dcap,.bottomline,.conclude,.mid,.note{text-wrap:balance}
+h1,h2,h3,.q,.dcap,.conclude,.mid,.note{text-wrap:balance}
 p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
 .src{position:absolute;left:120px;right:120px;bottom:80px;font-size:15px;color:var(--sub);line-height:1.5}
 /* 쿵짝 로고: 앱과 같은 모양(쿵 검정 + 짝 그라데이션). 짝의 위로 솟은 획이 잘리지 않게 칠할 자리를 넉넉히 둬요 */
@@ -124,20 +124,17 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
 .q{font-size:84px;font-weight:800;line-height:1.35;letter-spacing:-.04em}
 .q .soft{color:var(--mute)}
 
-/* 5·6 대학생 의견 */
+/* 5 대학생 의견 */
 .voice{display:grid;grid-template-columns:.85fr 1.15fr;gap:56px;margin-top:56px;align-items:stretch}
 .quotes{display:flex;flex-direction:column;gap:22px;justify-content:space-between}
 .quote{border-left:4px solid var(--ink);padding:6px 0 6px 30px;font-size:28px;font-weight:700;line-height:1.5}
 .quote small{display:block;font-size:19px;color:var(--sub);font-weight:600;margin-top:10px}
 .late{margin-top:14px;padding-top:24px;border-top:1.5px solid var(--rule);font-size:28px;font-weight:700;line-height:1.5;color:var(--sub)}
 .late b{color:var(--pink)}
-.s6{display:grid;grid-template-columns:.85fr 1.15fr;gap:56px;margin-top:56px;align-items:stretch}
-.voice>.box,.s6>.box{min-height:320px;display:flex;flex-direction:column;justify-content:center}
-.s6 .quote{display:flex;flex-direction:column;justify-content:center}
+.voice>.box{min-height:320px;display:flex;flex-direction:column;justify-content:center}
 .quote .hl{white-space:nowrap}
-.bottomline{margin-top:64px;font-size:44px;font-weight:800;letter-spacing:-.035em;line-height:1.35}
 
-/* 7 발견의 단절 */
+/* 6 발견의 단절 */
 .flow{display:flex;align-items:stretch;margin-top:72px}
 .flow .box{flex:1;min-height:330px}
 .flow .arrow{width:70px;display:flex;align-items:center;justify-content:center}
@@ -147,7 +144,7 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
 .box.zero .def{font-size:17px;color:var(--sub);margin-top:6px;line-height:1.4}
 .note{margin-top:54px;font-size:25px;font-weight:600}
 
-/* 8 관심의 휘발 */
+/* 7 관심의 휘발 */
 .s8top{display:flex;justify-content:space-between;align-items:flex-start;gap:40px}
 .s8top .box{padding:24px 34px;text-align:right}
 .s8top .box .n{font-size:80px;margin-top:6px}
@@ -158,14 +155,14 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
 .tag.gray{color:var(--ink);opacity:.8;font-size:22px}
 .s9line{position:absolute;left:120px;right:120px;bottom:120px;font-size:36px;font-weight:800;letter-spacing:-.035em}
 
-/* 9 정리: 번호 목록 */
+/* 8 정리: 번호 목록 */
 .olist{margin-top:0;border-top:2px solid var(--ink)}
 .olist div{display:flex;align-items:baseline;gap:36px;padding:22px 0;border-bottom:1.5px solid var(--rule);font-size:40px;font-weight:800;letter-spacing:-.035em}
 .olist i{font-style:normal;font-size:40px;font-weight:800;width:60px}
 .mid{margin-top:44px;font-size:34px;font-weight:700;color:var(--sub);letter-spacing:-.03em}
 .conclude{margin-top:22px;font-size:52px;font-weight:800;line-height:1.35;letter-spacing:-.04em}
 
-/* 10 기존 서비스 */
+/* 9 기존 서비스 */
 .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:52px;border:2px solid var(--ink);background:var(--white)}
 .card{padding:32px 34px;min-height:230px;border-left:1.5px solid var(--ink)}
 .card:first-child{border-left:0}
@@ -177,13 +174,13 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
 .common div{font-size:34px;font-weight:800;display:flex;gap:36px;align-items:baseline}
 .common div i{font-style:normal;font-size:34px;width:60px}
 
-/* 11 조건 */
+/* 10 조건 */
 .conds{display:grid;grid-template-columns:1fr 1fr;gap:36px;margin-top:64px}
 .cond{border:2px solid var(--ink);background:var(--white);padding:46px 46px;min-height:300px}
 .cond .k{display:inline-block;padding:6px 14px;background:var(--ink);color:var(--white);font-size:20px;font-weight:800}
 .cond h3{font-size:46px;font-weight:800;line-height:1.3;margin-top:28px;letter-spacing:-.035em}
 
-/* 12 쿵짝 */
+/* 11 쿵짝 */
 .s12{display:flex;gap:110px;align-items:center;height:100%}
 .slide.intro{padding:130px 120px 90px}
 .phone{flex:none;width:312px;height:640px;border:6px solid var(--ink);border-radius:44px;background:var(--white);overflow:hidden}
@@ -197,7 +194,7 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
 .types b{flex:none;width:130px;font-weight:800}
 .types span{font-size:22px;color:var(--sub);font-weight:600}
 
-/* 13 비교표 */
+/* 12 비교표 */
 .cmp{width:100%;border-collapse:collapse;margin-top:50px;background:var(--white);border:2px solid var(--ink)}
 .cmp th,.cmp td{border:1.5px solid var(--ink);padding:30px 30px;text-align:left;vertical-align:middle;line-height:1.45}
 .cmp thead th{font-size:22px;font-weight:800;background:var(--line)}
@@ -207,7 +204,7 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
 .cmp td.k{color:var(--ink);font-weight:700;font-size:24px}
 .cmp td.k b{color:var(--pink)}
 
-/* 14 시연 */
+/* 13 시연 */
 .slide.demo{padding:54px 120px;display:none}
 .slide.demo.on{display:flex;gap:84px;align-items:center}
 .dphone{flex:none;width:377px;height:792px;border:8px solid var(--ink);border-radius:52px;overflow:hidden;background:var(--white);position:relative}
@@ -238,7 +235,7 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
 #dflag.on{display:block}
 #dflag.busy{display:block;background:var(--mute)}
 
-/* 15 달라지는 것 */
+/* 14 달라지는 것 */
 .lives{display:grid;grid-template-columns:repeat(3,1fr);margin-top:56px;border:2px solid var(--ink);background:var(--white)}
 .life{padding:40px 40px 44px;border-left:1.5px solid var(--ink)}
 .life:first-child{border-left:0}
@@ -247,7 +244,7 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
 .life .k small{font-size:20px;color:var(--sub);font-weight:700;margin-left:8px}
 .life h3{font-size:30px;font-weight:700;line-height:1.45;margin-top:14px;letter-spacing:-.03em;color:var(--sub)}
 
-/* 16 마무리: 구간마다 화면이 바뀌어요 */
+/* 15 마무리: 구간마다 화면이 바뀌어요 */
 .slide.fin{padding:0}
 .pane{position:absolute;inset:130px 0 90px;padding:0 120px;display:flex;align-items:center}
 .noti{position:absolute;left:14px;right:14px;top:100px;background:var(--white);border:2px solid var(--ink);border-radius:20px;padding:16px 18px;display:flex;gap:12px;align-items:flex-start}
@@ -260,7 +257,7 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
 .kw .thanks{margin-top:60px;font-size:38px;font-weight:800}
 .kw .thanks .logo{font-size:38px}
 
-/* 17 출처 · 18 백업 영상 */
+/* 16 출처 · 17 백업 영상 */
 .refs{margin-top:0;display:grid;grid-template-columns:1fr 1fr;gap:0 60px;font-size:22px;line-height:1.5;border-top:2px solid var(--ink)}
 .refs div{padding:18px 0;border-bottom:1.5px solid var(--rule)}
 .refs b{display:block;font-size:23px}
@@ -268,7 +265,7 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
 .video{margin-top:0;width:100%;height:560px;background:#000;display:block}
 .vmiss{margin-top:0;height:560px;border:2px dashed var(--mute);display:none;place-items:center;text-align:center;font-size:26px;color:var(--sub);line-height:1.6}
 .vbox.missing video{display:none}.vbox.missing .vmiss{display:grid}
-/* 이야기 구간(2·3·4·16장)은 어두운 배경, 설명 구간은 밝은 배경. 배경색만 봐도 이야기와 설명이 구분돼요 */
+/* 이야기 구간(2·3·4·15장)은 어두운 배경, 설명 구간은 밝은 배경. 배경색만 봐도 이야기와 설명이 구분돼요 */
 .slide.dark{background:var(--ink);color:var(--white)}
 #deck.dark{background:var(--ink)}
 .dark .hd .no,.dark .hd .ttl{color:var(--white)}
@@ -379,19 +376,8 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
   <p class="src">전북대 재학생 10명 대상 · 2026년 11월 조사</p>
 </section>
 
-<!-- 6. ② 관심이 이어지지 않는다 -->
-<section class="slide">
-  <div class="hd"><span class="no">02</span><span class="sec">대학생 의견</span><span class="ttl">한 번 보러 갔더라도</span></div>
-  <h2 class="big">한 번 생긴 관심도 이어지지 않습니다</h2>
-  <div class="s6">
-    <div class="box"><p class="lab">다시 보러 가기</p><div class="n" style="font-size:84px">10명 중 7명</div><p class="d">재미있게 본 팀의 다음 소식을<br>다시 챙겨 본 적이 없다</p></div>
-    <div class="quote"><p>인스타그램 계정을 팔로우하고 다음 공연 일정을 챙겨 본 적 있음.<br>그러나 일정이 맞지 않아 <span class="hl">재관람은 하지 못함</span></p><small>전북대 재학생</small></div>
-  </div>
-  <p class="bottomline" data-b="1">행사가 보이지 않고, 한 번 생긴 관심도 이어지지 않는다</p>
-  <p class="src">전북대 재학생 10명 대상 · 2026년 11월 조사</p>
-</section>
 
-<!-- 7. ③ 발견의 단절 -->
+<!-- 6. ③ 발견의 단절 -->
 <section class="slide">
   <div class="hd"><span class="no">03</span><span class="sec">문제</span><span class="ttl">발견의 단절</span></div>
   <h2 class="big">그 적은 무대마저, 보이지 않습니다</h2>
@@ -400,13 +386,13 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
     <div class="arrow" data-b="2"><svg width="34" height="60" aria-hidden="true"><path d="M4 4 L28 30 L4 56" fill="none" stroke="#191F28" stroke-width="3"/></svg></div>
     <div class="box" data-b="2"><p class="lab">예매 앱 네 곳</p><div class="n">8<small>건</small></div><p class="d">'전주 공연'으로 검색하면 많아야</p><div class="qbar" style="width:21%"></div></div>
     <div class="arrow" data-b="3"><svg width="34" height="60" aria-hidden="true"><path d="M4 4 L28 30 L4 56" fill="none" stroke="#191F28" stroke-width="3"/></svg></div>
-    <div class="box zero" data-b="3"><p class="lab">그중</p><div class="n">0<small>건</small></div><p class="d">지역 인디 공연</p><p class="def">전주 인디 뮤지션이<br>작은 공연장·카페에서 여는 공연</p></div>
+    <div class="box zero" data-b="3"><p class="lab">그중</p><div class="n">0<small>건</small></div><p class="d">작은 규모의 공연</p><p class="def">전주 인디 뮤지션이<br>작은 공연장·카페에서 여는 공연</p></div>
   </div>
-  <p class="note" data-b="4">책방 북토크·작은 전시는 이 숫자에도 없이, 각 공간의 SNS에서만 보입니다</p>
+  <p class="note" data-b="3">책방 북토크·작은 전시는 이 숫자에도 없이, 각 공간의 SNS에서만 보입니다</p>
   <p class="src">2026년 11월 24일 조회 · KOPIS 전주시 공연예정·공연중 · 예매 앱 NOL 8 · 예스24 5 · 티켓링크 4 · 멜론티켓 0</p>
 </section>
 
-<!-- 8. ③ 관심의 휘발 -->
+<!-- 7. ③ 관심의 휘발 -->
 <section class="slide">
   <div class="hd"><span class="no">03</span><span class="sec">문제</span><span class="ttl">관심의 휘발</span></div>
   <div class="s8top">
@@ -417,7 +403,7 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
   <p class="src">네이버 데이터랩 검색어트렌드 주간 상대지수 2023.1~2026.11('전주 책방'은 책방·동네책방·독립서점·서점, '전주 전시'는 전시·전시회) · 25배는 '전주책쾌' 월간 값</p>
 </section>
 
-<!-- 9. ③ 정리: 연결 · 관심 -->
+<!-- 8. ③ 정리: 연결 · 관심 -->
 <section class="slide">
   <div class="hd"><span class="no">03</span><span class="sec">문제</span><span class="ttl">정리</span></div>
   <div class="olist">
@@ -429,7 +415,7 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
   <p class="conclude" data-b="2">그래서 무대와 사람을 잇고,<br>한 번 생긴 관심을 붙잡습니다</p>
 </section>
 
-<!-- 10. ④ 기존 서비스 -->
+<!-- 9. ④ 기존 서비스 -->
 <section class="slide">
   <div class="hd"><span class="no">04</span><span class="sec">기존 시도</span><span class="ttl">왜 지금까지 못 풀었나</span></div>
   <h2 class="big">시도는 이미 있었습니다</h2>
@@ -445,7 +431,7 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
   <p class="src">전북일보(2024) · 각 서비스 공개 자료</p>
 </section>
 
-<!-- 11. ④ 조건 두 가지 -->
+<!-- 10. ④ 조건 두 가지 -->
 <section class="slide">
   <div class="hd"><span class="no">04</span><span class="sec">기존 시도</span><span class="ttl">두 가지 조건</span></div>
   <h2 class="big">쿵짝이 풀어야 할 것</h2>
@@ -455,7 +441,7 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
   </div>
 </section>
 
-<!-- 12. ⑤ 쿵짝 소개 -->
+<!-- 11. ⑤ 쿵짝 소개 -->
 <section class="slide intro">
   <div class="hd"><span class="no">05</span><span class="sec">쿵짝</span><span class="ttl">소개</span></div>
   <div class="s12">
@@ -473,7 +459,7 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
   </div>
 </section>
 
-<!-- 13. ⑤ 무엇이 다른가 -->
+<!-- 12. ⑤ 무엇이 다른가 -->
 <section class="slide">
   <div class="hd"><span class="no">05</span><span class="sec">쿵짝</span><span class="ttl">무엇이 다른가</span></div>
   <h2 class="big">쿵짝의 세 가지 차별점</h2>
@@ -487,7 +473,7 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
   </table>
 </section>
 
-<!-- 14. ⑥ 시연: → 한 번이 앱에서 한 단계 -->
+<!-- 13. ⑥ 시연: → 한 번이 앱에서 한 단계 -->
 <section class="slide demo" id="demo">
   <div class="dphone"><div class="dwrap" id="dwrap"><iframe id="app" title="쿵짝 앱 시연"></iframe><div class="fx" id="fx"></div></div></div>
   <div class="dside">
@@ -500,7 +486,7 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
   <i id="dflag"></i>
 </section>
 
-<!-- 15. ⑥ 달라지는 것 -->
+<!-- 14. ⑥ 달라지는 것 -->
 <section class="slide">
   <div class="hd"><span class="no">06</span><span class="sec">시연</span><span class="ttl">달라지는 것</span></div>
   <h2 class="big">세 주체의 일상이 달라집니다</h2>
@@ -520,7 +506,7 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
   </div>
 </section>
 
-<!-- 16. ⑦ 마무리: 다시 금요일 밤 → 연결과 관심 -->
+<!-- 15. ⑦ 마무리: 다시 금요일 밤 → 연결과 관심 -->
 <section class="slide fin dark" id="fin">
   <div class="hd"><span class="no">07</span><span class="sec">마무리</span><span class="ttl">다시, 금요일 밤</span></div>
   <div class="pane" data-r="0-1">
@@ -547,7 +533,7 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
   <i data-b="2" style="display:none"></i>
 </section>
 
-<!-- 17. 부록: 근거와 출처 (17 + Enter) -->
+<!-- 16. 부록: 근거와 출처 (16 + Enter) -->
 <section class="slide">
   <div class="hd"><span class="no">부록</span><span class="ttl">근거와 출처</span></div>
   <div class="refs">
@@ -559,7 +545,7 @@ p,.writer,.box .d,.card p,.life h3,.dsub,.def{text-wrap:pretty}
   </div>
 </section>
 
-<!-- 18. 부록: 백업 시연 영상 (18 + Enter) -->
+<!-- 17. 부록: 백업 시연 영상 (17 + Enter) -->
 <section class="slide">
   <div class="hd"><span class="no">부록</span><span class="ttl">시연 영상</span></div>
   <div class="vbox" id="vbox">
@@ -610,7 +596,7 @@ document.getElementById('c8').innerHTML = chaekChart(1360, 400) +
 
 /* ───────── 슬라이드 넘기기 ───────── */
 const deck = document.getElementById('deck'), slides = [...document.querySelectorAll('.slide')];
-const MAIN = 16;                       // → 로는 16장까지만. 17 출처 · 18 백업 영상은 번호 + Enter
+const MAIN = 15;                       // → 로는 15장까지만. 16 출처 · 17 백업 영상은 번호 + Enter
 let cur = 0, build = 0, typed = '';
 function fit() { const k = Math.min(innerWidth / 1600, innerHeight / 900); deck.style.transform = `translate(-50%,-50%) scale(${k})`; }
 addEventListener('resize', fit); fit();
